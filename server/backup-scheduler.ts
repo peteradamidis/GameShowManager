@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import xlsx from 'xlsx';
-import { storage, db } from './storage';
+import { storage, db, dbCeleb, runWithWorkspace } from './storage';
 import {
   prizeWinners,
   castingCardVersions,
@@ -13,40 +13,55 @@ import {
   systemSettings,
 } from '../shared/schema';
 
-const BACKUP_DIR = './storage/backups';
+const BACKUP_BASE_DIR = './storage/backups';
+const DOND_BACKUP_DIR = `${BACKUP_BASE_DIR}/dond`;
+const CELEB_BACKUP_DIR = `${BACKUP_BASE_DIR}/celeb`;
 const BACKUP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
-// Generate timestamped backup filename
-function getBackupFilename(extension: 'json' | 'xlsx'): string {
+function getBackupDir(workspace: 'dond' | 'celeb'): string {
+  return workspace === 'celeb' ? CELEB_BACKUP_DIR : DOND_BACKUP_DIR;
+}
+
+function getBackupFilename(workspace: 'dond' | 'celeb', extension: 'json' | 'xlsx'): string {
   const now = new Date();
   const timestamp = now.toISOString()
     .replace(/[:.]/g, '-')
     .replace('T', '_')
     .slice(0, 19);
-  return `backup_${timestamp}.${extension}`;
+  return `backup_${workspace}_${timestamp}.${extension}`;
 }
 
 let backupIntervalId: NodeJS.Timeout | null = null;
-let lastBackupTime: Date | null = null;
-let lastBackupStatus: 'success' | 'error' | null = null;
-let lastBackupError: string | null = null;
-let consecutiveFailures = 0;
 let schedulerInitialized = false;
 const MAX_CONSECUTIVE_FAILURES = 5;
 
-// Ensure backup directory exists
-function ensureBackupDir() {
-  if (!fs.existsSync(BACKUP_DIR)) {
-    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+// Per-workspace state
+const state: Record<'dond' | 'celeb', {
+  lastBackupTime: Date | null;
+  lastBackupStatus: 'success' | 'error' | null;
+  lastBackupError: string | null;
+  consecutiveFailures: number;
+}> = {
+  dond: { lastBackupTime: null, lastBackupStatus: null, lastBackupError: null, consecutiveFailures: 0 },
+  celeb: { lastBackupTime: null, lastBackupStatus: null, lastBackupError: null, consecutiveFailures: 0 },
+};
+
+function ensureBackupDir(workspace: 'dond' | 'celeb') {
+  const dir = getBackupDir(workspace);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 }
 
-// Export all data to JSON
-export async function performBackup(): Promise<{ success: boolean; message: string; path?: string }> {
+// Run backup for a single workspace
+export async function performBackupForWorkspace(workspace: 'dond' | 'celeb'): Promise<{ success: boolean; message: string; path?: string }> {
+  const ws = state[workspace];
   try {
-    ensureBackupDir();
-    
-    // Fetch all data via storage interface
+    ensureBackupDir(workspace);
+
+    // All storage method calls run inside the correct workspace context
+    const rawDb = workspace === 'celeb' ? dbCeleb : db;
+
     const [
       recordDays,
       contestants,
@@ -64,7 +79,7 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
       movementHistory,
       contestantAvailability,
       birthdayEntries,
-    ] = await Promise.all([
+    ] = await runWithWorkspace(workspace, () => Promise.all([
       storage.getRecordDays(),
       storage.getContestants(),
       storage.getGroups(),
@@ -81,17 +96,17 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
       storage.getMovementHistory(),
       storage.getAllAvailabilityResponses(),
       storage.getBirthdayEntries(),
-    ]);
-    
-    // Get block types and block notes for all record days
-    const [blockTypesArrays, blockNotesArrays] = await Promise.all([
+    ]));
+
+    // Block types and notes (also need workspace context)
+    const [blockTypesArrays, blockNotesArrays] = await runWithWorkspace(workspace, () => Promise.all([
       Promise.all(recordDays.map(rd => storage.getBlockTypesByRecordDay(rd.id))),
       Promise.all(recordDays.map(rd => storage.getBlockNotes(rd.id))),
-    ]);
+    ]));
     const blockTypes = blockTypesArrays.flat();
     const blockNotes = blockNotesArrays.flat();
 
-    // Fetch tables that only have per-record-day or per-item DB methods — query DB directly
+    // Direct DB queries for tables without bulk storage methods
     let prizeWinnersData: any[] = [];
     let castingCardVersionsData: any[] = [];
     let systemConfigData: any[] = [];
@@ -101,7 +116,7 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
     let standbyConfirmationTokensData: any[] = [];
     let systemSettingsData: any[] = [];
 
-    if (db) {
+    if (rawDb) {
       [
         prizeWinnersData,
         castingCardVersionsData,
@@ -112,23 +127,23 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
         standbyConfirmationTokensData,
         systemSettingsData,
       ] = await Promise.all([
-        db.select().from(prizeWinners),
-        db.select().from(castingCardVersions),
-        db.select().from(systemConfig),
-        db.select().from(noticeboardComments),
-        db.select().from(availabilityTokens),
-        db.select().from(bookingConfirmationTokens),
-        db.select().from(standbyConfirmationTokens),
-        db.select().from(systemSettings),
+        rawDb.select().from(prizeWinners),
+        rawDb.select().from(castingCardVersions),
+        rawDb.select().from(systemConfig),
+        rawDb.select().from(noticeboardComments),
+        rawDb.select().from(availabilityTokens),
+        rawDb.select().from(bookingConfirmationTokens),
+        rawDb.select().from(standbyConfirmationTokens),
+        rawDb.select().from(systemSettings),
       ]);
     }
 
     const backupData = {
       version: '2.0',
+      workspace,
       exportedAt: new Date().toISOString(),
       automatic: true,
       data: {
-        // Core seating data
         recordDays,
         contestants,
         groups,
@@ -136,17 +151,14 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
         blockTypes,
         standbys,
         canceledAssignments,
-        // History & audit trails
         attendanceIssues,
         rebookingHistory,
         standbyAttendanceHistory,
         movementHistory,
-        // Booking workflow
         contestantAvailability,
         availabilityTokens: availabilityTokensData,
         bookingConfirmationTokens: bookingConfirmationTokensData,
         standbyConfirmationTokens: standbyConfirmationTokensData,
-        // Content & config
         castingCards,
         castingCardVersions: castingCardVersionsData,
         rxPlanningEntries,
@@ -154,10 +166,8 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
         postRecordTracking,
         prizeWinners: prizeWinnersData,
         birthdayEntries,
-        // Noticeboard
         noticeboardPosts,
         noticeboardComments: noticeboardCommentsData,
-        // System
         systemConfig: systemConfigData,
         systemSettings: systemSettingsData,
       },
@@ -187,47 +197,49 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
       },
     };
 
-    const jsonFilename = getBackupFilename('json');
-    const excelFilename = getBackupFilename('xlsx');
-    const backupPath = path.join(BACKUP_DIR, jsonFilename);
-    fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
+    const dir = getBackupDir(workspace);
+    const jsonFilename = getBackupFilename(workspace, 'json');
+    const excelFilename = getBackupFilename(workspace, 'xlsx');
+    const backupPath = path.join(dir, jsonFilename);
+    const excelPath = path.join(dir, excelFilename);
 
-    // Also create Excel backup
-    const excelPath = path.join(BACKUP_DIR, excelFilename);
+    fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
     await createExcelBackup(backupData.data, excelPath);
 
-    lastBackupTime = new Date();
-    lastBackupStatus = 'success';
-    lastBackupError = null;
-    consecutiveFailures = 0;
+    ws.lastBackupTime = new Date();
+    ws.lastBackupStatus = 'success';
+    ws.lastBackupError = null;
+    ws.consecutiveFailures = 0;
 
-    console.log(`[Backup] Automatic backup completed at ${lastBackupTime.toISOString()}`);
-    console.log(`[Backup] Data: ${recordDays.length} record days, ${contestants.length} contestants, ${seatAssignments.length} assignments, ${attendanceIssues.length} attendance issues, ${rebookingHistory.length} rebookings, ${castingCards.length} casting cards`);
-    console.log(`[Backup] Excel backup saved to ${excelPath}`);
+    const label = workspace.toUpperCase();
+    console.log(`[Backup:${label}] Backup completed at ${ws.lastBackupTime.toISOString()}`);
+    console.log(`[Backup:${label}] Data: ${recordDays.length} record days, ${contestants.length} contestants, ${seatAssignments.length} assignments, ${attendanceIssues.length} attendance issues, ${rebookingHistory.length} rebookings, ${castingCards.length} casting cards`);
+    console.log(`[Backup:${label}] Excel saved to ${excelPath}`);
 
-    return { 
-      success: true, 
-      message: 'Backup completed successfully',
-      path: backupPath 
-    };
+    return { success: true, message: `Backup completed successfully for ${label}`, path: backupPath };
   } catch (error: any) {
-    lastBackupStatus = 'error';
-    lastBackupError = error.message;
-    consecutiveFailures++;
-    
-    console.error(`[Backup] Automatic backup failed (attempt ${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}):`, error.message);
-    
-    // Stop scheduler after too many consecutive failures
-    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES && backupIntervalId) {
-      console.error('[Backup] Too many consecutive failures - stopping scheduler');
-      stopBackupScheduler();
-    }
-    
-    return { 
-      success: false, 
-      message: `Backup failed: ${error.message}` 
-    };
+    ws.lastBackupStatus = 'error';
+    ws.lastBackupError = error.message;
+    ws.consecutiveFailures++;
+    console.error(`[Backup:${workspace.toUpperCase()}] Backup failed (attempt ${ws.consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}):`, error.message);
+    return { success: false, message: `Backup failed: ${error.message}` };
   }
+}
+
+// Run backups for both workspaces (used by the scheduler)
+export async function performBackup(): Promise<{ success: boolean; message: string; path?: string }> {
+  const [dondResult, celebResult] = await Promise.all([
+    performBackupForWorkspace('dond'),
+    performBackupForWorkspace('celeb'),
+  ]);
+  const success = dondResult.success && celebResult.success;
+  return {
+    success,
+    message: success
+      ? 'Both workspace backups completed successfully'
+      : `DOND: ${dondResult.message} | CELEB: ${celebResult.message}`,
+    path: dondResult.path,
+  };
 }
 
 // Start the automatic backup scheduler
@@ -237,16 +249,14 @@ export function startBackupScheduler() {
     return;
   }
 
-  console.log('[Backup] Starting automatic backup scheduler (every 1 hour)');
+  console.log('[Backup] Starting automatic backup scheduler (every 1 hour, both workspaces)');
   schedulerInitialized = true;
-  consecutiveFailures = 0;
-  
+
   // Run first backup after 1 minute to let the app settle
   setTimeout(() => {
     performBackup();
   }, 60 * 1000);
 
-  // Then run every hour
   backupIntervalId = setInterval(() => {
     performBackup();
   }, BACKUP_INTERVAL_MS);
@@ -261,45 +271,67 @@ export function stopBackupScheduler() {
   }
 }
 
-// Get list of all backup files
-export function getBackupFiles(): { json: string[]; excel: string[] } {
-  ensureBackupDir();
+// Get list of backup files for a specific workspace
+export function getBackupFiles(workspace: 'dond' | 'celeb' = 'dond'): { json: string[]; excel: string[] } {
+  const dir = getBackupDir(workspace);
+  if (!fs.existsSync(dir)) return { json: [], excel: [] };
   try {
-    const files = fs.readdirSync(BACKUP_DIR);
+    const files = fs.readdirSync(dir);
+    const prefix = `backup_${workspace}_`;
     return {
-      json: files.filter(f => f.startsWith('backup_') && f.endsWith('.json')).sort().reverse(),
-      excel: files.filter(f => f.startsWith('backup_') && f.endsWith('.xlsx')).sort().reverse(),
+      json: files.filter(f => f.startsWith(prefix) && f.endsWith('.json')).sort().reverse(),
+      excel: files.filter(f => f.startsWith(prefix) && f.endsWith('.xlsx')).sort().reverse(),
     };
   } catch (error) {
     return { json: [], excel: [] };
   }
 }
 
-// Get backup status
+// Get backup status for both workspaces
 export function getBackupStatus() {
-  const backupFiles = getBackupFiles();
+  const dondFiles = getBackupFiles('dond');
+  const celebFiles = getBackupFiles('celeb');
   return {
     schedulerRunning: !!backupIntervalId,
     schedulerInitialized,
-    lastBackupTime: lastBackupTime?.toISOString() || null,
-    lastBackupStatus,
-    lastBackupError,
-    consecutiveFailures,
     backupInterval: '1 hour',
-    backupDir: BACKUP_DIR,
-    totalBackups: backupFiles.json.length,
-    latestBackup: backupFiles.json[0] || null,
+    dond: {
+      lastBackupTime: state.dond.lastBackupTime?.toISOString() || null,
+      lastBackupStatus: state.dond.lastBackupStatus,
+      lastBackupError: state.dond.lastBackupError,
+      consecutiveFailures: state.dond.consecutiveFailures,
+      backupDir: DOND_BACKUP_DIR,
+      totalBackups: dondFiles.json.length,
+      latestBackup: dondFiles.json[0] || null,
+    },
+    celeb: {
+      lastBackupTime: state.celeb.lastBackupTime?.toISOString() || null,
+      lastBackupStatus: state.celeb.lastBackupStatus,
+      lastBackupError: state.celeb.lastBackupError,
+      consecutiveFailures: state.celeb.consecutiveFailures,
+      backupDir: CELEB_BACKUP_DIR,
+      totalBackups: celebFiles.json.length,
+      latestBackup: celebFiles.json[0] || null,
+    },
+    // Legacy flat fields (DOND, for backwards compat)
+    lastBackupTime: state.dond.lastBackupTime?.toISOString() || null,
+    lastBackupStatus: state.dond.lastBackupStatus,
+    lastBackupError: state.dond.lastBackupError,
+    consecutiveFailures: state.dond.consecutiveFailures,
+    backupDir: DOND_BACKUP_DIR,
+    totalBackups: dondFiles.json.length,
+    latestBackup: dondFiles.json[0] || null,
   };
 }
 
-// Check if backup file exists and get its info
-export function getBackupFileInfo(): { exists: boolean; size?: number; modifiedAt?: string; latestFile?: string } {
-  const backupFiles = getBackupFiles();
+// Check if backup file exists for a workspace
+export function getBackupFileInfo(workspace: 'dond' | 'celeb' = 'dond'): { exists: boolean; size?: number; modifiedAt?: string; latestFile?: string } {
+  const backupFiles = getBackupFiles(workspace);
   if (backupFiles.json.length === 0) {
     return { exists: false };
   }
   const latestFile = backupFiles.json[0];
-  const backupPath = path.join(BACKUP_DIR, latestFile);
+  const backupPath = path.join(getBackupDir(workspace), latestFile);
   try {
     const stats = fs.statSync(backupPath);
     return {
@@ -313,13 +345,13 @@ export function getBackupFileInfo(): { exists: boolean; size?: number; modifiedA
   }
 }
 
-// Read a specific backup file content (defaults to latest)
-export function readBackupFile(filename?: string): string | null {
-  const backupFiles = getBackupFiles();
+// Read a specific backup file (defaults to latest for given workspace)
+export function readBackupFile(workspace: 'dond' | 'celeb' = 'dond', filename?: string): string | null {
+  const backupFiles = getBackupFiles(workspace);
   const targetFile = filename || backupFiles.json[0];
   if (!targetFile) return null;
-  
-  const backupPath = path.join(BACKUP_DIR, targetFile);
+
+  const backupPath = path.join(getBackupDir(workspace), targetFile);
   try {
     if (fs.existsSync(backupPath)) {
       return fs.readFileSync(backupPath, 'utf-8');
@@ -330,330 +362,183 @@ export function readBackupFile(filename?: string): string | null {
   return null;
 }
 
+// Get latest Excel backup path for a workspace
+export function getExcelBackupPath(workspace: 'dond' | 'celeb' = 'dond'): string | null {
+  const backupFiles = getBackupFiles(workspace);
+  if (backupFiles.excel.length === 0) return null;
+  return path.join(getBackupDir(workspace), backupFiles.excel[0]);
+}
+
+// Check if Excel backup exists for a workspace
+export function excelBackupExists(workspace: 'dond' | 'celeb' = 'dond'): boolean {
+  return getBackupFiles(workspace).excel.length > 0;
+}
+
 // Create Excel backup with multiple sheets
 async function createExcelBackup(data: any, filePath: string): Promise<void> {
   const workbook = xlsx.utils.book_new();
-  
-  // Record Days sheet
-  if (data.recordDays && data.recordDays.length > 0) {
-    const rdSheet = xlsx.utils.json_to_sheet(data.recordDays.map((rd: any) => ({
-      ID: rd.id,
-      Date: rd.date,
-      RxNumber: rd.rxNumber,
-      Status: rd.status,
-      Notes: rd.notes,
-      ProducerId: rd.producerId,
-      ApId: rd.apId,
-      IsLocked: rd.isLocked,
-    })));
-    xlsx.utils.book_append_sheet(workbook, rdSheet, 'Record Days');
-  }
-  
-  // Contestants sheet
-  if (data.contestants && data.contestants.length > 0) {
-    const cSheet = xlsx.utils.json_to_sheet(data.contestants.map((c: any) => ({
-      ID: c.id,
-      Name: c.name,
-      Age: c.age,
-      Gender: c.gender,
-      Email: c.email,
-      Phone: c.phone,
-      Location: c.location,
-      Postcode: c.postcode,
-      Rating: c.auditionRating,
-      Status: c.availabilityStatus,
-      AttendingWith: c.attendingWith,
-      GroupID: c.groupId,
-      MedicalInfo: c.medicalInfo,
-      MobilityNotes: c.mobilityNotes,
-      HasPhoto: c.hasPhoto,
-      ImportedAt: c.importedAt,
-      NoShowCount: c.noShowCount,
-      EarlyLeaverCount: c.earlyLeaverCount,
-    })));
-    xlsx.utils.book_append_sheet(workbook, cSheet, 'Contestants');
-  }
-  
-  // Seat Assignments sheet
-  if (data.seatAssignments && data.seatAssignments.length > 0) {
-    const saSheet = xlsx.utils.json_to_sheet(data.seatAssignments.map((sa: any) => ({
-      ID: sa.id,
-      RecordDayID: sa.recordDayId,
-      ContestantID: sa.contestantId,
-      Block: sa.blockNumber,
-      Seat: sa.seatLabel,
-      PlayerType: sa.playerType,
-      SeatedAsBlockType: sa.seatedAsBlockType,
-      SeatedFromStandby: sa.seatedFromStandby,
-      BookingEmailSent: sa.bookingEmailSent,
-      ConfirmedRSVP: sa.confirmedRsvp,
-      PaperworkSent: sa.paperworkSent,
-      PaperworkReceived: sa.paperworkReceived,
-      SignedIn: sa.signedIn,
-      OtdNotes: sa.otdNotes,
-      AttendingWithOverride: sa.attendingWithOverride,
-      Notes: sa.notes,
-      AssignedAt: sa.assignedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, saSheet, 'Seat Assignments');
-  }
-  
-  // Standbys sheet
-  if (data.standbys && data.standbys.length > 0) {
-    const stSheet = xlsx.utils.json_to_sheet(data.standbys.map((st: any) => ({
-      ID: st.id,
-      RecordDayID: st.recordDayId,
-      ContestantID: st.contestantId,
-      Status: st.status,
-      MovedToReschedule: st.movedToReschedule,
-      Notes: st.notes,
-      EmailSentAt: st.emailSentAt,
-      AssignedAt: st.assignedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, stSheet, 'Standbys');
-  }
-  
-  // Canceled Assignments sheet
-  if (data.canceledAssignments && data.canceledAssignments.length > 0) {
-    const caSheet = xlsx.utils.json_to_sheet(data.canceledAssignments.map((ca: any) => ({
-      ID: ca.id,
-      RecordDayID: ca.recordDayId,
-      ContestantID: ca.contestantId,
-      Reason: ca.reason,
-      IsFromStandby: ca.isFromStandby,
-      RebookedToRecordDayId: ca.rebookedToRecordDayId,
-      RebookedAt: ca.rebookedAt,
-      RebookedBy: ca.rebookedBy,
-      CanceledAt: ca.canceledAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, caSheet, 'Canceled Assignments');
+
+  if (data.recordDays?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.recordDays.map((rd: any) => ({
+      ID: rd.id, Date: rd.date, RxNumber: rd.rxNumber, Status: rd.status, Notes: rd.notes,
+      ProducerId: rd.producerId, ApId: rd.apId, IsLocked: rd.isLocked,
+    }))), 'Record Days');
   }
 
-  // Attendance Issues sheet
-  if (data.attendanceIssues && data.attendanceIssues.length > 0) {
-    const aiSheet = xlsx.utils.json_to_sheet(data.attendanceIssues.map((ai: any) => ({
-      ID: ai.id,
-      RecordDayID: ai.recordDayId,
-      ContestantID: ai.contestantId,
-      IssueType: ai.issueType,
-      Notes: ai.notes,
-      RecordedAt: ai.recordedAt,
-      RecordedBy: ai.recordedBy,
-    })));
-    xlsx.utils.book_append_sheet(workbook, aiSheet, 'Attendance Issues');
+  if (data.contestants?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.contestants.map((c: any) => ({
+      ID: c.id, Name: c.name, Age: c.age, Gender: c.gender, Email: c.email, Phone: c.phone,
+      Location: c.location, Postcode: c.postcode, Rating: c.auditionRating, Status: c.availabilityStatus,
+      AttendingWith: c.attendingWith, GroupID: c.groupId, MedicalInfo: c.medicalInfo,
+      MobilityNotes: c.mobilityNotes, HasPhoto: c.hasPhoto, ImportedAt: c.importedAt,
+      NoShowCount: c.noShowCount, EarlyLeaverCount: c.earlyLeaverCount,
+    }))), 'Contestants');
   }
 
-  // Rebooking History sheet
-  if (data.rebookingHistory && data.rebookingHistory.length > 0) {
-    const rhSheet = xlsx.utils.json_to_sheet(data.rebookingHistory.map((rh: any) => ({
-      ID: rh.id,
-      ContestantID: rh.contestantId,
-      FromRecordDayID: rh.fromRecordDayId,
-      ToRecordDayID: rh.toRecordDayId,
-      Reason: rh.reason,
-      RebookedBy: rh.rebookedBy,
-      RebookedAt: rh.rebookedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, rhSheet, 'Rebooking History');
+  if (data.seatAssignments?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.seatAssignments.map((sa: any) => ({
+      ID: sa.id, RecordDayID: sa.recordDayId, ContestantID: sa.contestantId,
+      Block: sa.blockNumber, Seat: sa.seatLabel, PlayerType: sa.playerType,
+      SeatedAsBlockType: sa.seatedAsBlockType, SeatedFromStandby: sa.seatedFromStandby,
+      BookingEmailSent: sa.bookingEmailSent, ConfirmedRSVP: sa.confirmedRsvp,
+      PaperworkSent: sa.paperworkSent, PaperworkReceived: sa.paperworkReceived,
+      SignedIn: sa.signedIn, OtdNotes: sa.otdNotes, AttendingWithOverride: sa.attendingWithOverride,
+      Notes: sa.notes, AssignedAt: sa.assignedAt,
+    }))), 'Seat Assignments');
   }
 
-  // Standby Attendance History sheet
-  if (data.standbyAttendanceHistory && data.standbyAttendanceHistory.length > 0) {
-    const sahSheet = xlsx.utils.json_to_sheet(data.standbyAttendanceHistory.map((sah: any) => ({
-      ID: sah.id,
-      ContestantID: sah.contestantId,
-      RecordDayID: sah.recordDayId,
-      AttendedAt: sah.attendedAt,
-      Notes: sah.notes,
-    })));
-    xlsx.utils.book_append_sheet(workbook, sahSheet, 'Standby Attendance History');
+  if (data.standbys?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.standbys.map((st: any) => ({
+      ID: st.id, RecordDayID: st.recordDayId, ContestantID: st.contestantId,
+      Status: st.status, MovedToReschedule: st.movedToReschedule,
+      Notes: st.notes, EmailSentAt: st.emailSentAt, AssignedAt: st.assignedAt,
+    }))), 'Standbys');
   }
 
-  // Prize Winners sheet
-  if (data.prizeWinners && data.prizeWinners.length > 0) {
-    const pwSheet = xlsx.utils.json_to_sheet(data.prizeWinners.map((pw: any) => ({
-      ID: pw.id,
-      ContestantID: pw.contestantId,
-      RecordDayID: pw.recordDayId,
-      Amount: pw.amount,
-      Notes: pw.notes,
-      RecordedAt: pw.recordedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, pwSheet, 'Prize Winners');
+  if (data.canceledAssignments?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.canceledAssignments.map((ca: any) => ({
+      ID: ca.id, RecordDayID: ca.recordDayId, ContestantID: ca.contestantId,
+      Reason: ca.reason, IsFromStandby: ca.isFromStandby,
+      RebookedToRecordDayId: ca.rebookedToRecordDayId, RebookedAt: ca.rebookedAt,
+      RebookedBy: ca.rebookedBy, CanceledAt: ca.canceledAt,
+    }))), 'Canceled Assignments');
   }
 
-  // Casting Cards sheet
-  if (data.castingCards && data.castingCards.length > 0) {
-    const ccSheet = xlsx.utils.json_to_sheet(data.castingCards.map((cc: any) => ({
-      ID: cc.id,
-      ContestantID: cc.contestantId,
-      Content: JSON.stringify(cc.content),
-      UpdatedAt: cc.updatedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, ccSheet, 'Casting Cards');
+  if (data.attendanceIssues?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.attendanceIssues.map((ai: any) => ({
+      ID: ai.id, RecordDayID: ai.recordDayId, ContestantID: ai.contestantId,
+      IssueType: ai.issueType, Notes: ai.notes, RecordedAt: ai.recordedAt, RecordedBy: ai.recordedBy,
+    }))), 'Attendance Issues');
   }
 
-  // Casting Card Versions sheet
-  if (data.castingCardVersions && data.castingCardVersions.length > 0) {
-    const ccvSheet = xlsx.utils.json_to_sheet(data.castingCardVersions.map((v: any) => ({
-      ID: v.id,
-      CastingCardID: v.castingCardId,
-      Content: JSON.stringify(v.content),
-      SavedAt: v.createdAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, ccvSheet, 'Casting Card Versions');
+  if (data.rebookingHistory?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.rebookingHistory.map((rh: any) => ({
+      ID: rh.id, ContestantID: rh.contestantId, FromRecordDayID: rh.fromRecordDayId,
+      ToRecordDayID: rh.toRecordDayId, Reason: rh.reason, RebookedBy: rh.rebookedBy, RebookedAt: rh.rebookedAt,
+    }))), 'Rebooking History');
   }
 
-  // RX Planning Entries sheet
-  if (data.rxPlanningEntries && data.rxPlanningEntries.length > 0) {
-    const rxSheet = xlsx.utils.json_to_sheet(data.rxPlanningEntries.map((rx: any) => ({
-      ID: rx.id,
-      RecordDayID: rx.recordDayId,
-      ContestantID: rx.contestantId,
-      EpisodeNumber: rx.episodeNumber,
-      Position: rx.position,
-      Notes: rx.notes,
-    })));
-    xlsx.utils.book_append_sheet(workbook, rxSheet, 'RX Planning');
+  if (data.standbyAttendanceHistory?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.standbyAttendanceHistory.map((sah: any) => ({
+      ID: sah.id, ContestantID: sah.contestantId, RecordDayID: sah.recordDayId,
+      AttendedAt: sah.attendedAt, Notes: sah.notes,
+    }))), 'Standby Attendance History');
   }
 
-  // Block Notes sheet
-  if (data.blockNotes && data.blockNotes.length > 0) {
-    const bnSheet = xlsx.utils.json_to_sheet(data.blockNotes.map((bn: any) => ({
-      ID: bn.id,
-      RecordDayID: bn.recordDayId,
-      BlockNumber: bn.blockNumber,
-      Notes: bn.notes,
-      UpdatedAt: bn.updatedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, bnSheet, 'Block Notes');
+  if (data.prizeWinners?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.prizeWinners.map((pw: any) => ({
+      ID: pw.id, ContestantID: pw.contestantId, RecordDayID: pw.recordDayId,
+      Amount: pw.amount, Notes: pw.notes, RecordedAt: pw.recordedAt,
+    }))), 'Prize Winners');
   }
 
-  // Post Record Tracking sheet
-  if (data.postRecordTracking && data.postRecordTracking.length > 0) {
-    const prtSheet = xlsx.utils.json_to_sheet(data.postRecordTracking.map((prt: any) => ({
-      ID: prt.id,
-      ContestantID: prt.contestantId,
-      RecordDayID: prt.recordDayId,
-      SeatAssignmentID: prt.seatAssignmentId,
-      WonMoney: prt.wonMoney,
-      Amount: prt.amount,
-      Notes: prt.notes,
-      UpdatedAt: prt.updatedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, prtSheet, 'Post Record Tracking');
+  if (data.castingCards?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.castingCards.map((cc: any) => ({
+      ID: cc.id, ContestantID: cc.contestantId, Content: JSON.stringify(cc.content), UpdatedAt: cc.updatedAt,
+    }))), 'Casting Cards');
   }
 
-  // Groups sheet
-  if (data.groups && data.groups.length > 0) {
-    const gSheet = xlsx.utils.json_to_sheet(data.groups.map((g: any) => ({
-      ID: g.id,
-      ReferenceNumber: g.referenceNumber,
-    })));
-    xlsx.utils.book_append_sheet(workbook, gSheet, 'Groups');
-  }
-  
-  // Block Types sheet
-  if (data.blockTypes && data.blockTypes.length > 0) {
-    const btSheet = xlsx.utils.json_to_sheet(data.blockTypes.map((bt: any) => ({
-      ID: bt.id,
-      RecordDayID: bt.recordDayId,
-      BlockNumber: bt.blockNumber,
-      BlockType: bt.blockType,
-    })));
-    xlsx.utils.book_append_sheet(workbook, btSheet, 'Block Types');
+  if (data.castingCardVersions?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.castingCardVersions.map((v: any) => ({
+      ID: v.id, CastingCardID: v.castingCardId, Content: JSON.stringify(v.content), SavedAt: v.createdAt,
+    }))), 'Casting Card Versions');
   }
 
-  // Movement History sheet
-  if (data.movementHistory && data.movementHistory.length > 0) {
-    const mhSheet = xlsx.utils.json_to_sheet(data.movementHistory.map((mh: any) => ({
-      ID: mh.id,
-      ContestantID: mh.contestantId,
-      RecordDayID: mh.recordDayId,
-      MovementType: mh.movementType,
-      FromBlock: mh.fromBlockNumber,
-      FromSeat: mh.fromSeatLabel,
-      ToBlock: mh.toBlockNumber,
-      ToSeat: mh.toSeatLabel,
-      MovedBy: mh.movedBy,
-      MovedAt: mh.movedAt,
-      Notes: mh.notes,
-    })));
-    xlsx.utils.book_append_sheet(workbook, mhSheet, 'Movement History');
+  if (data.rxPlanningEntries?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.rxPlanningEntries.map((rx: any) => ({
+      ID: rx.id, RecordDayID: rx.recordDayId, ContestantID: rx.contestantId,
+      EpisodeNumber: rx.episodeNumber, Position: rx.position, Notes: rx.notes,
+    }))), 'RX Planning');
   }
 
-  // Contestant Availability sheet
-  if (data.contestantAvailability && data.contestantAvailability.length > 0) {
-    const avSheet = xlsx.utils.json_to_sheet(data.contestantAvailability.map((av: any) => ({
-      ID: av.id,
-      ContestantID: av.contestantId,
-      RecordDayID: av.recordDayId,
-      Response: av.response,
-      RespondedAt: av.respondedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, avSheet, 'Contestant Availability');
+  if (data.blockNotes?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.blockNotes.map((bn: any) => ({
+      ID: bn.id, RecordDayID: bn.recordDayId, BlockNumber: bn.blockNumber,
+      Notes: bn.notes, UpdatedAt: bn.updatedAt,
+    }))), 'Block Notes');
   }
 
-  // Noticeboard Posts sheet
-  if (data.noticeboardPosts && data.noticeboardPosts.length > 0) {
-    const npSheet = xlsx.utils.json_to_sheet(data.noticeboardPosts.map((np: any) => ({
-      ID: np.id,
-      Title: np.title,
-      Content: np.content,
-      AuthorID: np.authorId,
-      IsPinned: np.isPinned,
-      CreatedAt: np.createdAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, npSheet, 'Noticeboard Posts');
+  if (data.postRecordTracking?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.postRecordTracking.map((prt: any) => ({
+      ID: prt.id, ContestantID: prt.contestantId, RecordDayID: prt.recordDayId,
+      SeatAssignmentID: prt.seatAssignmentId, WonMoney: prt.wonMoney,
+      Amount: prt.amount, Notes: prt.notes, UpdatedAt: prt.updatedAt,
+    }))), 'Post Record Tracking');
   }
 
-  // Noticeboard Comments sheet
-  if (data.noticeboardComments && data.noticeboardComments.length > 0) {
-    const ncSheet = xlsx.utils.json_to_sheet(data.noticeboardComments.map((nc: any) => ({
-      ID: nc.id,
-      PostID: nc.postId,
-      AuthorID: nc.authorId,
-      Content: nc.content,
-      CreatedAt: nc.createdAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, ncSheet, 'Noticeboard Comments');
+  if (data.groups?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.groups.map((g: any) => ({
+      ID: g.id, ReferenceNumber: g.referenceNumber,
+    }))), 'Groups');
   }
 
-  // Birthday Entries sheet
-  if (data.birthdayEntries && data.birthdayEntries.length > 0) {
-    const beSheet = xlsx.utils.json_to_sheet(data.birthdayEntries.map((be: any) => ({
-      ID: be.id,
-      ContestantID: be.contestantId,
-      RecordDayID: be.recordDayId,
-      BirthDate: be.birthDate,
-      Notes: be.notes,
-    })));
-    xlsx.utils.book_append_sheet(workbook, beSheet, 'Birthday Entries');
+  if (data.blockTypes?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.blockTypes.map((bt: any) => ({
+      ID: bt.id, RecordDayID: bt.recordDayId, BlockNumber: bt.blockNumber, BlockType: bt.blockType,
+    }))), 'Block Types');
   }
 
-  // System Config sheet
-  if (data.systemConfig && data.systemConfig.length > 0) {
-    const scSheet = xlsx.utils.json_to_sheet(data.systemConfig.map((sc: any) => ({
-      Key: sc.key,
-      Value: sc.value,
-      UpdatedAt: sc.updatedAt,
-    })));
-    xlsx.utils.book_append_sheet(workbook, scSheet, 'System Config');
+  if (data.movementHistory?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.movementHistory.map((mh: any) => ({
+      ID: mh.id, ContestantID: mh.contestantId, RecordDayID: mh.recordDayId,
+      MovementType: mh.movementType, FromBlock: mh.fromBlockNumber, FromSeat: mh.fromSeatLabel,
+      ToBlock: mh.toBlockNumber, ToSeat: mh.toSeatLabel, MovedBy: mh.movedBy,
+      MovedAt: mh.movedAt, Notes: mh.notes,
+    }))), 'Movement History');
   }
-  
-  // Write the file
+
+  if (data.contestantAvailability?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.contestantAvailability.map((av: any) => ({
+      ID: av.id, ContestantID: av.contestantId, RecordDayID: av.recordDayId,
+      Response: av.response, RespondedAt: av.respondedAt,
+    }))), 'Contestant Availability');
+  }
+
+  if (data.noticeboardPosts?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.noticeboardPosts.map((np: any) => ({
+      ID: np.id, Title: np.title, Content: np.content, AuthorID: np.authorId,
+      IsPinned: np.isPinned, CreatedAt: np.createdAt,
+    }))), 'Noticeboard Posts');
+  }
+
+  if (data.noticeboardComments?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.noticeboardComments.map((nc: any) => ({
+      ID: nc.id, PostID: nc.postId, AuthorID: nc.authorId, Content: nc.content, CreatedAt: nc.createdAt,
+    }))), 'Noticeboard Comments');
+  }
+
+  if (data.birthdayEntries?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.birthdayEntries.map((be: any) => ({
+      ID: be.id, ContestantID: be.contestantId, RecordDayID: be.recordDayId,
+      BirthDate: be.birthDate, Notes: be.notes,
+    }))), 'Birthday Entries');
+  }
+
+  if (data.systemConfig?.length > 0) {
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.json_to_sheet(data.systemConfig.map((sc: any) => ({
+      Key: sc.key, Value: sc.value, UpdatedAt: sc.updatedAt,
+    }))), 'System Config');
+  }
+
   xlsx.writeFile(workbook, filePath);
-}
-
-// Get latest Excel backup file path
-export function getExcelBackupPath(): string | null {
-  const backupFiles = getBackupFiles();
-  if (backupFiles.excel.length === 0) return null;
-  return path.join(BACKUP_DIR, backupFiles.excel[0]);
-}
-
-// Check if Excel backup exists
-export function excelBackupExists(): boolean {
-  const backupFiles = getBackupFiles();
-  return backupFiles.excel.length > 0;
 }

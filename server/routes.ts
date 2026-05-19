@@ -16577,8 +16577,9 @@ Thank you.`;
   app.get("/api/backup/status", async (req, res) => {
     try {
       const { getBackupStatus, getBackupFileInfo } = await import('./backup-scheduler');
+      const workspace = ((req as any).session?.activeWorkspace || 'dond') as 'dond' | 'celeb';
       const status = getBackupStatus();
-      const fileInfo = getBackupFileInfo();
+      const fileInfo = getBackupFileInfo(workspace);
       res.json({ ...status, fileInfo });
     } catch (error: any) {
       console.error("Error getting backup status:", error);
@@ -16586,11 +16587,12 @@ Thank you.`;
     }
   });
 
-  // Trigger manual backup (overwrites automatic backup file)
+  // Trigger manual backup for the active workspace
   app.post("/api/backup/manual", async (req, res) => {
     try {
-      const { performBackup } = await import('./backup-scheduler');
-      const result = await performBackup();
+      const { performBackupForWorkspace } = await import('./backup-scheduler');
+      const workspace = ((req as any).session?.activeWorkspace || 'dond') as 'dond' | 'celeb';
+      const result = await performBackupForWorkspace(workspace);
       if (result.success) {
         res.json({ success: true, message: result.message, path: result.path });
       } else {
@@ -16602,24 +16604,25 @@ Thank you.`;
     }
   });
 
-  // Download the automatic backup file
+  // Download the automatic backup file for the active workspace
   app.get("/api/backup/download", async (req, res) => {
     try {
       const { readBackupFile, getBackupFileInfo } = await import('./backup-scheduler');
-      const fileInfo = getBackupFileInfo();
+      const workspace = ((req as any).session?.activeWorkspace || 'dond') as 'dond' | 'celeb';
+      const fileInfo = getBackupFileInfo(workspace);
       
       if (!fileInfo.exists) {
         return res.status(404).json({ error: "No backup file exists. Run a manual backup first." });
       }
       
-      const content = readBackupFile();
+      const content = readBackupFile(workspace);
       if (!content) {
         return res.status(500).json({ error: "Failed to read backup file" });
       }
       
       const timestamp = new Date().toISOString().split('T')[0];
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="contestant-backup-${timestamp}.json"`);
+      res.setHeader('Content-Disposition', `attachment; filename="contestant-backup-${workspace}-${timestamp}.json"`);
       res.send(content);
     } catch (error: any) {
       console.error("Error downloading backup:", error);
@@ -16627,20 +16630,21 @@ Thank you.`;
     }
   });
 
-  // Download the Excel backup file
+  // Download the Excel backup file for the active workspace
   app.get("/api/backup/download-excel", async (req, res) => {
     try {
       const { getExcelBackupPath, excelBackupExists } = await import('./backup-scheduler');
+      const workspace = ((req as any).session?.activeWorkspace || 'dond') as 'dond' | 'celeb';
       
-      if (!excelBackupExists()) {
+      if (!excelBackupExists(workspace)) {
         return res.status(404).json({ error: "No Excel backup file exists. Run a manual backup first." });
       }
       
-      const filePath = getExcelBackupPath();
+      const filePath = getExcelBackupPath(workspace);
       const timestamp = new Date().toISOString().split('T')[0];
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="contestant-backup-${timestamp}.xlsx"`);
-      res.sendFile(path.resolve(filePath));
+      res.setHeader('Content-Disposition', `attachment; filename="contestant-backup-${workspace}-${timestamp}.xlsx"`);
+      res.sendFile(path.resolve(filePath!));
     } catch (error: any) {
       console.error("Error downloading Excel backup:", error);
       res.status(500).json({ error: error.message });
