@@ -18109,6 +18109,7 @@ Thank you.`;
       const existingPositions = await storage.getPodiumPositions(recordDayId);
       const displaced = existingPositions.find(p => p.position === parseInt(position));
       const result = await storage.upsertPodiumPosition(recordDayId, parseInt(position), contestantId);
+      await storage.upsertPodiumSeatAssignment(recordDayId, parseInt(position), contestantId);
       // Mark the newly placed contestant as assigned
       await storage.updateContestantAvailability(contestantId, 'assigned');
       // If someone else was bumped from this position, revert their status to available
@@ -18129,6 +18130,7 @@ Thank you.`;
       const existingPositions = await storage.getPodiumPositions(recordDayId);
       const toRemove = existingPositions.find(p => p.position === parseInt(position));
       await storage.deletePodiumPosition(recordDayId, parseInt(position));
+      await storage.deletePodiumSeatAssignment(recordDayId, parseInt(position));
       if (toRemove) {
         await storage.updateContestantAvailability(toRemove.contestantId, 'available');
       }

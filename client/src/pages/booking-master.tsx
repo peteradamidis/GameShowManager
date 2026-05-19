@@ -1042,7 +1042,7 @@ export default function BookingMaster() {
         const femalePercent = blockTotal > 0 ? Math.round((blockFemaleCount / blockTotal) * 100) : 0;
         
         exportRows.push([]);
-        const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : `BLOCK ${currentBlock}`;
+        const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : currentBlock === 8 ? 'PODIUM' : `BLOCK ${currentBlock}`;
         const blockHeader = blockTotal > 0 
           ? `${blockLabel} - ${blockTotal} assigned | ${blockFemaleCount}F / ${blockMaleCount}M (${femalePercent}% female)`
           : blockLabel;
@@ -1227,7 +1227,7 @@ export default function BookingMaster() {
             const blockTotal = blockAssignments.length;
             const femalePct = blockTotal > 0 ? Math.round((blockFemale / blockTotal) * 100) : 0;
             exportRows.push([]);
-            const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : `BLOCK ${currentBlock}`;
+            const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : currentBlock === 8 ? 'PODIUM' : `BLOCK ${currentBlock}`;
             exportRows.push([`${blockLabel} - ${blockTotal} assigned | ${blockFemale}F / ${blockMale}M (${femalePct}% female)`]);
             exportRows.push(seriesHeaders);
           }
@@ -1235,6 +1235,8 @@ export default function BookingMaster() {
           const contestant = contestantMap.get(assignment.contestantId);
           const seatId = assignment.blockNumber === 0
             ? `00-${assignment.seatLabel}`
+            : assignment.blockNumber === 8
+            ? assignment.seatLabel
             : `${String(assignment.blockNumber).padStart(2, '0')}-${assignment.seatLabel}`;
 
           let standbySwaps = (assignment as any).standbyReplacementSwaps || "";
@@ -1396,7 +1398,7 @@ export default function BookingMaster() {
               const blockTotal = blockAssignments.length;
               const femalePct = blockTotal > 0 ? Math.round((blockFemale / blockTotal) * 100) : 0;
               exportRows.push([]);
-              const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : `BLOCK ${currentBlock}`;
+              const blockLabel = currentBlock === 0 ? 'TO SEAT ON DAY' : currentBlock === 8 ? 'PODIUM' : `BLOCK ${currentBlock}`;
               exportRows.push([`${blockLabel} - ${blockTotal} assigned | ${blockFemale}F / ${blockMale}M (${femalePct}% female)`]);
               exportRows.push(headers);
             }
@@ -1404,6 +1406,8 @@ export default function BookingMaster() {
             const contestant = contestantMap.get(assignment.contestantId);
             const seatId = assignment.blockNumber === 0
               ? `00-${assignment.seatLabel}`
+              : assignment.blockNumber === 8
+              ? assignment.seatLabel
               : `${String(assignment.blockNumber).padStart(2, '0')}-${assignment.seatLabel}`;
 
             let standbySwaps = (assignment as any).standbyReplacementSwaps || "";
@@ -2141,7 +2145,7 @@ export default function BookingMaster() {
                           <TableCell colSpan={20} className="py-1 h-8">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-sm text-white" data-testid={`block-header-${row.blockNumber}`}>
-                                {row.blockNumber === 0 ? 'TO SEAT ON DAY' : `BLOCK ${row.blockNumber}`}
+                                {row.blockNumber === 0 ? 'TO SEAT ON DAY' : row.blockNumber === 8 ? 'PODIUM' : `BLOCK ${row.blockNumber}`}
                               </span>
                               {blockTotal > 0 && (
                                 <span className="text-xs text-white/80">

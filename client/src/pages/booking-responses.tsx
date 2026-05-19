@@ -1285,6 +1285,7 @@ export default function BookingResponses() {
                   Block {block}
                 </SelectItem>
               ))}
+              <SelectItem value="8">Podium</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1868,7 +1869,7 @@ export default function BookingResponses() {
                       </TableCell>
                       <TableCell className="py-1">
                         <span className="text-xs font-mono">
-                          {item.blockNumber}-{item.seatLabel}
+                          {item.blockNumber === 8 ? item.seatLabel : `${item.blockNumber}-${item.seatLabel}`}
                         </span>
                       </TableCell>
                       <TableCell className="py-1">

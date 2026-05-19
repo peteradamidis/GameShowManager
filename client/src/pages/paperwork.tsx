@@ -1273,6 +1273,10 @@ Deal or No Deal Production Team`);
                             <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
                               To Seat - {item.seatLabel}
                             </Badge>
+                          ) : item.blockNumber === 8 ? (
+                            <Badge className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
+                              Podium - {item.seatLabel}
+                            </Badge>
                           ) : (
                             <Badge className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
                               Block {item.blockNumber} - {item.seatLabel}

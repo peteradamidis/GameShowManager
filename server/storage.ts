@@ -527,6 +527,8 @@ export interface IStorage {
   getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>>;
   upsertPodiumPosition(recordDayId: string, position: number, contestantId: string): Promise<PodiumPosition>;
   deletePodiumPosition(recordDayId: string, position: number): Promise<void>;
+  upsertPodiumSeatAssignment(recordDayId: string, position: number, contestantId: string): Promise<void>;
+  deletePodiumSeatAssignment(recordDayId: string, position: number): Promise<void>;
 }
 
 export interface SystemSetting {
@@ -3999,6 +4001,39 @@ export class DbStorage implements IStorage {
       .where(and(
         eq(podiumPositions.recordDayId, recordDayId),
         eq(podiumPositions.position, position)
+      ));
+  }
+
+  async upsertPodiumSeatAssignment(recordDayId: string, position: number, contestantId: string): Promise<void> {
+    const seatLabel = `P${position}`;
+    await getDb().transaction(async (tx) => {
+      await tx.delete(seatAssignments).where(and(
+        eq(seatAssignments.recordDayId, recordDayId),
+        eq(seatAssignments.contestantId, contestantId),
+        eq(seatAssignments.blockNumber, 8)
+      ));
+      await tx.delete(seatAssignments).where(and(
+        eq(seatAssignments.recordDayId, recordDayId),
+        eq(seatAssignments.blockNumber, 8),
+        eq(seatAssignments.seatLabel, seatLabel)
+      ));
+      await tx.insert(seatAssignments).values({
+        recordDayId,
+        contestantId,
+        blockNumber: 8,
+        seatLabel,
+      });
+    });
+  }
+
+  async deletePodiumSeatAssignment(recordDayId: string, position: number): Promise<void> {
+    const seatLabel = `P${position}`;
+    await getDb()
+      .delete(seatAssignments)
+      .where(and(
+        eq(seatAssignments.recordDayId, recordDayId),
+        eq(seatAssignments.blockNumber, 8),
+        eq(seatAssignments.seatLabel, seatLabel)
       ));
   }
 }
