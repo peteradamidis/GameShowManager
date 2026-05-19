@@ -594,6 +594,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // ── WORKSPACE ROUTES ──────────────────────────────────────────────────────
+  // Get the currently active workspace for this session
+  app.get("/api/workspace", (req: any, res) => {
+    res.json({ workspace: req.session?.activeWorkspace || 'dond' });
+  });
+
+  // Switch the active workspace — resets nothing, just changes the DB schema lens
+  app.post("/api/workspace/switch", requireAuth, (req: any, res) => {
+    const { workspace } = req.body;
+    if (!['dond', 'celeb'].includes(workspace)) {
+      return res.status(400).json({ error: 'Invalid workspace. Must be "dond" or "celeb".' });
+    }
+    req.session.activeWorkspace = workspace;
+    req.session.save((err: any) => {
+      if (err) return res.status(500).json({ error: 'Failed to save session' });
+      res.json({ workspace });
+    });
+  });
+
   // Change password (requires authentication)
   app.post("/api/auth/change-password", requireAuth, async (req, res) => {
     try {

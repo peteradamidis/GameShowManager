@@ -18,7 +18,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
-import { warmupDatabaseConnection, fixPhoneNumbers, fixContestantStatuses } from "./storage";
+import { warmupDatabaseConnection, fixPhoneNumbers, fixContestantStatuses, workspaceStorage } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
 import { getSessionConfig, createDefaultAdmin } from "./auth";
 
@@ -61,6 +61,14 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Session middleware for authentication
 app.use(getSessionConfig());
+
+// Workspace context middleware — runs before every request.
+// Sets the active workspace (dond or celeb) from the session so that all
+// database operations within the request use the correct PostgreSQL schema.
+app.use((req: any, _res: any, next: any) => {
+  const workspace = req.session?.activeWorkspace || 'dond';
+  workspaceStorage.run(workspace, next);
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

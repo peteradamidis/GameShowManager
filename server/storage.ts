@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { AsyncLocalStorage } from "async_hooks";
 import { 
   contestants, 
   groups, 
@@ -132,8 +133,55 @@ if (pool) {
 
 const db = pool ? drizzle(pool) : null;
 
+// ── CELEB WORKSPACE ──────────────────────────────────────────────────────────
+// A separate connection pool that sets search_path = celeb, public so all
+// queries transparently target the celeb schema. The 'public' fallback means
+// the shared `users` table (authentication) is still found even in celeb mode.
+const celebPool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
+      max: 5,
+      ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
+    })
+  : null;
+
+if (celebPool) {
+  // Set search_path immediately upon each new connection
+  celebPool.on('connect', (client: any) => {
+    client.query("SET search_path TO celeb, public");
+  });
+  celebPool.on('error', (err: Error) => {
+    const code = (err as any).code;
+    if (code === '57P01' || code === '57P02' || code === '57P03') {
+      console.warn('[Celeb Pool] Idle client terminated — reconnecting automatically.');
+    } else {
+      console.error('[Celeb Pool] Unexpected client error:', err.message);
+    }
+  });
+}
+
+const dbCeleb = celebPool ? drizzle(celebPool) : null;
+
+// ── WORKSPACE CONTEXT (AsyncLocalStorage) ────────────────────────────────────
+// Tracks the active workspace for the current async request chain.
+// The Express middleware sets this from the session before each request.
+export const workspaceStorage = new AsyncLocalStorage<string>();
+
+export function runWithWorkspace<T>(workspace: string, fn: () => T): T {
+  return workspaceStorage.run(workspace, fn);
+}
+
 // Helper to ensure db is available before operations
 function getDb() {
+  const workspace = workspaceStorage.getStore();
+  if (workspace === 'celeb') {
+    if (!dbCeleb) {
+      throw new Error("Database not configured. Please set the DATABASE_URL environment variable.");
+    }
+    return dbCeleb;
+  }
   if (!db) {
     throw new Error("DATABASE_URL is not configured. Please set the DATABASE_URL environment variable.");
   }
