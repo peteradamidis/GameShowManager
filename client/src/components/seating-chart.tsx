@@ -857,15 +857,6 @@ const SEAT_ROWS = [
   { label: 'A', count: 5 },
 ];
 
-// DOND CELEB: Playing blocks have 26 seats
-// Extra seats are C5, D5, E5 and E6 (no extra row — existing rows extended)
-const SEAT_ROWS_CELEB_PB = [
-  { label: 'E', count: 6 },
-  { label: 'D', count: 5 },
-  { label: 'C', count: 5 },
-  { label: 'B', count: 5 },
-  { label: 'A', count: 5 },
-];
 
 function SeatingBlock({ 
   block, 
@@ -974,7 +965,7 @@ function SeatingBlock({
       <CardHeader className={isPodiumVisualizerMode ? "pb-1 pt-2" : "pb-3"}>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
-          {isPodiumVisualizerMode ? (
+          {isCeleb ? null : isPodiumVisualizerMode ? (
             <Badge 
               variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
               className="text-xs font-medium"
@@ -1406,25 +1397,19 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     });
   }
 
-  // Derive the correct seat rows for each block
-  const getSeatRowsForBlock = (blockNum: number): typeof SEAT_ROWS => {
-    return (isCeleb && blockTypeMap[blockNum] === 'PB') ? SEAT_ROWS_CELEB_PB : SEAT_ROWS;
-  };
+  // All blocks always use the standard 22-seat rows
+  const getSeatRowsForBlock = (_blockNum: number): typeof SEAT_ROWS => SEAT_ROWS;
 
-  // Check if blocks are fully configured
-  const isBlockConfigComplete = blockConfigStatus?.complete ?? false;
+  // In CELEB all blocks are locked as AUDIENCE — config gate is always satisfied
+  // In DOND the config gate applies (5 PB + 2 NPB required)
+  const isBlockConfigComplete = isCeleb ? true : (blockConfigStatus?.complete ?? false);
 
-  // Workspace-aware config requirement label
-  const configRequirementLabel = isCeleb
-    ? '3 Playing Blocks (PB) and 4 Audience Blocks (AUDIENCE)'
-    : '5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB)';
-
-  // Wrap onEmptySeatClick to check block config
+  // Wrap onEmptySeatClick to check block config (DOND only)
   const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
     if (!isBlockConfigComplete) {
       toast({
         title: "Block configuration required",
-        description: `You must configure all 7 blocks (${configRequirementLabel}) before booking seats.`,
+        description: "You must configure all 7 blocks (5 Playing Blocks and 2 Non-Playing Blocks) before booking seats.",
         variant: "destructive",
       });
       return;

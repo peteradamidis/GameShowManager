@@ -5173,6 +5173,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const assignment = await storage.createSeatAssignment(assignmentData);
 
+      // Clean up any standby entry for this contestant — mark it as seated so it
+      // doesn't linger as an orphan and cause stale badge indicators on the contestants page
+      if (standbyAssignment) {
+        await storage.updateStandbyAssignment(standbyAssignment.id, { status: 'seated' });
+      }
+
       // Update contestant status to assigned
       await storage.updateContestantAvailability(contestantId, 'assigned');
 

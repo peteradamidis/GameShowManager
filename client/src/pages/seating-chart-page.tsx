@@ -199,27 +199,14 @@ const SEAT_ROWS = [
   { label: 'A', count: 5 },
 ];
 
-// DOND CELEB: Playing blocks have 26 seats
-// Extra seats are C5, D5, E5 and E6 (no extra row — existing rows extended)
-const SEAT_ROWS_CELEB_PB = [
-  { label: 'E', count: 6 },
-  { label: 'D', count: 5 },
-  { label: 'C', count: 5 },
-  { label: 'B', count: 5 },
-  { label: 'A', count: 5 },
-];
 
 function generateEmptyBlocks(
   recordDayId: string,
-  blockTypeMap?: Record<number, string>,
-  isCeleb?: boolean
 ): SeatData[][] {
   return Array(7).fill(null).map((_, blockIdx) => {
     const seats: SeatData[] = [];
-    const blockNum = blockIdx + 1;
-    const blockType = blockTypeMap?.[blockNum];
-    // CELEB PB blocks use 26-seat rows; everything else uses standard 22-seat rows
-    const seatRows = (isCeleb && blockType === 'PB') ? SEAT_ROWS_CELEB_PB : SEAT_ROWS;
+    // All blocks always use standard 22-seat rows
+    const seatRows = SEAT_ROWS;
     // For blocks 4, 5, 6 (indices 3, 4, 5), seat numbering is reversed (1-5 from right to left)
     const reverseNumbering = blockIdx >= 3 && blockIdx <= 5;
     
@@ -1018,8 +1005,7 @@ export default function SeatingChartPage() {
     return Array(7).fill(null).map((_, blockIdx) => {
       const blockNumber = blockIdx + 1;
       const blockAssignments = assignments.filter((a: any) => a.blockNumber === blockNumber);
-      // CELEB PB blocks hold 26 seats; everything else holds 22
-      const totalSeats = (isCeleb && blockTypePageMap[blockNumber] === 'PB') ? 26 : 22;
+      const totalSeats = 22;
       const filledSeats = blockAssignments.length;
       const confirmedSeats = blockAssignments.filter((a: any) => a.confirmedRsvp).length;
       const missingConfirmation = filledSeats - confirmedSeats;
@@ -1111,8 +1097,8 @@ export default function SeatingChartPage() {
     
     const totalFilled = blockReadiness.reduce((sum, b) => sum + b.filledSeats, 0);
     const totalConfirmed = blockReadiness.reduce((sum, b) => sum + b.confirmedSeats, 0);
-    // CELEB: 3×26 + 4×22 = 166; DOND: 7×22 = 154
-    const totalPossibleSeats = isCeleb ? 166 : 154;
+    // All workspaces: 7 blocks × 22 seats = 154
+    const totalPossibleSeats = 154;
     const isFullyConfirmed = totalConfirmed === totalPossibleSeats;
     
     // Reset celebration state when day is no longer fully confirmed
@@ -1281,7 +1267,7 @@ export default function SeatingChartPage() {
   // Must be called before any conditional returns (React hooks rules)
   const seats: SeatData[][] = useMemo(() => {
     if (!recordDayId) return [];
-    const emptyBlocks = generateEmptyBlocks(recordDayId, blockTypePageMap, isCeleb);
+    const emptyBlocks = generateEmptyBlocks(recordDayId);
     
     // Track which seats are occupied
     const occupiedPositions = new Set<string>();
@@ -4504,7 +4490,7 @@ export default function SeatingChartPage() {
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
                       <SelectItem key={blockNum} value={String(blockNum)} disabled={swapTargetBlock === String(blockNum)}>
-                        Block {blockNum} ({getBlockOccupancy(blockNum)}/{(isCeleb && blockTypePageMap[blockNum] === 'PB') ? 26 : 22})
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -4519,7 +4505,7 @@ export default function SeatingChartPage() {
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
                       <SelectItem key={blockNum} value={String(blockNum)} disabled={swapSourceBlock === String(blockNum)}>
-                        Block {blockNum} ({getBlockOccupancy(blockNum)}/{(isCeleb && blockTypePageMap[blockNum] === 'PB') ? 26 : 22})
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
                       </SelectItem>
                     ))}
                   </SelectContent>
