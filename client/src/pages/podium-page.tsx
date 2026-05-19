@@ -466,9 +466,17 @@ function PodiumPositionCard({
 export default function PodiumPage() {
   const { toast } = useToast();
   const isDark = useIsDarkMode();
-  const [recordDayId, setRecordDayId] = useState<string>("");
+  const [recordDayId, setRecordDayId] = useState<string>(
+    () => sessionStorage.getItem('podium-recordDayId') || ""
+  );
   const [activeTab, setActiveTab] = useState("positions");
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+
+  // Persist selected episode across route navigations
+  useEffect(() => {
+    if (recordDayId) sessionStorage.setItem('podium-recordDayId', recordDayId);
+    else sessionStorage.removeItem('podium-recordDayId');
+  }, [recordDayId]);
 
   // Stories tab search/filter state
   const [storiesSearch, setStoriesSearch] = useState("");
