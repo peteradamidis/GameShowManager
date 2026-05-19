@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,10 +12,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
   X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight,
-  Phone, Mail, ShieldAlert, Heart, Plus,
+  Phone, Mail, ShieldAlert, Heart, Plus, UserPlus, Pencil, AlertTriangle,
 } from "lucide-react";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -107,9 +109,153 @@ type Contestant = {
   auditionRating?: string | null; availabilityStatus?: string | null;
   age?: number | null; attendingWith?: string | null;
   availableForStandby?: boolean | null; podiumStory?: boolean | null;
-  postcode?: string | null;
+  postcode?: string | null; isTemporary?: boolean | null;
+  phone?: string | null; email?: string | null; availabilityNotes?: string | null;
 };
 type PodiumEntry = { id: string; position: number; contestantId: string; contestant: Contestant };
+
+// ─── TempContestantDialog ────────────────────────────────────────────────────
+
+const TempContestantDialog = React.memo(function TempContestantDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  isCreating,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: { name: string; gender: string; age?: string; phone?: string; email?: string; notes?: string }) => Promise<void>;
+  isCreating: boolean;
+}) {
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState<string>("");
+  const [age, setAge] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      setName(""); setGender(""); setAge(""); setPhone(""); setEmail(""); setNotes("");
+    }
+  }, [open]);
+
+  const handleSubmit = async () => {
+    await onSubmit({ name, gender, age, phone, email, notes });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md" data-testid="dialog-new-temp-contestant-podium">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-amber-500" />
+            Add Temporary Contestant
+          </DialogTitle>
+          <DialogDescription>
+            Create a placeholder contestant who hasn't been imported from Cast It Reach yet. They can be updated later after proper audition.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label htmlFor="podium-temp-name">Name <span className="text-destructive">*</span></Label>
+              <Input
+                id="podium-temp-name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Full name"
+                data-testid="input-podium-temp-name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="podium-temp-gender">Gender <span className="text-destructive">*</span></Label>
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger data-testid="select-podium-temp-gender">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="podium-temp-age">Age</Label>
+              <Input
+                id="podium-temp-age"
+                type="number"
+                value={age}
+                onChange={e => setAge(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-podium-temp-age"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="podium-temp-phone">Phone</Label>
+              <Input
+                id="podium-temp-phone"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-podium-temp-phone"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="podium-temp-email">Email</Label>
+              <Input
+                id="podium-temp-email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Optional"
+                data-testid="input-podium-temp-email"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="podium-temp-notes">Notes</Label>
+            <Textarea
+              id="podium-temp-notes"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Any notes about this contestant..."
+              className="h-20 resize-none"
+              data-testid="input-podium-temp-notes"
+            />
+          </div>
+
+          <div className="p-3 rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                This contestant is marked as <strong>temporary</strong> until they complete their audition and are properly imported via Cast It Reach.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isCreating || !name.trim() || !gender}
+            className="bg-amber-600 hover:bg-amber-700"
+            data-testid="button-create-podium-temp-contestant"
+          >
+            {isCreating ? "Creating..." : "Create & Assign to Position"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+});
 
 // ─── PodiumPositionCard ──────────────────────────────────────────────────────
 
@@ -327,6 +473,19 @@ export default function PodiumPage() {
   // Stories tab search/filter state
   const [storiesSearch, setStoriesSearch] = useState("");
   const [storiesRxFilter, setStoriesRxFilter] = useState("all");
+
+  // Temporary contestant dialogs
+  const [tempContestantDialogOpen, setTempContestantDialogOpen] = useState(false);
+  const [isCreatingTempContestant, setIsCreatingTempContestant] = useState(false);
+  const [editTempDialogOpen, setEditTempDialogOpen] = useState(false);
+  const [editingTempContestantId, setEditingTempContestantId] = useState<string | null>(null);
+  const [isUpdatingTempContestant, setIsUpdatingTempContestant] = useState(false);
+  const [editTempName, setEditTempName] = useState("");
+  const [editTempGender, setEditTempGender] = useState("");
+  const [editTempAge, setEditTempAge] = useState("");
+  const [editTempPhone, setEditTempPhone] = useState("");
+  const [editTempEmail, setEditTempEmail] = useState("");
+  const [editTempNotes, setEditTempNotes] = useState("");
 
   const [contestantSearch, setContestantSearch] = useState("");
   const [filterRating, setFilterRating] = useState("all");
@@ -689,8 +848,38 @@ export default function PodiumPage() {
                   <p className="font-medium text-sm truncate">{selectedEntry.contestant.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">{selectedEntry.contestant.gender}</p>
                 </div>
-                <Badge variant="secondary" className="text-xs shrink-0">Position #{selectedEntry.position}</Badge>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {selectedEntry.contestant.isTemporary && (
+                    <Badge className="text-[9px] px-1.5 py-0 h-5 bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700">
+                      TEMP
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="text-xs">Position #{selectedEntry.position}</Badge>
+                </div>
               </div>
+              {selectedEntry.contestant.isTemporary && (
+                <Button
+                  variant="outline"
+                  className="w-full bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700"
+                  onClick={() => {
+                    const c = allContestants.find(con => con.id === selectedEntry.contestant.id);
+                    if (c) {
+                      setEditingTempContestantId(c.id);
+                      setEditTempName(c.name);
+                      setEditTempGender(c.gender);
+                      setEditTempAge(c.age?.toString() || "");
+                      setEditTempPhone(c.phone || "");
+                      setEditTempEmail(c.email || "");
+                      setEditTempNotes(c.availabilityNotes || "");
+                      setEditTempDialogOpen(true);
+                    }
+                  }}
+                  data-testid="button-edit-podium-temp-contestant"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Temporary Contestant
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 className="w-full"
@@ -703,10 +892,21 @@ export default function PodiumPage() {
             </div>
           ) : (
             availableContestants.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="font-medium">No available contestants</p>
-                <p className="text-sm">All contestants are already assigned to podium positions.</p>
+              <div className="text-center py-8 text-muted-foreground space-y-4">
+                <div>
+                  <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p className="font-medium">No available contestants</p>
+                  <p className="text-sm">All contestants are already assigned to podium positions.</p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                  onClick={() => setTempContestantDialogOpen(true)}
+                  data-testid="button-new-podium-temp-contestant"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Create Temporary Contestant
+                </Button>
               </div>
             ) : (
               <>
@@ -902,9 +1102,161 @@ export default function PodiumPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Create temp contestant as an alternative to selecting from the list */}
+                <div className="shrink-0 pt-1 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">Can't find them in the list?</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                    onClick={() => setTempContestantDialogOpen(true)}
+                    data-testid="button-new-podium-temp-contestant"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create Temporary Contestant
+                  </Button>
+                </div>
               </>
             )
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* New Temporary Contestant Dialog */}
+      <TempContestantDialog
+        open={tempContestantDialogOpen}
+        onOpenChange={setTempContestantDialogOpen}
+        isCreating={isCreatingTempContestant}
+        onSubmit={async (data) => {
+          if (!data.name.trim() || !data.gender) {
+            toast({ variant: "destructive", title: "Missing required fields", description: "Name and gender are required." });
+            return;
+          }
+          setIsCreatingTempContestant(true);
+          try {
+            const res = await apiRequest("POST", "/api/contestants/temporary", {
+              name: data.name.trim(),
+              gender: data.gender,
+              age: data.age || undefined,
+              phone: data.phone || undefined,
+              email: data.email || undefined,
+              notes: data.notes || undefined,
+            });
+            const newContestant = await res.json();
+
+            // Assign directly to the selected podium position
+            await apiRequest("PUT", `/api/record-days/${recordDayId}/podium-positions/${selectedPosition}`, {
+              contestantId: newContestant.id,
+            });
+
+            toast({
+              title: "Temporary contestant added",
+              description: `${newContestant.name} has been created and assigned to Position #${selectedPosition}.`,
+            });
+
+            queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+            setTempContestantDialogOpen(false);
+            closeDialog();
+          } catch (error: any) {
+            toast({ variant: "destructive", title: "Failed to create contestant", description: error.message });
+          } finally {
+            setIsCreatingTempContestant(false);
+          }
+        }}
+      />
+
+      {/* Edit Temporary Contestant Dialog */}
+      <Dialog open={editTempDialogOpen} onOpenChange={open => { if (!open) { setEditTempDialogOpen(false); setEditingTempContestantId(null); } }}>
+        <DialogContent className="max-w-md" data-testid="dialog-edit-podium-temp-contestant">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-amber-600" />
+              Edit Temporary Contestant
+            </DialogTitle>
+            <DialogDescription>
+              Update the temporary contestant's information. They remain marked as temporary until properly imported via Cast It Reach.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label>Name <span className="text-destructive">*</span></Label>
+              <Input value={editTempName} onChange={e => setEditTempName(e.target.value)} placeholder="Full name" data-testid="input-edit-podium-temp-name" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Gender <span className="text-destructive">*</span></Label>
+              <Select value={editTempGender} onValueChange={setEditTempGender}>
+                <SelectTrigger data-testid="select-edit-podium-temp-gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Age</Label>
+                <Input value={editTempAge} onChange={e => setEditTempAge(e.target.value)} placeholder="Age" type="number" data-testid="input-edit-podium-temp-age" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Phone</Label>
+                <Input value={editTempPhone} onChange={e => setEditTempPhone(e.target.value)} placeholder="Phone number" data-testid="input-edit-podium-temp-phone" />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Email</Label>
+              <Input value={editTempEmail} onChange={e => setEditTempEmail(e.target.value)} placeholder="Email address" type="email" data-testid="input-edit-podium-temp-email" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Notes</Label>
+              <Textarea value={editTempNotes} onChange={e => setEditTempNotes(e.target.value)} placeholder="Any additional notes..." className="min-h-[60px]" data-testid="textarea-edit-podium-temp-notes" />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditTempDialogOpen(false); setEditingTempContestantId(null); }}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                if (!editTempName.trim() || !editTempGender || !editingTempContestantId) {
+                  toast({ variant: "destructive", title: "Missing required fields", description: "Name and gender are required." });
+                  return;
+                }
+                setIsUpdatingTempContestant(true);
+                try {
+                  await apiRequest("PATCH", `/api/contestants/${editingTempContestantId}`, {
+                    name: editTempName.trim(),
+                    gender: editTempGender,
+                    age: editTempAge ? parseInt(editTempAge) : undefined,
+                    phone: editTempPhone || undefined,
+                    email: editTempEmail || undefined,
+                    notes: editTempNotes || undefined,
+                  });
+                  toast({ title: "Contestant updated", description: `${editTempName.trim()} has been updated.` });
+                  queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+                  setEditTempDialogOpen(false);
+                  setEditingTempContestantId(null);
+                } catch (error: any) {
+                  toast({ variant: "destructive", title: "Failed to update contestant", description: error.message });
+                } finally {
+                  setIsUpdatingTempContestant(false);
+                }
+              }}
+              disabled={isUpdatingTempContestant || !editTempName.trim() || !editTempGender}
+              className="bg-amber-600 hover:bg-amber-700"
+              data-testid="button-save-podium-temp-contestant"
+            >
+              {isUpdatingTempContestant ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
