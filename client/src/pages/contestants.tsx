@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink, Download, Layers } from "lucide-react";
+import { UserPlus, UserMinus, Filter, X, ChevronLeft, ChevronRight, UserCheck, Trash2, Users, AlertTriangle, RefreshCw, Link, Unlink, Download, Layers, ArrowRightLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -1051,6 +1051,26 @@ export default function Contestants() {
     onError: (error: Error) => {
       toast({
         title: "Failed to remove from seat",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Transfer contestant to CELEB workspace mutation
+  const transferToCelebMutation = useMutation({
+    mutationFn: async (contestantId: string) => {
+      return apiRequest('POST', `/api/contestants/${contestantId}/transfer-to-celeb`, {});
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: data.alreadyExisted ? "Profile updated in CELEB" : "Copied to CELEB",
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Transfer failed",
         description: error.message,
         variant: "destructive",
       });
@@ -2132,6 +2152,9 @@ export default function Contestants() {
             }}
             onDeleteContestant={(contestantId) => {
               deleteContestantMutation.mutate(contestantId);
+            }}
+            onTransferToCeleb={(contestantId) => {
+              transferToCelebMutation.mutate(contestantId);
             }}
           />
           

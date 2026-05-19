@@ -520,6 +520,7 @@ export interface IStorage {
   saveRxPlanningBlock(recordDayId: string, blockNumber: number, contestantData: string): Promise<RxPlanningEntry>;
   deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void>;
   clearRxPlanningDay(recordDayId: string): Promise<void>;
+  transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }>;
 }
 
 export interface SystemSetting {
@@ -3835,6 +3836,110 @@ export class DbStorage implements IStorage {
   async clearRxPlanningDay(recordDayId: string): Promise<void> {
     const db = getDb();
     await getDb().delete(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
+  }
+
+  async transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }> {
+    // Read all data from the current workspace (DOND)
+    const contestant = await this.getContestantById(contestantId);
+    if (!contestant) throw new Error('Contestant not found');
+
+    let group: Group | undefined;
+    if (contestant.groupId) {
+      group = await this.getGroupById(contestant.groupId);
+    }
+    const castingCard = await this.getCastingCardByContestantId(contestantId);
+
+    let alreadyExisted = false;
+
+    await runWithWorkspace('celeb', async () => {
+      const celebDb = getDb();
+
+      // 1. Upsert group first (contestants FK → groups)
+      if (group) {
+        const [existingGroup] = await celebDb
+          .select({ id: groups.id })
+          .from(groups)
+          .where(eq(groups.id, group.id))
+          .limit(1);
+
+        if (!existingGroup) {
+          await celebDb.insert(groups).values({
+            id: group.id,
+            referenceNumber: group.referenceNumber,
+            createdAt: group.createdAt,
+          });
+        }
+      }
+
+      // 2. Upsert contestant (reset status to 'available' — no seat exists yet in CELEB)
+      const [existingContestant] = await celebDb
+        .select({ id: contestants.id })
+        .from(contestants)
+        .where(eq(contestants.id, contestantId))
+        .limit(1);
+
+      alreadyExisted = !!existingContestant;
+
+      if (existingContestant) {
+        await celebDb
+          .update(contestants)
+          .set({
+            name: contestant.name,
+            age: contestant.age,
+            gender: contestant.gender,
+            groupId: contestant.groupId,
+            attendingWith: contestant.attendingWith,
+            email: contestant.email,
+            phone: contestant.phone,
+            location: contestant.location,
+            postcode: contestant.postcode,
+            state: contestant.state,
+            medicalInfo: contestant.medicalInfo,
+            mobilityNotes: contestant.mobilityNotes,
+            criminalRecord: contestant.criminalRecord,
+            photoUrl: contestant.photoUrl,
+            auditionRating: contestant.auditionRating,
+            playerType: contestant.playerType,
+            groupSize: contestant.groupSize,
+            podiumStory: contestant.podiumStory,
+            podiumStoryNote: contestant.podiumStoryNote,
+            podiumStoryCaseNumber: contestant.podiumStoryCaseNumber,
+            availableForStandby: contestant.availableForStandby,
+            availabilityNotes: contestant.availabilityNotes,
+            noShowCount: contestant.noShowCount,
+            earlyLeaverCount: contestant.earlyLeaverCount,
+            isTemporary: contestant.isTemporary,
+            isTestSubject: contestant.isTestSubject,
+          })
+          .where(eq(contestants.id, contestantId));
+      } else {
+        await celebDb.insert(contestants).values({
+          ...contestant,
+          availabilityStatus: 'available',
+        });
+      }
+
+      // 3. Upsert casting card
+      if (castingCard) {
+        const [existingCard] = await celebDb
+          .select({ id: castingCards.id })
+          .from(castingCards)
+          .where(eq(castingCards.contestantId, contestantId))
+          .limit(1);
+
+        if (existingCard) {
+          const { id: _id, contestantId: _cid, ...cardUpdateFields } = castingCard;
+          await celebDb
+            .update(castingCards)
+            .set(cardUpdateFields)
+            .where(eq(castingCards.contestantId, contestantId));
+        } else {
+          await celebDb.insert(castingCards).values(castingCard);
+        }
+      }
+    });
+
+    return { alreadyExisted };
   }
 }
 

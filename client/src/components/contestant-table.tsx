@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -90,6 +90,7 @@ interface ContestantTableProps {
   allContestants?: Contestant[];
   onBookWithGroup?: (contestantIds: string[]) => void;
   onDeleteContestant?: (contestantId: string) => void;
+  onTransferToCeleb?: (contestantId: string) => void;
 }
 
 // Docklands, Melbourne coordinates
@@ -963,7 +964,8 @@ export function ContestantTable({
   paperworkStatusMap = new Map(),
   allContestants,
   onBookWithGroup,
-  onDeleteContestant
+  onDeleteContestant,
+  onTransferToCeleb,
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -984,6 +986,7 @@ export function ContestantTable({
   const [groupPreviewOpen, setGroupPreviewOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmContestantId, setDeleteConfirmContestantId] = useState<string | null>(null);
+  const [transferConfirmOpen, setTransferConfirmOpen] = useState(false);
   
   // Sorting state: column name and direction (asc, desc, or null for original order)
   type SortDirection = 'asc' | 'desc' | null;
@@ -1000,6 +1003,11 @@ export function ContestantTable({
   const { data: contestantDetails } = useQuery<Contestant>({
     queryKey: ['/api/contestants', selectedContestantId],
     enabled: !!selectedContestantId && detailDialogOpen,
+  });
+
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
   });
 
   // Find group members for the selected contestant
@@ -1804,15 +1812,28 @@ export function ContestantTable({
                 </DialogDescription>
               </div>
               {contestantDetails && !isEditMode && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditMode(true)}
-                  data-testid="button-edit-contestant"
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
+                <div className="flex items-center gap-2">
+                  {workspaceData?.workspace === 'dond' && onTransferToCeleb && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTransferConfirmOpen(true)}
+                      data-testid="button-transfer-to-celeb"
+                    >
+                      <ArrowRightLeft className="h-4 w-4 mr-1" />
+                      Copy to CELEB
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditMode(true)}
+                    data-testid="button-edit-contestant"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
               )}
             </div>
           </DialogHeader>
@@ -2500,6 +2521,42 @@ export function ContestantTable({
             >
               <AlertTriangle className="h-4 w-4 mr-1" />
               Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer to CELEB Confirmation Dialog */}
+      <Dialog open={transferConfirmOpen} onOpenChange={setTransferConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5" />
+              Copy to CELEB Workspace
+            </DialogTitle>
+            <DialogDescription>
+              This will copy <strong>{contestantDetails?.name}</strong> — including their profile, group, and casting card — into the DOND CELEB workspace. The original record in DOND remains untouched. If they already exist in CELEB, their profile will be updated with the latest DOND data.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setTransferConfirmOpen(false)}
+              data-testid="button-cancel-transfer"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (contestantDetails && onTransferToCeleb) {
+                  onTransferToCeleb(contestantDetails.id);
+                  setTransferConfirmOpen(false);
+                }
+              }}
+              data-testid="button-confirm-transfer"
+            >
+              <ArrowRightLeft className="h-4 w-4 mr-1" />
+              Copy to CELEB
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -3139,6 +3139,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Transfer contestant (and their group + casting card) from DOND into CELEB workspace
+  app.post("/api/contestants/:id/transfer-to-celeb", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const workspace = (req as any).session?.activeWorkspace || 'dond';
+      if (workspace !== 'dond') {
+        return res.status(400).json({ error: "Transfer to CELEB is only available from the DOND workspace" });
+      }
+      const result = await storage.transferContestantToCeleb(id);
+      res.json({
+        message: result.alreadyExisted
+          ? "Contestant profile updated in CELEB workspace"
+          : "Contestant copied to CELEB workspace successfully",
+        alreadyExisted: result.alreadyExisted,
+      });
+    } catch (error: any) {
+      console.error("Transfer to CELEB error:", error);
+      if (error.message === 'Contestant not found') {
+        return res.status(404).json({ error: "Contestant not found" });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Create temporary contestant (on-the-fly booking before proper audition/import)
   app.post("/api/contestants/temporary", requireAuth, async (req, res) => {
     try {
