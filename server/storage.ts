@@ -398,9 +398,9 @@ export interface IStorage {
   // Block Types (PB/NPB)
   getAllBlockTypes(): Promise<BlockType[]>;
   getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]>;
-  upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType>;
-  upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB'}>): Promise<BlockType[]>;
-  isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number}>;
+  upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB' | 'AUDIENCE'): Promise<BlockType>;
+  upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB' | 'AUDIENCE'}>): Promise<BlockType[]>;
+  isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number; audienceCount: number}>;
   
   // Standby Assignments
   createStandbyAssignment(assignment: InsertStandbyAssignment): Promise<StandbyAssignment>;
@@ -2115,7 +2115,7 @@ export class DbStorage implements IStorage {
       .where(eq(blockTypes.recordDayId, recordDayId));
   }
 
-  async upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB'): Promise<BlockType> {
+  async upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB' | 'AUDIENCE'): Promise<BlockType> {
     // Try to update existing record first
     const existing = await db
       .select()
@@ -2145,7 +2145,7 @@ export class DbStorage implements IStorage {
     }
   }
 
-  async upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB'}>): Promise<BlockType[]> {
+  async upsertBlockTypes(recordDayId: string, configs: Array<{blockNumber: number, blockType: 'PB' | 'NPB' | 'AUDIENCE'}>): Promise<BlockType[]> {
     const results: BlockType[] = [];
     for (const config of configs) {
       const result = await this.upsertBlockType(recordDayId, config.blockNumber, config.blockType);
@@ -2154,13 +2154,19 @@ export class DbStorage implements IStorage {
     return results;
   }
 
-  async isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number}> {
+  async isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number; audienceCount: number}> {
     const blockConfigs = await this.getBlockTypesByRecordDay(recordDayId);
     const pbCount = blockConfigs.filter(b => b.blockType === 'PB').length;
     const npbCount = blockConfigs.filter(b => b.blockType === 'NPB').length;
-    // Complete when we have exactly 5 PB and 2 NPB (7 total blocks configured)
-    const complete = pbCount === 5 && npbCount === 2;
-    return { complete, pbCount, npbCount };
+    const audienceCount = blockConfigs.filter(b => (b.blockType as string) === 'AUDIENCE').length;
+    // Workspace-aware completion check:
+    //   DOND:  5 PB + 2 NPB
+    //   CELEB: 3 PB + 4 AUDIENCE
+    const workspace = workspaceStorage.getStore() || 'dond';
+    const complete = workspace === 'celeb'
+      ? pbCount === 3 && audienceCount === 4
+      : pbCount === 5 && npbCount === 2;
+    return { complete, pbCount, npbCount, audienceCount };
   }
 
   // Standby Assignments

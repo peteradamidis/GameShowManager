@@ -857,6 +857,16 @@ const SEAT_ROWS = [
   { label: 'A', count: 5 },
 ];
 
+// DOND CELEB: Playing blocks have 26 seats (adds an F row at the back)
+const SEAT_ROWS_CELEB_PB = [
+  { label: 'F', count: 4 },
+  { label: 'E', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'C', count: 4 },
+  { label: 'B', count: 5 },
+  { label: 'A', count: 5 },
+];
+
 function SeatingBlock({ 
   block, 
   blockIndex, 
@@ -880,6 +890,8 @@ function SeatingBlock({
   onDeleteTestSubject,
   blockType,
   onBlockTypeChange,
+  isCeleb = false,
+  seatRows: activeSeatRows = SEAT_ROWS,
   isPodiumVisualizerMode = false,
   getNeighborsForSeat,
   onLinkWithNeighbor,
@@ -911,8 +923,10 @@ function SeatingBlock({
   onPrizeWinner?: (contestantId: string, contestantName: string, blockNumber: number, seatLabel: string) => void;
   onEditTempContestant?: (contestantId: string) => void;
   onDeleteTestSubject?: (contestantId: string) => void;
-  blockType?: 'PB' | 'NPB';
-  onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB') => void;
+  blockType?: 'PB' | 'NPB' | 'AUDIENCE';
+  onBlockTypeChange?: (blockNumber: number, newType: 'PB' | 'NPB' | 'AUDIENCE') => void;
+  isCeleb?: boolean;
+  seatRows?: typeof SEAT_ROWS;
   isPodiumVisualizerMode?: boolean;
   getNeighborsForSeat?: (blockIndex: number, seatIndex: number) => NeighborSeat[];
   onLinkWithNeighbor?: (contestantId: string, neighborContestantId: string) => void;
@@ -930,21 +944,27 @@ function SeatingBlock({
   // which has visibility across ALL blocks for accurate cross-block detection.
   // The isGroupSeparated flag is already set on each seat before reaching this component.
 
-  // Organize seats by row
+  // Organize seats by row using the provided (or default) seat rows
   let seatIdx = 0;
-  const seatsByRow = SEAT_ROWS.map(row => {
+  const seatsByRow = activeSeatRows.map(row => {
     const rowSeats = block.slice(seatIdx, seatIdx + row.count);
     seatIdx += row.count;
     return { ...row, seats: rowSeats };
   });
 
-  // SEAT_ROWS is in E,D,C,B,A order (top to bottom for blocks 1-3)
-  // For blocks 4-7 (reverseRows=true), flip to A,B,C,D,E (A at top, E at bottom)
+  // activeSeatRows is in E/F,D,C,B,A order (top to bottom for blocks 1-3)
+  // For blocks 4-7 (reverseRows=true), flip to A,B,C,D,E/F (A at top)
   const displayRows = reverseRows ? [...seatsByRow].reverse() : seatsByRow;
+
+  const totalSeatsInBlock = activeSeatRows.reduce((sum, r) => sum + r.count, 0);
 
   const handleBlockTypeToggle = () => {
     if (onBlockTypeChange) {
-      const newType = blockType === 'PB' ? 'NPB' : 'PB';
+      // In CELEB mode: cycle PB ↔ AUDIENCE (no NPB)
+      // In DOND mode:  cycle PB ↔ NPB
+      const newType = isCeleb
+        ? (blockType === 'PB' ? 'AUDIENCE' : 'PB')
+        : (blockType === 'PB' ? 'NPB' : 'PB');
       onBlockTypeChange(blockIndex + 1, newType);
     }
   };
@@ -964,8 +984,8 @@ function SeatingBlock({
           ) : (
             <Button
               size="sm"
-              variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
-              className="h-6 px-2 text-xs font-medium"
+              variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : blockType === 'AUDIENCE' ? 'outline' : 'outline'}
+              className={`h-6 px-2 text-xs font-medium${blockType === 'AUDIENCE' ? ' border-teal-500 text-teal-700 dark:text-teal-400' : ''}`}
               onClick={handleBlockTypeToggle}
               data-testid={`block-type-toggle-${blockIndex}`}
             >
@@ -976,7 +996,7 @@ function SeatingBlock({
         {!isPodiumVisualizerMode && (
           <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
             <div>
-              <span>{stats.total}/22 filled</span>
+              <span>{stats.total}/{totalSeatsInBlock} filled</span>
             </div>
             {stats.total > 0 && (
               <>
@@ -1322,8 +1342,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     queryKey: ['/api/record-days', recordDayId, 'block-types'],
   });
 
-  // Fetch block configuration status (5 PB + 2 NPB required)
-  const { data: blockConfigStatus } = useQuery<{complete: boolean; pbCount: number; npbCount: number}>({
+  // Fetch block configuration status (workspace-aware: 5PB+2NPB for DOND, 3PB+4AUDIENCE for CELEB)
+  const { data: blockConfigStatus } = useQuery<{complete: boolean; pbCount: number; npbCount: number; audienceCount: number}>({
     queryKey: ['/api/record-days', recordDayId, 'block-config-status'],
   });
 
@@ -1371,23 +1391,40 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     },
   });
 
+  // Workspace detection (staleTime=Infinity so it never refetches unnecessarily)
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+  });
+  const isCeleb = workspaceData?.workspace === 'celeb';
+
   // Create a map of block number to block type
-  const blockTypeMap: Record<number, 'PB' | 'NPB'> = {};
+  const blockTypeMap: Record<number, 'PB' | 'NPB' | 'AUDIENCE'> = {};
   if (blockTypesData) {
     blockTypesData.forEach(bt => {
-      blockTypeMap[bt.blockNumber] = bt.blockType as 'PB' | 'NPB';
+      blockTypeMap[bt.blockNumber] = bt.blockType as 'PB' | 'NPB' | 'AUDIENCE';
     });
   }
 
+  // Derive the correct seat rows for each block
+  const getSeatRowsForBlock = (blockNum: number): typeof SEAT_ROWS => {
+    return (isCeleb && blockTypeMap[blockNum] === 'PB') ? SEAT_ROWS_CELEB_PB : SEAT_ROWS;
+  };
+
   // Check if blocks are fully configured
   const isBlockConfigComplete = blockConfigStatus?.complete ?? false;
+
+  // Workspace-aware config requirement label
+  const configRequirementLabel = isCeleb
+    ? '3 Playing Blocks (PB) and 4 Audience Blocks (AUDIENCE)'
+    : '5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB)';
 
   // Wrap onEmptySeatClick to check block config
   const handleEmptySeatClick = (blockNumber: number, seatLabel: string) => {
     if (!isBlockConfigComplete) {
       toast({
         title: "Block configuration required",
-        description: "You must configure all 7 blocks (5 PB + 2 NPB) before booking seats.",
+        description: `You must configure all 7 blocks (${configRequirementLabel}) before booking seats.`,
         variant: "destructive",
       });
       return;
@@ -1397,7 +1434,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
   // Mutation to update block type
   const updateBlockTypeMutation = useMutation({
-    mutationFn: async ({ blockNumber, blockType }: { blockNumber: number; blockType: 'PB' | 'NPB' }) => {
+    mutationFn: async ({ blockNumber, blockType }: { blockNumber: number; blockType: 'PB' | 'NPB' | 'AUDIENCE' }) => {
       const response = await apiRequest(
         'PUT',
         `/api/record-days/${recordDayId}/block-types/${blockNumber}`,
@@ -1524,7 +1561,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     linkContestantsMutation.mutate({ contestantId, neighborContestantId });
   }, [linkContestantsMutation]);
 
-  const handleBlockTypeChange = (blockNumber: number, newType: 'PB' | 'NPB') => {
+  const handleBlockTypeChange = (blockNumber: number, newType: 'PB' | 'NPB' | 'AUDIENCE') => {
     updateBlockTypeMutation.mutate({ blockNumber, blockType: newType });
   };
 
@@ -2145,11 +2182,17 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     Block Configuration Required
                   </h4>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    You must select exactly <strong>5 Playing Blocks (PB)</strong> and <strong>2 Non-Playing Blocks (NPB)</strong> before you can book seats.
+                    {isCeleb
+                      ? <>You must select exactly <strong>3 Playing Blocks (PB)</strong> and <strong>4 Audience Blocks (AUDIENCE)</strong> before you can book seats.</>
+                      : <>You must select exactly <strong>5 Playing Blocks (PB)</strong> and <strong>2 Non-Playing Blocks (NPB)</strong> before you can book seats.</>
+                    }
                   </p>
                   <p className="text-sm text-amber-600 dark:text-amber-400">
-                    Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.npbCount ?? 0} NPB
-                    {(blockConfigStatus?.pbCount ?? 0) + (blockConfigStatus?.npbCount ?? 0) < 7 && (
+                    {isCeleb
+                      ? <>Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.audienceCount ?? 0} AUDIENCE</>
+                      : <>Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.npbCount ?? 0} NPB</>
+                    }
+                    {(blockConfigStatus?.pbCount ?? 0) + ((isCeleb ? (blockConfigStatus?.audienceCount ?? 0) : (blockConfigStatus?.npbCount ?? 0))) < 7 && (
                       <span> — Click the block type badges below to configure each block</span>
                     )}
                   </p>
@@ -2226,6 +2269,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onDeleteTestSubject={onDeleteTestSubject}
                   blockType={blockTypeMap[idx + 1]}
                   onBlockTypeChange={handleBlockTypeChange}
+                  isCeleb={isCeleb}
+                  seatRows={getSeatRowsForBlock(idx + 1)}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
                   getNeighborsForSeat={getNeighborsForSeat}
                   onLinkWithNeighbor={handleLinkWithNeighbor}
@@ -2302,6 +2347,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                     onDeleteTestSubject={onDeleteTestSubject}
                     blockType={blockTypeMap[originalIdx + 1]}
                     onBlockTypeChange={handleBlockTypeChange}
+                    isCeleb={isCeleb}
+                    seatRows={getSeatRowsForBlock(originalIdx + 1)}
                     isPodiumVisualizerMode={isPodiumVisualizerMode}
                     getNeighborsForSeat={getNeighborsForSeat}
                     onLinkWithNeighbor={handleLinkWithNeighbor}
@@ -2350,6 +2397,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onDeleteTestSubject={onDeleteTestSubject}
                   blockType={blockTypeMap[7]}
                   onBlockTypeChange={handleBlockTypeChange}
+                  isCeleb={isCeleb}
+                  seatRows={getSeatRowsForBlock(7)}
                   isPodiumVisualizerMode={isPodiumVisualizerMode}
                   getNeighborsForSeat={getNeighborsForSeat}
                   onLinkWithNeighbor={handleLinkWithNeighbor}

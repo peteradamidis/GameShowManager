@@ -156,6 +156,15 @@ export async function initializeCelebSchema(existingPool?: any) {
 
   const client = await pool.connect();
   try {
+    // 0. Ensure 'AUDIENCE' enum value exists in the global block_type enum
+    //    (Safe to run repeatedly — ADD VALUE IF NOT EXISTS is idempotent)
+    try {
+      await client.query(`ALTER TYPE block_type ADD VALUE IF NOT EXISTS 'AUDIENCE'`);
+    } catch (e: any) {
+      // Ignore "enum doesn't exist yet" during first-ever db:push
+      if (!e.message?.includes('does not exist')) throw e;
+    }
+
     // 1. Create the celeb schema
     await client.query('CREATE SCHEMA IF NOT EXISTS celeb');
 

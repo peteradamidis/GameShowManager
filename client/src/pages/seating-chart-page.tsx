@@ -199,15 +199,32 @@ const SEAT_ROWS = [
   { label: 'A', count: 5 },
 ];
 
-function generateEmptyBlocks(recordDayId: string): SeatData[][] {
+// DOND CELEB: Playing blocks have 26 seats (adds an F row at the back)
+const SEAT_ROWS_CELEB_PB = [
+  { label: 'F', count: 4 },
+  { label: 'E', count: 4 },
+  { label: 'D', count: 4 },
+  { label: 'C', count: 4 },
+  { label: 'B', count: 5 },
+  { label: 'A', count: 5 },
+];
+
+function generateEmptyBlocks(
+  recordDayId: string,
+  blockTypeMap?: Record<number, string>,
+  isCeleb?: boolean
+): SeatData[][] {
   return Array(7).fill(null).map((_, blockIdx) => {
     const seats: SeatData[] = [];
+    const blockNum = blockIdx + 1;
+    const blockType = blockTypeMap?.[blockNum];
+    // CELEB PB blocks use 26-seat rows; everything else uses standard 22-seat rows
+    const seatRows = (isCeleb && blockType === 'PB') ? SEAT_ROWS_CELEB_PB : SEAT_ROWS;
     // For blocks 4, 5, 6 (indices 3, 4, 5), seat numbering is reversed (1-5 from right to left)
     const reverseNumbering = blockIdx >= 3 && blockIdx <= 5;
     
-    SEAT_ROWS.forEach(row => {
+    seatRows.forEach(row => {
       for (let i = 1; i <= row.count; i++) {
-        // For reversed blocks, seat 1 is on the right (visually last), seat 5 is on the left (visually first)
         const seatNumber = reverseNumbering ? (row.count - i + 1) : i;
         seats.push({
           id: `${recordDayId}-block${blockIdx}-${row.label}${seatNumber}`,
@@ -601,6 +618,24 @@ export default function SeatingChartPage() {
     enabled: !!recordDayId,
   });
 
+  // Workspace detection (shared queryKey with SeatingChart — TanStack deduplicates)
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+  });
+  const isCeleb = workspaceData?.workspace === 'celeb';
+
+  // Block type map for this record day (shared queryKey with SeatingChart — TanStack deduplicates)
+  const { data: blockTypesPageData = [] } = useQuery<{ blockNumber: number; blockType: string }[]>({
+    queryKey: ['/api/record-days', recordDayId, 'block-types'],
+    enabled: !!recordDayId,
+  });
+  const blockTypePageMap: Record<number, string> = useMemo(() => {
+    const m: Record<number, string> = {};
+    blockTypesPageData.forEach(bt => { m[bt.blockNumber] = bt.blockType; });
+    return m;
+  }, [blockTypesPageData]);
+
   // Fetch returning contestants data
   const { data: returningContestantsMap = {} } = useQuery<Record<string, Array<{ recordDayId: string; date: string; label: string; type: string; blockType?: string }>>>({
     queryKey: ['/api/returning-contestants'],
@@ -980,12 +1015,11 @@ export default function SeatingChartPage() {
   const blockReadiness = useMemo(() => {
     if (!assignments || !Array.isArray(assignments)) return [];
     
-    const TOTAL_SEATS_PER_BLOCK = 22; // 5+5+4+4+4 = 22 seats per block
-    
     return Array(7).fill(null).map((_, blockIdx) => {
       const blockNumber = blockIdx + 1;
       const blockAssignments = assignments.filter((a: any) => a.blockNumber === blockNumber);
-      const totalSeats = TOTAL_SEATS_PER_BLOCK;
+      // CELEB PB blocks hold 26 seats; everything else holds 22
+      const totalSeats = (isCeleb && blockTypePageMap[blockNumber] === 'PB') ? 26 : 22;
       const filledSeats = blockAssignments.length;
       const confirmedSeats = blockAssignments.filter((a: any) => a.confirmedRsvp).length;
       const missingConfirmation = filledSeats - confirmedSeats;
@@ -1077,11 +1111,12 @@ export default function SeatingChartPage() {
     
     const totalFilled = blockReadiness.reduce((sum, b) => sum + b.filledSeats, 0);
     const totalConfirmed = blockReadiness.reduce((sum, b) => sum + b.confirmedSeats, 0);
-    const isFullyConfirmed = totalConfirmed === 154;
+    // CELEB: 3×26 + 4×22 = 166; DOND: 7×22 = 154
+    const totalPossibleSeats = isCeleb ? 166 : 154;
+    const isFullyConfirmed = totalConfirmed === totalPossibleSeats;
     
     // Reset celebration state when day is no longer fully confirmed
-    // This allows confetti to trigger again when day becomes fully confirmed after a removal
-    if (hasCelebratedRef.current === recordDayId && totalConfirmed < 154) {
+    if (hasCelebratedRef.current === recordDayId && totalConfirmed < totalPossibleSeats) {
       hasCelebratedRef.current = null;
     }
     
@@ -1246,7 +1281,7 @@ export default function SeatingChartPage() {
   // Must be called before any conditional returns (React hooks rules)
   const seats: SeatData[][] = useMemo(() => {
     if (!recordDayId) return [];
-    const emptyBlocks = generateEmptyBlocks(recordDayId);
+    const emptyBlocks = generateEmptyBlocks(recordDayId, blockTypePageMap, isCeleb);
     
     // Track which seats are occupied
     const occupiedPositions = new Set<string>();
@@ -4469,7 +4504,7 @@ export default function SeatingChartPage() {
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
                       <SelectItem key={blockNum} value={String(blockNum)} disabled={swapTargetBlock === String(blockNum)}>
-                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/{(isCeleb && blockTypePageMap[blockNum] === 'PB') ? 26 : 22})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -4484,7 +4519,7 @@ export default function SeatingChartPage() {
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
                       <SelectItem key={blockNum} value={String(blockNum)} disabled={swapSourceBlock === String(blockNum)}>
-                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/{(isCeleb && blockTypePageMap[blockNum] === 'PB') ? 26 : 22})
                       </SelectItem>
                     ))}
                   </SelectContent>
