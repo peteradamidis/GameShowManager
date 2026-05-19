@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SeatCard, SeatData } from "@/components/seat-card";
 import { useToast } from "@/hooks/use-toast";
 import {
   X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight,
@@ -124,7 +126,6 @@ function PodiumPositionCard({
   const isDark = useIsDarkMode();
   const ratingColors = isDark ? ratingColorsDark : ratingColorsLight;
 
-  // Fetch full contestant details on hover (same pattern as SeatCard)
   const { data: details } = useQuery({
     queryKey: ['/api/contestants', entry?.contestantId],
     queryFn: async () => {
@@ -155,26 +156,19 @@ function PodiumPositionCard({
       data-testid={`podium-position-${pos}`}
     >
       {isEmpty ? (
-        /* ── empty state ── */
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-1">
           <User className="h-3 w-3" />
           <span className="text-[10px] font-mono">#{pos}</span>
         </div>
       ) : (
-        /* ── occupied state (mirrors SeatCard body exactly) ── */
         <div className="space-y-1 overflow-hidden">
-          {/* position label row */}
           <div className="flex items-center gap-1 text-[10px] font-mono opacity-70">
             <span>#{pos}</span>
           </div>
-
-          {/* name + icon row */}
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
             <p className="font-medium text-xs truncate min-w-0 max-w-[80px]" title={entry.contestant.name}>
               {entry.contestant.name}
             </p>
-
-            {/* Podium story icon */}
             {entry.contestant.podiumStory && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -182,42 +176,26 @@ function PodiumPositionCard({
                     PS
                   </span>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Has podium story</p>
-                </TooltipContent>
+                <TooltipContent side="top" className="text-xs"><p>Has podium story</p></TooltipContent>
               </Tooltip>
             )}
-
-            {/* Medical/mobility icon (loaded once details arrive) */}
             {details && (hasMeaningfulMedicalNote(details.mobilityNotes) || hasMeaningfulMedicalNote(details.medicalInfo)) && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div>
-                    <Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} />
-                  </div>
+                  <div><Plus className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" style={{ strokeWidth: 3 }} /></div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Has mobility/medical notes</p>
-                </TooltipContent>
+                <TooltipContent side="top" className="text-xs"><p>Has mobility/medical notes</p></TooltipContent>
               </Tooltip>
             )}
-
-            {/* Criminal record icon */}
             {details && hasMeaningfulMedicalNote(details.criminalRecord) && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div>
-                    <ShieldAlert className="h-3 w-3 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-                  </div>
+                  <div><ShieldAlert className="h-3 w-3 text-orange-600 dark:text-orange-400 flex-shrink-0" /></div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  <p>Has criminal record notes</p>
-                </TooltipContent>
+                <TooltipContent side="top" className="text-xs"><p>Has criminal record notes</p></TooltipContent>
               </Tooltip>
             )}
           </div>
-
-          {/* age / gender row */}
           <div className="flex items-center gap-2 opacity-70 text-[10px]">
             <span>{entry.contestant.age}</span>
             <span>•</span>
@@ -228,49 +206,35 @@ function PodiumPositionCard({
     </Card>
   );
 
-  // Wrap occupied positions with HoverCard (mirrors SeatCard)
   if (!isEmpty) {
     return (
       <HoverCard openDelay={200} closeDelay={100}>
-        <HoverCardTrigger asChild>
-          {cardContent}
-        </HoverCardTrigger>
+        <HoverCardTrigger asChild>{cardContent}</HoverCardTrigger>
         <HoverCardContent
           className="w-80 z-[100] max-h-[80vh] overflow-y-auto"
-          side="bottom"
-          align="center"
-          sideOffset={8}
-          avoidCollisions
-          collisionPadding={{ top: 150, bottom: 50, left: 20, right: 20 }}
+          side="bottom" align="center" sideOffset={8}
+          avoidCollisions collisionPadding={{ top: 150, bottom: 50, left: 20, right: 20 }}
           sticky="partial"
           data-testid={`hovercard-podium-${pos}`}
         >
           <div className="space-y-3">
             {details ? (
               <>
-                {/* Header: avatar + name + rating + age */}
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
-                    {details.photoUrl ? (
-                      <AvatarImage src={details.photoUrl} alt={details.name} className="object-cover" />
-                    ) : null}
-                    <AvatarFallback>
-                      {details.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
+                    {details.photoUrl ? <AvatarImage src={details.photoUrl} alt={details.name} className="object-cover" /> : null}
+                    <AvatarFallback>{details.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1 flex-wrap">
                         <h4 className="text-sm font-semibold">{details.name}</h4>
                         {details.availableForStandby && (
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-700">
-                            S
-                          </Badge>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-700">S</Badge>
                         )}
                         {details.podiumStory && (
                           <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800">
-                            <Heart className="h-2.5 w-2.5 mr-0.5" />
-                            Story
+                            <Heart className="h-2.5 w-2.5 mr-0.5" />Story
                           </Badge>
                         )}
                       </div>
@@ -282,100 +246,53 @@ function PodiumPositionCard({
                           details.auditionRating === 'B'  ? 'text-orange-600 dark:text-orange-400' :
                           details.auditionRating === 'C'  ? 'text-red-500 dark:text-red-400' :
                           details.auditionRating === 'P'  ? 'text-cyan-600 dark:text-cyan-400' : ''
-                        }`}>
-                          {details.auditionRating}
-                        </span>
+                        }`}>{details.auditionRating}</span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">{details.age} years old • {details.gender}</p>
-                    {details.phone && (
-                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{details.phone}</p>
-                    )}
-                    {details.location && (
-                      <p className="text-xs text-muted-foreground">{details.location}</p>
-                    )}
+                    {details.phone && <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{details.phone}</p>}
+                    {details.location && <p className="text-xs text-muted-foreground">{details.location}</p>}
                   </div>
                 </div>
-
-                {/* Phone */}
-                {details.phone && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <Phone className="h-3 w-3 text-muted-foreground" />
-                    <span>{details.phone}</span>
-                  </div>
-                )}
-
-                {/* Email */}
-                {details.email && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <Mail className="h-3 w-3 text-muted-foreground" />
-                    <span className="truncate">{details.email}</span>
-                  </div>
-                )}
-
-                {/* Attending With */}
+                {details.phone && <div className="flex items-center gap-2 text-xs"><Phone className="h-3 w-3 text-muted-foreground" /><span>{details.phone}</span></div>}
+                {details.email && <div className="flex items-center gap-2 text-xs"><Mail className="h-3 w-3 text-muted-foreground" /><span className="truncate">{details.email}</span></div>}
                 {details.attendingWith && (
                   <div className="text-sm">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      Attending With
-                    </label>
+                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" />Attending With</label>
                     <p className="text-xs mt-0.5">{details.attendingWith}</p>
                   </div>
                 )}
-
-                {/* Availability Notes */}
                 {details.availabilityNotes && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
                     <p className="text-xs mt-0.5">{details.availabilityNotes}</p>
                   </div>
                 )}
-
-                {/* Medical Info */}
                 {hasMeaningfulMedicalNote(details.medicalInfo) && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Medical Info</label>
                     <p className="text-xs mt-0.5">{details.medicalInfo}</p>
                   </div>
                 )}
-
-                {/* Mobility/Access Notes */}
                 {hasMeaningfulMedicalNote(details.mobilityNotes) && (
                   <div className="text-sm p-2 bg-amber-50 dark:bg-amber-950/50 rounded-md border border-amber-200 dark:border-amber-800">
-                    <label className="text-xs font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1">
-                      <ShieldAlert className="h-3 w-3" />
-                      Mobility/Access Notes
-                    </label>
+                    <label className="text-xs font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1"><ShieldAlert className="h-3 w-3" />Mobility/Access Notes</label>
                     <p className="text-xs mt-0.5">{details.mobilityNotes}</p>
                   </div>
                 )}
-
-                {/* Criminal Record */}
                 {hasMeaningfulMedicalNote(details.criminalRecord) && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Criminal Record</label>
                     <p className="text-xs mt-0.5">{details.criminalRecord}</p>
                   </div>
                 )}
-
-                {/* Status */}
                 <div className="text-sm">
                   <label className="text-xs font-medium text-muted-foreground">Status</label>
-                  <div className="mt-1">
-                    <Badge variant="secondary">
-                      {details.availabilityStatus || 'Available'}
-                    </Badge>
-                  </div>
+                  <div className="mt-1"><Badge variant="secondary">{details.availabilityStatus || 'Available'}</Badge></div>
                 </div>
-
-                {/* Position label */}
-                <div className="pt-1 border-t text-xs text-muted-foreground">
-                  Podium Position #{pos}
-                </div>
+                <div className="pt-1 border-t text-xs text-muted-foreground">Podium Position #{pos}</div>
               </>
             ) : (
-              /* Loading skeleton while details fetch */
               <div className="space-y-2 animate-pulse">
                 <div className="flex gap-3">
                   <div className="h-12 w-12 rounded-full bg-muted" />
@@ -402,6 +319,7 @@ function PodiumPositionCard({
 export default function PodiumPage() {
   const { toast } = useToast();
   const [recordDayId, setRecordDayId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("positions");
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
 
   const [contestantSearch, setContestantSearch] = useState("");
@@ -421,10 +339,71 @@ export default function PodiumPage() {
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({ queryKey: ["/api/record-days"] });
   const { data: allContestants = [] } = useQuery<Contestant[]>({ queryKey: ["/api/contestants"] });
+
   const { data: podiumData = [], isLoading: podiumLoading } = useQuery<PodiumEntry[]>({
     queryKey: ["/api/record-days", recordDayId, "podium-positions"],
     enabled: !!recordDayId,
   });
+
+  // Seat assignments for the selected record day — used by the Stories tab
+  const { data: assignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments', recordDayId],
+    queryFn: async () => {
+      if (!recordDayId) return [];
+      const r = await fetch(`/api/seat-assignments/${recordDayId}`, { credentials: 'include' });
+      if (!r.ok) throw new Error('Failed to fetch seat assignments');
+      return r.json();
+    },
+    enabled: !!recordDayId,
+  });
+
+  // Contestants with podiumStory=true for this record day, as SeatData objects
+  const storySeats: SeatData[] = useMemo(() => {
+    return assignments
+      .filter((a: any) => a.podiumStory && a.blockNumber > 0)
+      .sort((a: any, b: any) => {
+        if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
+        return (a.seatLabel || '').localeCompare(b.seatLabel || '', undefined, { numeric: true });
+      })
+      .map((a: any): SeatData => ({
+        id: `${recordDayId}-block${a.blockNumber - 1}-${a.seatLabel}`,
+        contestantName: a.contestantName,
+        age: a.age,
+        gender: a.gender,
+        groupId: a.groupId,
+        assignmentId: a.id,
+        contestantId: a.contestantId,
+        auditionRating: a.auditionRating,
+        playerType: a.playerType,
+        attendingWith: a.attendingWith,
+        originalBlockNumber: a.originalBlockNumber,
+        originalSeatLabel: a.originalSeatLabel,
+        swappedAt: a.swappedAt,
+        rxNumber: a.rxNumber,
+        caseNumber: a.caseNumber,
+        winningMoneyRole: a.winningMoneyRole,
+        winningMoneyAmount: a.winningMoneyAmount,
+        mobilityNotes: a.mobilityNotes,
+        medicalInfo: a.medicalInfo,
+        wasStandby: a.wasStandby,
+        isFromReschedule: a.isFromReschedule,
+        photoUrl: a.photoUrl,
+        contestantLocation: a.contestantLocation,
+        criminalRecord: a.criminalRecord,
+        isTemporary: a.isTemporary,
+        isTestSubject: a.isTestSubject,
+        notes: a.notes,
+        attendingWithOverride: a.attendingWithOverride,
+        mobilityNotesOverride: a.mobilityNotesOverride,
+        podiumStory: a.podiumStory,
+        availabilityStatus: a.availabilityStatus,
+        signedIn: a.signedIn,
+        bookingEmailSent: a.bookingEmailSent,
+        confirmedRsvp: a.confirmedRsvp || a.status === 'confirmed',
+        isReturning: !!a.isReturning,
+        returningInfo: a.returningInfo,
+      }));
+  }, [assignments, recordDayId]);
 
   const positionMap = useMemo(() => {
     const map: Record<number, PodiumEntry> = {};
@@ -549,6 +528,12 @@ export default function PodiumPage() {
               {filledCount}/26 assigned
             </Badge>
           )}
+          {recordDayId && storySeats.length > 0 && (
+            <Badge variant="outline" className="text-xs bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800">
+              <Heart className="h-3 w-3 mr-1" />
+              {storySeats.length} {storySeats.length === 1 ? 'story' : 'stories'}
+            </Badge>
+          )}
         </div>
         <Select value={recordDayId} onValueChange={setRecordDayId}>
           <SelectTrigger className="w-64" data-testid="select-record-day">
@@ -570,32 +555,81 @@ export default function PodiumPage() {
       </div>
 
       {/* Main area */}
-      <div className="flex-1 overflow-auto p-5">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {!recordDayId ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+          <div className="flex flex-col items-center justify-center flex-1 text-muted-foreground gap-2">
             <p className="text-base">Select a record day to manage podium positions</p>
           </div>
         ) : (
-          <div className="space-y-6 max-w-3xl mx-auto">
-            {ROWS.map(row => (
-              <div key={row.key}>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  {row.label} — {row.positions.filter(p => positionMap[p]).length}/{row.count} filled
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {row.positions.map(pos => (
-                    <div key={pos} className="min-w-[72px] flex-1">
-                      <PodiumPositionCard
-                        pos={pos}
-                        entry={positionMap[pos]}
-                        onClick={() => openPosition(pos)}
-                      />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+            <div className="px-5 pt-3 shrink-0">
+              <TabsList>
+                <TabsTrigger value="positions" data-testid="tab-positions">Positions</TabsTrigger>
+                <TabsTrigger value="stories" data-testid="tab-stories">
+                  Podium Stories
+                  {storySeats.length > 0 && (
+                    <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-pink-500 text-white">
+                      {storySeats.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            {/* ── Positions tab ── */}
+            <TabsContent value="positions" className="flex-1 overflow-auto p-5 mt-0">
+              <div className="space-y-6 max-w-3xl mx-auto">
+                {ROWS.map(row => (
+                  <div key={row.key}>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                      {row.label} — {row.positions.filter(p => positionMap[p]).length}/{row.count} filled
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {row.positions.map(pos => (
+                        <div key={pos} className="min-w-[72px] flex-1">
+                          <PodiumPositionCard
+                            pos={pos}
+                            entry={positionMap[pos]}
+                            onClick={() => openPosition(pos)}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </TabsContent>
+
+            {/* ── Stories tab ── */}
+            <TabsContent value="stories" className="flex-1 overflow-auto p-5 mt-0">
+              {storySeats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                  <Heart className="h-10 w-10 opacity-20" />
+                  <p className="font-medium">No podium stories tagged</p>
+                  <p className="text-sm">Tag contestants as Podium Story from the seating chart to see them here.</p>
+                </div>
+              ) : (
+                <div className="max-w-4xl mx-auto">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    {storySeats.length} contestant{storySeats.length !== 1 ? 's' : ''} tagged for podium story
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {storySeats.map((seat, i) => (
+                      <div key={seat.id} className="w-[100px]">
+                        <SeatCard
+                          seat={seat}
+                          blockIndex={seat.id.match(/block(\d+)/)?.[1] ? parseInt(seat.id.match(/block(\d+)/)![1]) : 0}
+                          seatIndex={i}
+                          isRXDayLocked={false}
+                          isGlobalDragging={false}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
@@ -619,7 +653,6 @@ export default function PodiumPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Occupied: show remove option */}
           {selectedEntry ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 rounded-md bg-muted">
@@ -656,7 +689,6 @@ export default function PodiumPage() {
               </div>
             ) : (
               <>
-                {/* Search and Filters */}
                 <div className="space-y-2 shrink-0">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -674,9 +706,7 @@ export default function PodiumPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[10px] font-medium">Rating</span>
                       <Select value={filterRating} onValueChange={v => { setFilterRating(v); setContestantPage(1); }}>
-                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-rating">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-rating"><SelectValue placeholder="All" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="A+">A+</SelectItem>
@@ -692,9 +722,7 @@ export default function PodiumPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[10px] font-medium">Gender</span>
                       <Select value={filterGender} onValueChange={v => { setFilterGender(v); setContestantPage(1); }}>
-                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-gender">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-gender"><SelectValue placeholder="All" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="Female">Female</SelectItem>
@@ -706,9 +734,7 @@ export default function PodiumPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[10px] font-medium">Group Size</span>
                       <Select value={filterGroupSize} onValueChange={v => { setFilterGroupSize(v); setContestantPage(1); }}>
-                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-group-size">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-group-size"><SelectValue placeholder="All" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="1">Solo</SelectItem>
@@ -721,9 +747,7 @@ export default function PodiumPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[10px] font-medium">Age</span>
                       <Select value={filterAge} onValueChange={v => { setFilterAge(v); setContestantPage(1); }}>
-                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-age">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-age"><SelectValue placeholder="All" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="18-29">18-29</SelectItem>
@@ -738,9 +762,7 @@ export default function PodiumPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[10px] font-medium">Status</span>
                       <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setContestantPage(1); }}>
-                        <SelectTrigger className="h-7 w-[90px] text-xs" data-testid="select-filter-status">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-7 w-[90px] text-xs" data-testid="select-filter-status"><SelectValue placeholder="All" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="available">Available</SelectItem>
@@ -756,9 +778,7 @@ export default function PodiumPage() {
                     <div className="flex flex-col gap-1">
                       <span className="text-muted-foreground text-[10px] font-medium">Standby</span>
                       <Select value={filterStandby} onValueChange={v => { setFilterStandby(v); setContestantPage(1); }}>
-                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-standby">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-standby"><SelectValue placeholder="All" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="available">Yes</SelectItem>
@@ -775,53 +795,34 @@ export default function PodiumPage() {
                   </div>
                 </div>
 
-                {/* Contestant List */}
                 <ScrollArea className="h-[400px] border rounded-md bg-muted/20">
                   <div className="p-2 space-y-1">
                     {paginatedContestants.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-6">
-                        No contestants match your filters.
-                      </p>
+                      <p className="text-sm text-muted-foreground text-center py-6">No contestants match your filters.</p>
                     ) : paginatedContestants.map((c: any) => {
                       const isSelected = selectedContestant === c.id;
                       const hasGroup = !!c.attendingWith;
                       const isAvailableForStandby = !!c.availableForStandby;
-
                       return (
                         <div
                           key={c.id}
                           onClick={() => setSelectedContestant(isSelected ? "" : c.id)}
                           className={`grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
-                            isSelected
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "hover:bg-muted"
+                            isSelected ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted"
                           }`}
                           data-testid={`contestant-card-${c.id}`}
                         >
-                          {/* Photo */}
                           <Avatar className="h-9 w-9 border border-border">
-                            {c.photoUrl ? (
-                              <AvatarImage src={c.photoUrl} alt={c.name} className="object-cover" />
-                            ) : null}
-                            <AvatarFallback className="text-xs bg-muted">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                            </AvatarFallback>
+                            {c.photoUrl ? <AvatarImage src={c.photoUrl} alt={c.name} className="object-cover" /> : null}
+                            <AvatarFallback className="text-xs bg-muted"><User className="h-4 w-4 text-muted-foreground" /></AvatarFallback>
                           </Avatar>
-
-                          {/* Info */}
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-sm truncate">{c.name}</span>
                               {isAvailableForStandby && (
-                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
-                                  isSelected
-                                    ? "bg-primary-foreground/20 text-primary-foreground"
-                                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                                }`}>S</span>
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"}`}>S</span>
                               )}
-                              {hasGroup && (
-                                <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? "text-primary-foreground/70" : "text-blue-500"}`} />
-                              )}
+                              {hasGroup && <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? "text-primary-foreground/70" : "text-blue-500"}`} />}
                               {isSelected && <Check className="h-4 w-4 flex-shrink-0" />}
                             </div>
                             <div className={`text-xs truncate ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
@@ -830,30 +831,14 @@ export default function PodiumPage() {
                               {hasGroup && ` | ${c.attendingWith}`}
                             </div>
                           </div>
-
-                          {/* Status badge */}
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            isSelected
-                              ? "bg-primary-foreground/20 text-primary-foreground"
-                              : STATUS_COLORS[c.availabilityStatus] || "bg-gray-100 text-gray-600"
-                          }`}>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${isSelected ? "bg-primary-foreground/20 text-primary-foreground" : STATUS_COLORS[c.availabilityStatus] || "bg-gray-100 text-gray-600"}`}>
                             {STATUS_LABELS[c.availabilityStatus] || c.availabilityStatus || "?"}
                           </span>
-
-                          {/* Rating circle */}
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                            c.auditionRating
-                              ? RATING_COLORS[c.auditionRating] || "bg-gray-500 text-white"
-                              : "bg-muted text-muted-foreground"
-                          }`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${c.auditionRating ? RATING_COLORS[c.auditionRating] || "bg-gray-500 text-white" : "bg-muted text-muted-foreground"}`}>
                             {c.auditionRating || "?"}
                           </div>
-
-                          {/* View button */}
                           <Button
-                            size="icon"
-                            variant={isSelected ? "secondary" : "outline"}
-                            className="h-7 w-7"
+                            size="icon" variant={isSelected ? "secondary" : "outline"} className="h-7 w-7"
                             onClick={e => { e.stopPropagation(); setViewContestantId(c.id); }}
                             data-testid={`button-view-contestant-${c.id}`}
                           >
@@ -865,42 +850,26 @@ export default function PodiumPage() {
                   </div>
                 </ScrollArea>
 
-                {/* Pagination */}
                 {filteredContestants.length > CONTESTANTS_PER_PAGE && (
                   <div className="flex items-center justify-between gap-2 pt-1 border-t shrink-0">
-                    <span className="text-xs text-muted-foreground" data-testid="text-contestant-pagination">
-                      Page {contestantPage} of {totalPages}
-                    </span>
+                    <span className="text-xs text-muted-foreground" data-testid="text-contestant-pagination">Page {contestantPage} of {totalPages}</span>
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline" size="sm"
-                        onClick={() => setContestantPage(p => Math.max(1, p - 1))}
-                        disabled={contestantPage <= 1}
-                        data-testid="button-prev-page"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setContestantPage(p => Math.max(1, p - 1))} disabled={contestantPage <= 1} data-testid="button-prev-page">
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline" size="sm"
-                        onClick={() => setContestantPage(p => Math.min(totalPages, p + 1))}
-                        disabled={contestantPage >= totalPages}
-                        data-testid="button-next-page"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setContestantPage(p => Math.min(totalPages, p + 1))} disabled={contestantPage >= totalPages} data-testid="button-next-page">
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 )}
 
-                {/* Confirm Assign */}
                 {selectedContestant && (
                   <div className="border rounded-md p-3 bg-card shrink-0">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-medium">Selected:</p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {allContestants.find(c => c.id === selectedContestant)?.name}
-                        </p>
+                        <p className="text-sm text-muted-foreground truncate">{allContestants.find(c => c.id === selectedContestant)?.name}</p>
                       </div>
                       <Button
                         onClick={() => assignMutation.mutate({ position: selectedPosition!, contestantId: selectedContestant })}
@@ -928,12 +897,8 @@ export default function PodiumPage() {
             </DialogHeader>
             <div className="flex items-start gap-4">
               <Avatar className="h-16 w-16 border border-border shrink-0">
-                {viewedContestant.photoUrl ? (
-                  <AvatarImage src={viewedContestant.photoUrl} alt={viewedContestant.name} className="object-cover" />
-                ) : null}
-                <AvatarFallback>
-                  <User className="h-6 w-6 text-muted-foreground" />
-                </AvatarFallback>
+                {viewedContestant.photoUrl ? <AvatarImage src={viewedContestant.photoUrl} alt={viewedContestant.name} className="object-cover" /> : null}
+                <AvatarFallback><User className="h-6 w-6 text-muted-foreground" /></AvatarFallback>
               </Avatar>
               <div className="space-y-1 text-sm">
                 <p><span className="text-muted-foreground">Gender: </span>{viewedContestant.gender}</p>
