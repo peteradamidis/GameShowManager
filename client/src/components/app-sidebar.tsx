@@ -60,6 +60,11 @@ const menuItems = [
     icon: Star,
   },
   {
+    title: "Podium Stories",
+    url: "/podium-stories",
+    icon: Mic2,
+  },
+  {
     title: "Standbys",
     url: "/standbys",
     icon: UserCheck,
@@ -83,11 +88,6 @@ const menuItems = [
     title: "Winners",
     url: "/winners",
     icon: Trophy,
-  },
-  {
-    title: "Podium Stories",
-    url: "/podium-stories",
-    icon: Mic2,
   },
   {
     title: "Attendance Issues",
