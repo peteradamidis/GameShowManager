@@ -3878,46 +3878,14 @@ export class DbStorage implements IStorage {
         .where(eq(contestants.id, contestantId))
         .limit(1);
 
-      alreadyExisted = !!existingContestant;
-
       if (existingContestant) {
-        await celebDb
-          .update(contestants)
-          .set({
-            name: contestant.name,
-            age: contestant.age,
-            gender: contestant.gender,
-            groupId: contestant.groupId,
-            attendingWith: contestant.attendingWith,
-            email: contestant.email,
-            phone: contestant.phone,
-            location: contestant.location,
-            postcode: contestant.postcode,
-            state: contestant.state,
-            medicalInfo: contestant.medicalInfo,
-            mobilityNotes: contestant.mobilityNotes,
-            criminalRecord: contestant.criminalRecord,
-            photoUrl: contestant.photoUrl,
-            auditionRating: contestant.auditionRating,
-            playerType: contestant.playerType,
-            groupSize: contestant.groupSize,
-            podiumStory: contestant.podiumStory,
-            podiumStoryNote: contestant.podiumStoryNote,
-            podiumStoryCaseNumber: contestant.podiumStoryCaseNumber,
-            availableForStandby: contestant.availableForStandby,
-            availabilityNotes: contestant.availabilityNotes,
-            noShowCount: contestant.noShowCount,
-            earlyLeaverCount: contestant.earlyLeaverCount,
-            isTemporary: contestant.isTemporary,
-            isTestSubject: contestant.isTestSubject,
-          })
-          .where(eq(contestants.id, contestantId));
-      } else {
-        await celebDb.insert(contestants).values({
-          ...contestant,
-          availabilityStatus: 'available',
-        });
+        throw new Error(`ALREADY_IN_CELEB: ${contestant.name} already exists in the CELEB workspace`);
       }
+
+      await celebDb.insert(contestants).values({
+        ...contestant,
+        availabilityStatus: 'available',
+      });
 
       // 3. Upsert casting card
       if (castingCard) {
