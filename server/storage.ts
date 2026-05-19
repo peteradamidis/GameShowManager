@@ -2109,15 +2109,16 @@ export class DbStorage implements IStorage {
   }
 
   async getBlockTypesByRecordDay(recordDayId: string): Promise<BlockType[]> {
-    return db
+    return getDb()
       .select()
       .from(blockTypes)
       .where(eq(blockTypes.recordDayId, recordDayId));
   }
 
   async upsertBlockType(recordDayId: string, blockNumber: number, blockType: 'PB' | 'NPB' | 'AUDIENCE'): Promise<BlockType> {
+    const database = getDb();
     // Try to update existing record first
-    const existing = await db
+    const existing = await database
       .select()
       .from(blockTypes)
       .where(
@@ -2129,7 +2130,7 @@ export class DbStorage implements IStorage {
 
     if (existing.length > 0) {
       // Update existing
-      const [updated] = await db
+      const [updated] = await database
         .update(blockTypes)
         .set({ blockType })
         .where(eq(blockTypes.id, existing[0].id))
@@ -2137,7 +2138,7 @@ export class DbStorage implements IStorage {
       return updated;
     } else {
       // Insert new
-      const [created] = await db
+      const [created] = await database
         .insert(blockTypes)
         .values({ recordDayId, blockNumber, blockType })
         .returning();
