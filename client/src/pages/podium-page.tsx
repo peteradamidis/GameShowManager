@@ -2,30 +2,81 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { X, UserPlus } from "lucide-react";
-import backdropSrc from "@assets/stage-backdrop_1779190275090.png";
+import { X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight } from "lucide-react";
 
-// Row layout: bottom=9, middle=9, top=8 (total 26)
+const CONTESTANTS_PER_PAGE = 50;
+
 const ROWS = [
-  { key: "top",    count: 8, positions: [19,20,21,22,23,24,25,26], topPct: 39, widthPct: 45 },
-  { key: "middle", count: 9, positions: [10,11,12,13,14,15,16,17,18], topPct: 52, widthPct: 57 },
-  { key: "bottom", count: 9, positions: [1,2,3,4,5,6,7,8,9], topPct: 64, widthPct: 66 },
+  { key: "top",    label: "Top Tier",    count: 8,  positions: [19,20,21,22,23,24,25,26] },
+  { key: "middle", label: "Middle Tier", count: 9,  positions: [10,11,12,13,14,15,16,17,18] },
+  { key: "bottom", label: "Bottom Tier", count: 9,  positions: [1,2,3,4,5,6,7,8,9] },
 ];
 
+const RATING_COLORS: Record<string, string> = {
+  'A+': 'bg-emerald-500 text-white',
+  'A':  'bg-green-500 text-white',
+  'B+': 'bg-amber-500 text-white',
+  'B':  'bg-orange-500 text-white',
+  'C':  'bg-red-500 text-white',
+  'P':  'bg-cyan-500 text-white',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  'available':        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  'assigned':         'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+  'invited':          'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+  'confirmed':        'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+  'rescheduled':      'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+  'returning_standby':'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  'available':        'Avail',
+  'assigned':         'Asgnd',
+  'invited':          'Invited',
+  'confirmed':        'Conf',
+  'rescheduled':      'Resc',
+  'returning_standby':'RetSB',
+};
+
 type RecordDay = { id: string; date: string | null; rxNumber: string | null };
-type Contestant = { id: string; name: string; gender: string; photoUrl?: string | null };
+type Contestant = {
+  id: string; name: string; gender: string; photoUrl?: string | null;
+  auditionRating?: string | null; availabilityStatus?: string | null;
+  age?: number | null; attendingWith?: string | null;
+  availableForStandby?: boolean | null; podiumStory?: boolean | null;
+  postcode?: string | null;
+};
 type PodiumEntry = { id: string; position: number; contestantId: string; contestant: Contestant };
 
 export default function PodiumPage() {
   const { toast } = useToast();
   const [recordDayId, setRecordDayId] = useState<string>("");
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+
+  // Contestant selector state — mirrors seating chart dialog exactly
+  const [contestantSearch, setContestantSearch] = useState("");
+  const [filterRating, setFilterRating] = useState("all");
+  const [filterGender, setFilterGender] = useState("all");
+  const [filterGroupSize, setFilterGroupSize] = useState("all");
+  const [filterAge, setFilterAge] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStandby, setFilterStandby] = useState("all");
+  const [filterWithin20km, setFilterWithin20km] = useState(false);
+  const [filterWithin60km, setFilterWithin60km] = useState(false);
+  const [filterOver60km, setFilterOver60km] = useState(false);
+  const [filterAllGroupAvailable, setFilterAllGroupAvailable] = useState(false);
+  const [contestantPage, setContestantPage] = useState(1);
+  const [selectedContestant, setSelectedContestant] = useState("");
+  const [viewContestantId, setViewContestantId] = useState<string | null>(null);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({
     queryKey: ["/api/record-days"],
@@ -46,13 +97,52 @@ export default function PodiumPage() {
     return map;
   }, [podiumData]);
 
+  const assignedContestantIds = useMemo(
+    () => new Set(podiumData.map(p => p.contestantId)),
+    [podiumData]
+  );
+
+  // Build the unassigned pool, then apply all the same filters as seating chart
+  const availableContestants = useMemo(
+    () => allContestants.filter(c => !assignedContestantIds.has(c.id)),
+    [allContestants, assignedContestantIds]
+  );
+
+  const filteredContestants = useMemo(() => {
+    return availableContestants.filter((c: any) => {
+      if (contestantSearch) {
+        const q = contestantSearch.toLowerCase();
+        if (!c.name?.toLowerCase().includes(q)) return false;
+      }
+      if (filterRating !== "all" && c.auditionRating !== filterRating) return false;
+      if (filterGender !== "all" && c.gender !== filterGender) return false;
+      if (filterGroupSize !== "all") {
+        const hasGroup = !!c.attendingWith;
+        if (filterGroupSize === "1" && hasGroup) return false;
+        if (filterGroupSize === "2" && !hasGroup) return false;
+        if (filterGroupSize === "3+" && !hasGroup) return false;
+      }
+      if (filterAge !== "all" && c.age) {
+        const age = Number(c.age);
+        if (filterAge === "18-29" && (age < 18 || age > 29)) return false;
+        if (filterAge === "30-39" && (age < 30 || age > 39)) return false;
+        if (filterAge === "40-49" && (age < 40 || age > 49)) return false;
+        if (filterAge === "50-59" && (age < 50 || age > 59)) return false;
+        if (filterAge === "60+" && age < 60) return false;
+      }
+      if (filterStatus !== "all" && c.availabilityStatus !== filterStatus) return false;
+      if (filterStandby === "available" && !c.availableForStandby) return false;
+      if (filterStandby === "not_available" && c.availableForStandby) return false;
+      return true;
+    });
+  }, [availableContestants, contestantSearch, filterRating, filterGender, filterGroupSize, filterAge, filterStatus, filterStandby, filterWithin20km, filterWithin60km, filterOver60km, filterAllGroupAvailable]);
+
   const assignMutation = useMutation({
     mutationFn: ({ position, contestantId }: { position: number; contestantId: string }) =>
       apiRequest("PUT", `/api/record-days/${recordDayId}/podium-positions/${position}`, { contestantId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
-      setSelectedPosition(null);
-      setSearchQuery("");
+      closeDialog();
     },
     onError: (err: any) => {
       toast({ title: "Failed to assign", description: err.message, variant: "destructive" });
@@ -64,22 +154,36 @@ export default function PodiumPage() {
       apiRequest("DELETE", `/api/record-days/${recordDayId}/podium-positions/${position}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
-      setSelectedPosition(null);
+      closeDialog();
     },
     onError: (err: any) => {
       toast({ title: "Failed to remove", description: err.message, variant: "destructive" });
     },
   });
 
-  const assignedContestantIds = useMemo(() => new Set(podiumData.map(p => p.contestantId)), [podiumData]);
+  function closeDialog() {
+    setSelectedPosition(null);
+    setSelectedContestant("");
+    setContestantSearch("");
+    setFilterRating("all");
+    setFilterGender("all");
+    setFilterGroupSize("all");
+    setFilterAge("all");
+    setFilterStatus("all");
+    setFilterStandby("all");
+    setFilterWithin20km(false);
+    setFilterWithin60km(false);
+    setFilterOver60km(false);
+    setFilterAllGroupAvailable(false);
+    setContestantPage(1);
+  }
 
-  const availableContestants = useMemo(() =>
-    allContestants
-      .filter(c => !assignedContestantIds.has(c.id))
-      .filter(c => !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    [allContestants, assignedContestantIds, searchQuery]
-  );
+  function openPosition(pos: number) {
+    if (!podiumLoading) {
+      setSelectedPosition(pos);
+      setContestantPage(1);
+    }
+  }
 
   const selectedEntry = selectedPosition != null ? positionMap[selectedPosition] : null;
   const filledCount = podiumData.length;
@@ -90,10 +194,20 @@ export default function PodiumPage() {
     return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
 
+  const totalPages = Math.ceil(filteredContestants.length / CONTESTANTS_PER_PAGE);
+  const paginatedContestants = filteredContestants.slice(
+    (contestantPage - 1) * CONTESTANTS_PER_PAGE,
+    contestantPage * CONTESTANTS_PER_PAGE
+  );
+
+  const viewedContestant = viewContestantId
+    ? (allContestants.find(c => c.id === viewContestantId) ?? null)
+    : null;
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 px-5 py-3 border-b shrink-0">
+      <div className="flex items-center justify-between gap-4 px-5 py-3 border-b shrink-0 flex-wrap">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold">Podium</h1>
           {recordDayId && (
@@ -103,14 +217,16 @@ export default function PodiumPage() {
           )}
         </div>
         <Select value={recordDayId} onValueChange={setRecordDayId}>
-          <SelectTrigger className="w-60" data-testid="select-record-day">
+          <SelectTrigger className="w-64" data-testid="select-record-day">
             <SelectValue placeholder="Select a record day" />
           </SelectTrigger>
           <SelectContent>
             {sortedDays.map(day => (
               <SelectItem key={day.id} value={day.id}>
                 {day.rxNumber ? `${day.rxNumber} — ` : ""}
-                {day.date ? new Date(day.date).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : "No date"}
+                {day.date
+                  ? new Date(day.date).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+                  : "No date"}
               </SelectItem>
             ))}
           </SelectContent>
@@ -118,59 +234,48 @@ export default function PodiumPage() {
       </div>
 
       {/* Main area */}
-      <div className="flex-1 overflow-auto flex items-start justify-center p-4">
+      <div className="flex-1 overflow-auto p-5">
         {!recordDayId ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2 mt-20">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
             <p className="text-base">Select a record day to manage podium positions</p>
           </div>
         ) : (
-          <div className="relative w-full" style={{ maxWidth: "900px" }}>
-            <img
-              src={backdropSrc}
-              alt="Podium stage backdrop"
-              className="w-full block select-none"
-              draggable={false}
-            />
-
-            {/* Overlay rows */}
+          <div className="space-y-6 max-w-3xl mx-auto">
             {ROWS.map(row => (
-              <div
-                key={row.key}
-                className="absolute flex items-stretch justify-center"
-                style={{
-                  top: `${row.topPct}%`,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  width: `${row.widthPct}%`,
-                  gap: "3px",
-                }}
-              >
-                {row.positions.map(pos => {
-                  const entry = positionMap[pos];
-                  return (
-                    <button
-                      key={pos}
-                      data-testid={`podium-position-${pos}`}
-                      onClick={() => {
-                        if (!podiumLoading) setSelectedPosition(pos);
-                      }}
-                      className={[
-                        "flex-1 min-w-0 rounded flex flex-col items-center justify-center py-1 px-0.5 transition-all",
-                        entry
-                          ? "bg-teal-600/90 hover:bg-teal-500/90 text-white shadow-sm"
-                          : "bg-black/50 hover:bg-black/70 text-white/60 border border-white/20",
-                      ].join(" ")}
-                      style={{ minHeight: "28px" }}
-                    >
-                      <span className="text-[9px] font-bold opacity-70 leading-none">{pos}</span>
-                      {entry ? (
-                        <span className="text-[9px] font-medium leading-tight text-center truncate w-full px-0.5 mt-0.5">
-                          {entry.contestant.name.split(" ")[0]}
+              <div key={row.key}>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  {row.label} — {row.positions.filter(p => positionMap[p]).length}/{row.count} filled
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  {row.positions.map(pos => {
+                    const entry = positionMap[pos];
+                    return (
+                      <button
+                        key={pos}
+                        data-testid={`podium-position-${pos}`}
+                        onClick={() => openPosition(pos)}
+                        className={[
+                          "flex flex-col items-center justify-center rounded-md border transition-all px-2 py-2 min-w-[72px] flex-1",
+                          entry
+                            ? "bg-teal-600/10 border-teal-600/40 hover-elevate"
+                            : "bg-muted/40 border-border hover-elevate",
+                        ].join(" ")}
+                        style={{ minHeight: "60px" }}
+                      >
+                        <span className="text-[10px] font-bold text-muted-foreground leading-none mb-1">
+                          #{pos}
                         </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
+                        {entry ? (
+                          <span className="text-xs font-semibold text-teal-700 dark:text-teal-400 text-center leading-tight">
+                            {entry.contestant.name.split(" ")[0]}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground/50">Empty</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
@@ -180,29 +285,40 @@ export default function PodiumPage() {
       {/* Assignment Dialog */}
       <Dialog
         open={selectedPosition != null}
-        onOpenChange={open => {
-          if (!open) {
-            setSelectedPosition(null);
-            setSearchQuery("");
-          }
-        }}
+        onOpenChange={open => { if (!open) closeDialog(); }}
       >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
+        <DialogContent
+          className="w-[95vw] max-w-5xl max-h-[90vh] flex flex-col gap-4 overflow-hidden"
+          data-testid="dialog-assign-podium-position"
+        >
+          <DialogHeader className="pb-2">
             <DialogTitle>
-              Position {selectedPosition}
-              {selectedEntry ? ` — ${selectedEntry.contestant.name}` : " — Empty"}
+              {selectedEntry
+                ? `Position #${selectedPosition} — ${selectedEntry.contestant.name}`
+                : `Assign to Position #${selectedPosition}`}
             </DialogTitle>
+            <DialogDescription>
+              {selectedEntry ? "Manage this podium position" : "Choose a contestant from the list below"}
+            </DialogDescription>
           </DialogHeader>
 
+          {/* Occupied: show remove option */}
           {selectedEntry ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 rounded-md bg-muted">
+                <Avatar className="h-10 w-10 border border-border shrink-0">
+                  {selectedEntry.contestant.photoUrl ? (
+                    <AvatarImage src={selectedEntry.contestant.photoUrl} alt={selectedEntry.contestant.name} className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className="text-xs bg-muted">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{selectedEntry.contestant.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">{selectedEntry.contestant.gender}</p>
                 </div>
-                <Badge variant="secondary" className="text-xs shrink-0">Pos {selectedEntry.position}</Badge>
+                <Badge variant="secondary" className="text-xs shrink-0">Position #{selectedEntry.position}</Badge>
               </div>
               <Button
                 variant="destructive"
@@ -215,39 +331,305 @@ export default function PodiumPage() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
-              <Input
-                placeholder="Search contestants..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                data-testid="input-contestant-search"
-                autoFocus
-              />
-              <div className="max-h-72 overflow-y-auto space-y-0.5 rounded-md border">
-                {availableContestants.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    {searchQuery ? "No contestants match your search" : "All contestants are assigned"}
-                  </p>
-                ) : (
-                  availableContestants.map(c => (
-                    <button
-                      key={c.id}
-                      className="w-full text-left px-3 py-2 text-sm hover-elevate flex items-center gap-2"
-                      onClick={() => assignMutation.mutate({ position: selectedPosition!, contestantId: c.id })}
-                      disabled={assignMutation.isPending}
-                      data-testid={`assign-contestant-${c.id}`}
-                    >
-                      <UserPlus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate">{c.name}</span>
-                      <span className="text-xs text-muted-foreground capitalize shrink-0">{c.gender}</span>
-                    </button>
-                  ))
-                )}
+            /* Empty: show full contestant selector — same as seating chart assign dialog */
+            availableContestants.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p className="font-medium">No available contestants</p>
+                <p className="text-sm">All contestants are already assigned to podium positions.</p>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Search and Filters */}
+                <div className="space-y-2 shrink-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name..."
+                      value={contestantSearch}
+                      onChange={e => { setContestantSearch(e.target.value); setContestantPage(1); }}
+                      className="pl-9"
+                      autoFocus
+                      data-testid="input-contestant-search"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-end gap-2 text-xs">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-[10px] font-medium">Rating</span>
+                      <Select value={filterRating} onValueChange={v => { setFilterRating(v); setContestantPage(1); }}>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-rating">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="A+">A+</SelectItem>
+                          <SelectItem value="A">A</SelectItem>
+                          <SelectItem value="B+">B+</SelectItem>
+                          <SelectItem value="B">B</SelectItem>
+                          <SelectItem value="C">C</SelectItem>
+                          <SelectItem value="R">R</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-[10px] font-medium">Gender</span>
+                      <Select value={filterGender} onValueChange={v => { setFilterGender(v); setContestantPage(1); }}>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-gender">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                          <SelectItem value="Male">Male</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-[10px] font-medium">Group Size</span>
+                      <Select value={filterGroupSize} onValueChange={v => { setFilterGroupSize(v); setContestantPage(1); }}>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-group-size">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="1">Solo</SelectItem>
+                          <SelectItem value="2">Pair</SelectItem>
+                          <SelectItem value="3+">3+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-[10px] font-medium">Age</span>
+                      <Select value={filterAge} onValueChange={v => { setFilterAge(v); setContestantPage(1); }}>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-age">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="18-29">18-29</SelectItem>
+                          <SelectItem value="30-39">30-39</SelectItem>
+                          <SelectItem value="40-49">40-49</SelectItem>
+                          <SelectItem value="50-59">50-59</SelectItem>
+                          <SelectItem value="60+">60+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-[10px] font-medium">Status</span>
+                      <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setContestantPage(1); }}>
+                        <SelectTrigger className="h-7 w-[90px] text-xs" data-testid="select-filter-status">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="available">Available</SelectItem>
+                          <SelectItem value="assigned">Assigned</SelectItem>
+                          <SelectItem value="invited">Invited</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="rescheduled">Reschedule</SelectItem>
+                          <SelectItem value="returning_standby">Returning Standby</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-[10px] font-medium">Standby</span>
+                      <Select value={filterStandby} onValueChange={v => { setFilterStandby(v); setContestantPage(1); }}>
+                        <SelectTrigger className="h-7 w-[75px] text-xs" data-testid="select-filter-standby">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="available">Yes</SelectItem>
+                          <SelectItem value="not_available">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <span className="ml-auto text-muted-foreground self-end pb-1" data-testid="text-contestant-count">
+                      {filteredContestants.length > CONTESTANTS_PER_PAGE
+                        ? `${(contestantPage - 1) * CONTESTANTS_PER_PAGE + 1}-${Math.min(contestantPage * CONTESTANTS_PER_PAGE, filteredContestants.length)} of ${filteredContestants.length}`
+                        : `${filteredContestants.length} found`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Contestant List */}
+                <ScrollArea className="h-[400px] border rounded-md bg-muted/20">
+                  <div className="p-2 space-y-1">
+                    {paginatedContestants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        No contestants match your filters.
+                      </p>
+                    ) : paginatedContestants.map((c: any) => {
+                      const isSelected = selectedContestant === c.id;
+                      const hasGroup = !!c.attendingWith;
+                      const isAvailableForStandby = !!c.availableForStandby;
+
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedContestant(isSelected ? "" : c.id)}
+                          className={`grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "hover:bg-muted"
+                          }`}
+                          data-testid={`contestant-card-${c.id}`}
+                        >
+                          {/* Photo */}
+                          <Avatar className="h-9 w-9 border border-border">
+                            {c.photoUrl ? (
+                              <AvatarImage src={c.photoUrl} alt={c.name} className="object-cover" />
+                            ) : null}
+                            <AvatarFallback className="text-xs bg-muted">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                            </AvatarFallback>
+                          </Avatar>
+
+                          {/* Info */}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-sm truncate">{c.name}</span>
+                              {isAvailableForStandby && (
+                                <span className={`px-1 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${
+                                  isSelected
+                                    ? "bg-primary-foreground/20 text-primary-foreground"
+                                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                                }`}>S</span>
+                              )}
+                              {hasGroup && (
+                                <Users className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? "text-primary-foreground/70" : "text-blue-500"}`} />
+                              )}
+                              {isSelected && <Check className="h-4 w-4 flex-shrink-0" />}
+                            </div>
+                            <div className={`text-xs truncate ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                              {c.gender === "Female" ? "F" : "M"}
+                              {c.age && ` | ${c.age}yo`}
+                              {hasGroup && ` | ${c.attendingWith}`}
+                            </div>
+                          </div>
+
+                          {/* Status badge */}
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            isSelected
+                              ? "bg-primary-foreground/20 text-primary-foreground"
+                              : STATUS_COLORS[c.availabilityStatus] || "bg-gray-100 text-gray-600"
+                          }`}>
+                            {STATUS_LABELS[c.availabilityStatus] || c.availabilityStatus || "?"}
+                          </span>
+
+                          {/* Rating circle */}
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            c.auditionRating
+                              ? RATING_COLORS[c.auditionRating] || "bg-gray-500 text-white"
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            {c.auditionRating || "?"}
+                          </div>
+
+                          {/* View button */}
+                          <Button
+                            size="icon"
+                            variant={isSelected ? "secondary" : "outline"}
+                            className="h-7 w-7"
+                            onClick={e => { e.stopPropagation(); setViewContestantId(c.id); }}
+                            data-testid={`button-view-contestant-${c.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+
+                {/* Pagination */}
+                {filteredContestants.length > CONTESTANTS_PER_PAGE && (
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t shrink-0">
+                    <span className="text-xs text-muted-foreground" data-testid="text-contestant-pagination">
+                      Page {contestantPage} of {totalPages}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline" size="sm"
+                        onClick={() => setContestantPage(p => Math.max(1, p - 1))}
+                        disabled={contestantPage <= 1}
+                        data-testid="button-prev-page"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline" size="sm"
+                        onClick={() => setContestantPage(p => Math.min(totalPages, p + 1))}
+                        disabled={contestantPage >= totalPages}
+                        data-testid="button-next-page"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Confirm Assign */}
+                {selectedContestant && (
+                  <div className="border rounded-md p-3 bg-card shrink-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">Selected:</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {allContestants.find(c => c.id === selectedContestant)?.name}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => assignMutation.mutate({ position: selectedPosition!, contestantId: selectedContestant })}
+                        disabled={assignMutation.isPending}
+                        data-testid="button-confirm-assign"
+                      >
+                        Assign to Position #{selectedPosition}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Quick view dialog */}
+      {viewedContestant && (
+        <Dialog open={!!viewContestantId} onOpenChange={open => { if (!open) setViewContestantId(null); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{viewedContestant.name}</DialogTitle>
+              <DialogDescription>Contestant details</DialogDescription>
+            </DialogHeader>
+            <div className="flex items-start gap-4">
+              <Avatar className="h-16 w-16 border border-border shrink-0">
+                {viewedContestant.photoUrl ? (
+                  <AvatarImage src={viewedContestant.photoUrl} alt={viewedContestant.name} className="object-cover" />
+                ) : null}
+                <AvatarFallback>
+                  <User className="h-6 w-6 text-muted-foreground" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-1 text-sm">
+                <p><span className="text-muted-foreground">Gender: </span>{viewedContestant.gender}</p>
+                {viewedContestant.age && <p><span className="text-muted-foreground">Age: </span>{viewedContestant.age}</p>}
+                {viewedContestant.auditionRating && <p><span className="text-muted-foreground">Rating: </span>{viewedContestant.auditionRating}</p>}
+                {viewedContestant.availabilityStatus && <p><span className="text-muted-foreground">Status: </span>{viewedContestant.availabilityStatus}</p>}
+                {viewedContestant.attendingWith && <p><span className="text-muted-foreground">With: </span>{viewedContestant.attendingWith}</p>}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
