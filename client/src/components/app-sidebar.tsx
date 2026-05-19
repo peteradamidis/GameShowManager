@@ -209,16 +209,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {isCeleb && (
-        <SidebarFooter className="border-t">
-          <div className="px-1 py-2">
-            <div className="rounded-md bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 px-3 py-2">
-              <p className="text-xs font-medium text-purple-700 dark:text-purple-300">DOND CELEB</p>
-              <p className="text-xs text-purple-600/80 dark:text-purple-400/80 mt-0.5">Separate clean database</p>
-            </div>
-          </div>
-        </SidebarFooter>
-      )}
     </Sidebar>
   );
 }
