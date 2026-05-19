@@ -857,12 +857,12 @@ const SEAT_ROWS = [
   { label: 'A', count: 5 },
 ];
 
-// DOND CELEB: Playing blocks have 26 seats (adds an F row at the back)
+// DOND CELEB: Playing blocks have 26 seats
+// Extra seats are C5, D5, E5 and E6 (no extra row — existing rows extended)
 const SEAT_ROWS_CELEB_PB = [
-  { label: 'F', count: 4 },
-  { label: 'E', count: 4 },
-  { label: 'D', count: 4 },
-  { label: 'C', count: 4 },
+  { label: 'E', count: 6 },
+  { label: 'D', count: 5 },
+  { label: 'C', count: 5 },
   { label: 'B', count: 5 },
   { label: 'A', count: 5 },
 ];
