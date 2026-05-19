@@ -1070,10 +1070,18 @@ export default function Contestants() {
       });
     },
     onError: (error: Error) => {
+      const apiMsg = (() => {
+        const match = error.message.match(/^\d+: ([\s\S]+)$/);
+        if (match) { try { const p = JSON.parse(match[1]); if (p.error) return p.error; } catch {} }
+        return error.message;
+      })();
+      const isAlreadyMoved = apiMsg.includes('already exists in the CELEB workspace');
       toast({
-        title: "Transfer failed",
-        description: error.message,
-        variant: "destructive",
+        title: isAlreadyMoved ? "Already in CELEB" : "Transfer failed",
+        description: isAlreadyMoved
+          ? apiMsg.replace('already exists in the CELEB workspace', 'has already been moved to the CELEB workspace')
+          : apiMsg,
+        variant: isAlreadyMoved ? "default" : "destructive",
       });
     },
   });
@@ -1093,17 +1101,26 @@ export default function Contestants() {
           apiRequest('POST', `/api/contestants/${id}/transfer-to-celeb`, {})
         )
       );
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const alreadyMoved = results.filter(r => {
+        if (r.status !== 'rejected') return false;
+        const msg = (r as PromiseRejectedResult).reason?.message || '';
+        return msg.includes('already exists in the CELEB workspace');
+      }).length;
+      const otherFailed = results.filter(r => r.status === 'rejected').length - alreadyMoved;
       const succeeded = results.filter(r => r.status === 'fulfilled').length;
-      if (failed > 0) throw new Error(`${failed} transfer${failed !== 1 ? 's' : ''} failed, ${succeeded} succeeded`);
-      return { succeeded };
+      if (otherFailed > 0) throw new Error(`${otherFailed} transfer${otherFailed !== 1 ? 's' : ''} failed, ${succeeded} succeeded`);
+      return { succeeded, alreadyMoved };
     },
-    onSuccess: ({ succeeded }) => {
+    onSuccess: ({ succeeded, alreadyMoved }) => {
       setSelectedContestants([]);
+      const parts: string[] = [];
+      if (succeeded > 0) parts.push(`${succeeded} copied to CELEB`);
+      if (alreadyMoved > 0) parts.push(`${alreadyMoved} already in CELEB`);
       toast({
-        title: "Copied to CELEB",
-        description: `${succeeded} contestant${succeeded !== 1 ? 's' : ''} copied to the CELEB workspace.`,
+        title: succeeded > 0 ? "Copied to CELEB" : "Already in CELEB",
+        description: parts.join(', ') + '.',
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
     },
     onError: (error: Error) => {
       setSelectedContestants([]);
@@ -1112,6 +1129,7 @@ export default function Contestants() {
         description: error.message,
         variant: "destructive",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
     },
   });
 
