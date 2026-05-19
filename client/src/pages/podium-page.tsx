@@ -762,46 +762,84 @@ export default function PodiumPage() {
                   )}
                 </div>
               ) : (
-                <div className="max-w-4xl mx-auto">
+                <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                     {filteredStories.length} contestant{filteredStories.length !== 1 ? 's' : ''} with podium stories
                   </p>
-                  <div className="flex flex-wrap gap-3">
-                    {filteredStories.map((c: any) => {
+
+                  {/* Table header */}
+                  <div className="rounded-md border overflow-hidden">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_3fr] gap-0 bg-muted/50 border-b px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      <div>Contestant</div>
+                      <div>Rating / RX</div>
+                      <div>Case #</div>
+                      <div>Story</div>
+                    </div>
+
+                    {filteredStories.map((c: any, idx: number) => {
                       const ratingColors = isDark ? ratingColorsDark : ratingColorsLight;
                       const colorInfo = c.auditionRating ? ratingColors[c.auditionRating] : null;
+                      const rxLabels = c.episodes?.map((e: any) => e.rxNumber || '?').join(', ');
+                      const isLast = idx === filteredStories.length - 1;
                       return (
-                        <div key={c.id} className="w-[100px]">
-                          <Card
-                            className="p-2 min-h-[70px] flex flex-col justify-center text-xs border-2 cursor-pointer hover-elevate"
-                            style={colorInfo ? { backgroundColor: colorInfo.bg, borderColor: colorInfo.border, color: colorInfo.text } : undefined}
-                            onClick={() => setViewContestantId(c.id)}
-                            data-testid={`story-card-${c.id}`}
-                          >
-                            <div className="space-y-1 overflow-hidden">
-                              {c.photoUrl && (
-                                <div className="flex justify-center mb-1">
-                                  <Avatar className="h-9 w-9">
-                                    <AvatarImage src={c.photoUrl} className="object-cover" />
-                                    <AvatarFallback className="text-[9px]">
-                                      {c.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </div>
-                              )}
-                              <p className="font-medium text-xs truncate" title={c.name}>{c.name}</p>
-                              <div className="flex items-center gap-1.5 opacity-70 text-[10px]">
-                                <span>{c.age}</span>
-                                {c.age && c.gender && <span>•</span>}
-                                <span>{c.gender?.[0]}</span>
-                              </div>
-                              {c.episodes?.length > 0 && (
-                                <div className="text-[9px] opacity-60 truncate">
-                                  {c.episodes.map((e: any) => e.rxNumber || '?').join(', ')}
-                                </div>
-                              )}
+                        <div
+                          key={c.id}
+                          className={`grid grid-cols-[2fr_1fr_1fr_3fr] gap-0 px-4 py-3 hover-elevate cursor-pointer ${!isLast ? 'border-b' : ''}`}
+                          onClick={() => setViewContestantId(c.id)}
+                          data-testid={`story-row-${c.id}`}
+                        >
+                          {/* Contestant name + photo */}
+                          <div className="flex items-start gap-2.5 pr-4">
+                            <Avatar className="h-8 w-8 shrink-0 mt-0.5">
+                              {c.photoUrl
+                                ? <AvatarImage src={c.photoUrl} className="object-cover" />
+                                : null}
+                              <AvatarFallback className="text-[9px] bg-muted">
+                                {c.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium leading-tight truncate">{c.name}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {[c.age ? `${c.age}yo` : null, c.gender].filter(Boolean).join(' · ')}
+                              </p>
                             </div>
-                          </Card>
+                          </div>
+
+                          {/* Rating + episodes */}
+                          <div className="flex flex-col gap-1.5 justify-start pr-3">
+                            {c.auditionRating && (
+                              <span
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0"
+                                style={colorInfo ? { backgroundColor: colorInfo.bg, color: colorInfo.text, border: `1px solid ${colorInfo.border}` } : undefined}
+                              >
+                                {c.auditionRating}
+                              </span>
+                            )}
+                            {rxLabels && (
+                              <span className="text-xs text-muted-foreground leading-tight">{rxLabels}</span>
+                            )}
+                          </div>
+
+                          {/* Case number */}
+                          <div className="flex items-start justify-start pr-3">
+                            {c.podiumStoryCaseNumber != null ? (
+                              <Badge variant="secondary" className="text-xs font-mono">
+                                Case {c.podiumStoryCaseNumber}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/40">—</span>
+                            )}
+                          </div>
+
+                          {/* Story text */}
+                          <div className="flex items-start">
+                            {c.podiumStoryNote ? (
+                              <p className="text-sm text-foreground leading-snug line-clamp-3">{c.podiumStoryNote}</p>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">No story notes yet</span>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
