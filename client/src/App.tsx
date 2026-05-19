@@ -25,6 +25,7 @@ import AvailabilityManagement from "@/pages/availability-management";
 import StandbysPage from "@/pages/standbys";
 import ReschedulePage from "@/pages/reschedule";
 import WinnersPage from "@/pages/winners";
+import PodiumStoriesPage from "@/pages/podium-stories";
 import PlayersPage from "@/pages/players";
 import Settings from "@/pages/settings";
 import Backup from "@/pages/backup";
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/reschedule" component={ReschedulePage} />
       <Route path="/players" component={PlayersPage} />
       <Route path="/winners" component={WinnersPage} />
+      <Route path="/podium-stories" component={PodiumStoriesPage} />
       <Route path="/paperwork" component={Paperwork} />
       <Route path="/attendance-issues" component={AttendanceIssuesPage} />
       <Route path="/noticeboard" component={NoticeboardPage} />

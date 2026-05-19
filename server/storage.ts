@@ -521,6 +521,7 @@ export interface IStorage {
   deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void>;
   clearRxPlanningDay(recordDayId: string): Promise<void>;
   transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }>;
+  getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>>;
 }
 
 export interface SystemSetting {
@@ -3908,6 +3909,49 @@ export class DbStorage implements IStorage {
     });
 
     return { alreadyExisted };
+  }
+  async getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>> {
+    const currentDb = getDb();
+
+    const podiumContestants = await currentDb
+      .select()
+      .from(contestants)
+      .where(eq(contestants.podiumStory, true));
+
+    if (podiumContestants.length === 0) return [];
+
+    const contestantIds = podiumContestants.map(c => c.id);
+
+    const assignments = await currentDb
+      .select({
+        contestantId: seatAssignments.contestantId,
+        recordDayId: seatAssignments.recordDayId,
+        blockNumber: seatAssignments.blockNumber,
+        seatLabel: seatAssignments.seatLabel,
+        rxNumber: recordDays.rxNumber,
+        date: recordDays.date,
+        lockedAt: recordDays.lockedAt,
+      })
+      .from(seatAssignments)
+      .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
+      .where(inArray(seatAssignments.contestantId, contestantIds));
+
+    const episodesByContestant: Record<string, typeof assignments> = {};
+    for (const a of assignments) {
+      if (!episodesByContestant[a.contestantId]) {
+        episodesByContestant[a.contestantId] = [];
+      }
+      episodesByContestant[a.contestantId].push(a);
+    }
+
+    return podiumContestants.map(c => ({
+      ...c,
+      episodes: (episodesByContestant[c.id] || []).sort((a, b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }),
+    }));
   }
 }
 

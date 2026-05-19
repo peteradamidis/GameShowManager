@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, Star, Megaphone, FileCheck2, History, ArrowLeftRight, Loader2 } from "lucide-react";
+import { Home, Users, Calendar, LayoutGrid, Settings, CheckSquare, RefreshCcw, ClipboardList, UserCheck, MessageSquareText, FileText, Trophy, AlertTriangle, Star, Megaphone, FileCheck2, History, ArrowLeftRight, Loader2, Mic2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -83,6 +83,11 @@ const menuItems = [
     title: "Winners",
     url: "/winners",
     icon: Trophy,
+  },
+  {
+    title: "Podium Stories",
+    url: "/podium-stories",
+    icon: Mic2,
   },
   {
     title: "Attendance Issues",

@@ -2725,6 +2725,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Podium Stories — all contestants tagged with podiumStory, with their episode history
+  app.get("/api/podium-stories", requireAuth, async (req, res) => {
+    try {
+      const data = await storage.getPodiumStoryContestants();
+      res.json(data);
+    } catch (error: any) {
+      console.error("Get podium stories error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Search contestants for PPTX import matching
   app.get("/api/contestants/search", async (req, res) => {
     try {
