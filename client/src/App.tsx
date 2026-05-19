@@ -81,6 +81,20 @@ function AuthenticatedApp() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+    enabled: !!authData?.authenticated,
+  });
+
+  useEffect(() => {
+    if (workspaceData?.workspace === 'celeb') {
+      document.documentElement.classList.add('workspace-celeb');
+    } else {
+      document.documentElement.classList.remove('workspace-celeb');
+    }
+  }, [workspaceData?.workspace]);
+
   const { data: animatedMessageConfig } = useQuery({
     queryKey: ['/api/settings/animated_message'],
     enabled: !!authData?.authenticated,

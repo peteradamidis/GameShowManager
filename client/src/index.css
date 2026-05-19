@@ -165,6 +165,86 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* ─── CELEB workspace: cool blue-indigo palette ───────────────────────────── */
+/* Applied by toggling .workspace-celeb on <html>. Overrides the warm-amber   */
+/* defaults so the two workspaces are immediately visually distinguishable.    */
+
+.workspace-celeb {
+  --primary: 217 65% 50%;
+  --primary-foreground: 217 100% 98%;
+  --ring: 217 65% 50%;
+  --sidebar-primary: 217 60% 50%;
+  --sidebar-primary-foreground: 217 100% 98%;
+  --sidebar-ring: 217 60% 50%;
+
+  --background: 220 25% 99%;
+  --foreground: 220 15% 12%;
+  --border: 220 12% 87%;
+  --card: 220 18% 97%;
+  --card-foreground: 220 15% 12%;
+  --card-border: 220 12% 90%;
+  --sidebar: 220 15% 95%;
+  --sidebar-foreground: 220 15% 12%;
+  --sidebar-border: 220 12% 88%;
+  --sidebar-accent: 220 18% 88%;
+  --sidebar-accent-foreground: 220 15% 20%;
+  --popover: 220 15% 94%;
+  --popover-foreground: 220 15% 12%;
+  --popover-border: 220 12% 85%;
+  --secondary: 220 18% 88%;
+  --secondary-foreground: 220 12% 22%;
+  --muted: 220 14% 90%;
+  --muted-foreground: 220 10% 40%;
+  --accent: 220 20% 88%;
+  --accent-foreground: 220 15% 20%;
+  --input: 220 10% 75%;
+
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark.workspace-celeb {
+  --primary: 217 60% 60%;
+  --primary-foreground: 217 100% 98%;
+  --ring: 217 60% 60%;
+  --sidebar-primary: 217 55% 60%;
+  --sidebar-primary-foreground: 217 100% 98%;
+  --sidebar-ring: 217 55% 60%;
+
+  --background: 222 20% 8%;
+  --foreground: 220 15% 92%;
+  --border: 222 12% 18%;
+  --card: 222 15% 10%;
+  --card-foreground: 220 15% 92%;
+  --card-border: 222 12% 14%;
+  --sidebar: 222 15% 12%;
+  --sidebar-foreground: 220 15% 92%;
+  --sidebar-border: 222 12% 16%;
+  --sidebar-accent: 222 18% 18%;
+  --sidebar-accent-foreground: 220 15% 88%;
+  --popover: 222 15% 14%;
+  --popover-foreground: 220 15% 92%;
+  --popover-border: 222 12% 20%;
+  --secondary: 222 16% 20%;
+  --secondary-foreground: 220 12% 88%;
+  --muted: 222 14% 20%;
+  --muted-foreground: 220 10% 65%;
+  --accent: 222 18% 18%;
+  --accent-foreground: 220 15% 88%;
+  --input: 222 10% 30%;
+
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
 @layer base {
   * {
     @apply border-border;
