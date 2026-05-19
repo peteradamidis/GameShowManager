@@ -965,7 +965,19 @@ function SeatingBlock({
       <CardHeader className={isPodiumVisualizerMode ? "pb-1 pt-2" : "pb-3"}>
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
-          {isCeleb ? null : isPodiumVisualizerMode ? (
+          {isCeleb ? (
+            <Badge
+              variant="outline"
+              className={`text-xs font-medium ${
+                blockType === 'AUDIENCE'
+                  ? 'border-teal-500 text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40'
+                  : 'border-primary/50 text-primary bg-primary/10'
+              }`}
+              data-testid={`block-type-label-${blockIndex}`}
+            >
+              {blockType === 'AUDIENCE' ? 'Audience' : blockType === 'PB' ? 'Playing' : blockType || '—'}
+            </Badge>
+          ) : isPodiumVisualizerMode ? (
             <Badge 
               variant={blockType === 'PB' ? 'default' : blockType === 'NPB' ? 'secondary' : 'outline'}
               className="text-xs font-medium"
