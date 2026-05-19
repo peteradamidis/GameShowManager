@@ -12,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mic2, Search, CalendarDays, Hash } from "lucide-react";
+import { Mic2, Search, CalendarDays, Hash, ExternalLink } from "lucide-react";
+import { useLocation } from "wouter";
 
 type Episode = {
   recordDayId: string;
@@ -60,6 +61,7 @@ function getInitials(name: string): string {
 
 export default function PodiumStoriesPage() {
   const [search, setSearch] = useState("");
+  const [, setLocation] = useLocation();
 
   const { data: contestants = [], isLoading } = useQuery<PodiumContestant[]>({
     queryKey: ["/api/podium-stories"],
@@ -158,7 +160,12 @@ export default function PodiumStoriesPage() {
               </TableHeader>
               <TableBody>
                 {sorted.map((c) => (
-                  <TableRow key={c.id} data-testid={`row-podium-${c.id}`}>
+                  <TableRow
+                    key={c.id}
+                    data-testid={`row-podium-${c.id}`}
+                    className="cursor-pointer"
+                    onClick={() => setLocation(`/contestants?open=${c.id}`)}
+                  >
                     <TableCell className="pl-4 text-sm font-mono text-muted-foreground">
                       {c.podiumStoryCaseNumber !== null ? (
                         <span className="font-semibold text-foreground">

@@ -91,6 +91,7 @@ interface ContestantTableProps {
   onBookWithGroup?: (contestantIds: string[]) => void;
   onDeleteContestant?: (contestantId: string) => void;
   onTransferToCeleb?: (contestantId: string) => void;
+  initialOpenContestantId?: string;
 }
 
 // Docklands, Melbourne coordinates
@@ -966,6 +967,7 @@ export function ContestantTable({
   onBookWithGroup,
   onDeleteContestant,
   onTransferToCeleb,
+  initialOpenContestantId,
 }: ContestantTableProps) {
   // Create a map for quick lookup of seat assignments by contestant ID
   // Use the most recent assignment if multiple exist
@@ -980,6 +982,14 @@ export function ContestantTable({
   const setSearchTerm = onSearchChange || setLocalSearchTerm;
   const [selectedContestantId, setSelectedContestantId] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  // Auto-open dialog when navigated here from another page with a specific contestant ID
+  useEffect(() => {
+    if (initialOpenContestantId) {
+      setSelectedContestantId(initialOpenContestantId);
+      setDetailDialogOpen(true);
+    }
+  }, [initialOpenContestantId]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingContestantId, setUploadingContestantId] = useState<string | null>(null);
   const [selectedPlayerType, setSelectedPlayerType] = useState<string>("");

@@ -2194,6 +2194,7 @@ export default function Contestants() {
             onTransferToCeleb={(contestantId) => {
               transferToCelebMutation.mutate(contestantId);
             }}
+            initialOpenContestantId={new URLSearchParams(window.location.search).get('open') ?? undefined}
           />
           
           {/* Pagination Controls */}
