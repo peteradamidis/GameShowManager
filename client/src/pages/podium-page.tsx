@@ -909,19 +909,6 @@ export default function PodiumPage() {
                     data-testid="input-stories-search"
                   />
                 </div>
-                <Select value={storiesRxFilter} onValueChange={setStoriesRxFilter}>
-                  <SelectTrigger className="w-[160px]" data-testid="select-stories-rx">
-                    <SelectValue placeholder="All RXs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All RXs</SelectItem>
-                    {sortedDays.map(day => (
-                      <SelectItem key={day.id} value={day.id}>
-                        {day.rxNumber || (day.date ? new Date(day.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : day.id)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {storiesLoading ? (
