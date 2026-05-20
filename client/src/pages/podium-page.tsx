@@ -70,10 +70,16 @@ const ratingColorsDark: Record<string, { bg: string; border: string; text: strin
 
 const CONTESTANTS_PER_PAGE = 50;
 
-const ROWS = [
+const ROWS_DOND = [
   { key: "top",    label: "Top Tier",    count: 8,  positions: [19,20,21,22,23,24,25,26] },
   { key: "middle", label: "Middle Tier", count: 9,  positions: [10,11,12,13,14,15,16,17,18] },
   { key: "bottom", label: "Bottom Tier", count: 9,  positions: [1,2,3,4,5,6,7,8,9] },
+];
+
+const ROWS_CELEB = [
+  { key: "top",    label: "Top Tier",    count: 10, positions: [16,17,18,19,20,21,22,23,24,25] },
+  { key: "middle", label: "Middle Tier", count: 8,  positions: [8,9,10,11,12,13,14,15] },
+  { key: "bottom", label: "Bottom Tier", count: 7,  positions: [1,2,3,4,5,6,7] },
 ];
 
 const RATING_COLORS: Record<string, string> = {
@@ -563,6 +569,11 @@ function PodiumPositionCard({
 export default function PodiumPage() {
   const { toast } = useToast();
   const isDark = useIsDarkMode();
+
+  const { data: workspaceData } = useQuery<{ workspace: string }>({ queryKey: ['/api/workspace'] });
+  const isCeleb = workspaceData?.workspace === 'celeb';
+  const ROWS = isCeleb ? ROWS_CELEB : ROWS_DOND;
+
   const [recordDayId, setRecordDayId] = useState<string>(
     () => sessionStorage.getItem('podium-recordDayId') || ""
   );
