@@ -1,0 +1,37 @@
+ PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 3370 modules transformed.
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/admin/projects/GameShowManager/node_modules/xlsx/xlsx.mjs is dynamically imported by /Users/admin/projects/GameShowManager/client/src/pages/contestants.tsx, /Users/admin/projects/GameShowManager/client/src/pages/players.tsx but also statically imported by /Users/admin/projects/GameShowManager/client/src/pages/booking-master.tsx, /Users/admin/projects/GameShowManager/client/src/pages/winners.tsx, dynamic import will not move module into another chunk.
+
+../dist/public/index.html                                                                  2.07 kB │ gzip:   0.80 kB
+../dist/public/assets/dond-logo-QD_SPDoK.png                                              38.47 kB
+../dist/public/assets/cute_robot_holding_deal_or_no_deal_clapperboard-OZfWcIrC.png     1,088.11 kB
+../dist/public/assets/6b13f568-ecb4-421a-8c1d-6edbe0b1a6c7_1764305481833-BtA7jm15.png  1,175.91 kB
+../dist/public/assets/stage-backdrop-CJ8BtoEI.png                                      1,241.24 kB
+../dist/public/assets/podium-set-BDckeEJU.png                                          1,942.53 kB
+../dist/public/assets/centre-stage-CzGLmQka.png                                        2,639.42 kB
+../dist/public/assets/index-ERDod9YV.css                                                 156.81 kB │ gzip:  23.21 kB
+../dist/public/assets/purify.es-C5KSVp3G.js                                               22.74 kB │ gzip:   8.75 kB
+../dist/public/assets/index.es-DLXy__Fu.js                                               150.62 kB │ gzip:  51.36 kB
+../dist/public/assets/html2canvas.esm-CBrSDip1.js                                        201.42 kB │ gzip:  47.70 kB
+../dist/public/assets/jspdf.es.min-D8VTkBB9.js                                           413.72 kB │ gzip: 133.51 kB
+../dist/public/assets/index-CQ_BUoDZ.js                                                2,373.59 kB │ gzip: 633.04 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.13s
+✘ [ERROR] Unexpected "<<"
+
+    server/backup-scheduler.ts:16:0:
+      16 │ <<<<<<< Updated upstream
+         ╵ ~~
+
+1 error
+admin@GameShowManager GameShowManager % git pull origin main
+error: Pulling is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+admin@GameShowManager GameShowManager % 

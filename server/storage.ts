@@ -574,7 +574,7 @@ export class DbStorage implements IStorage {
     if (contestantIds.length === 0) return [];
     const db = getDb();
     // Step 1: get the assigned contestants
-    const assigned = await db
+    const assigned = await getDb()
       .select()
       .from(contestants)
       .where(inArray(contestants.id, contestantIds));
@@ -583,7 +583,7 @@ export class DbStorage implements IStorage {
     if (groupIds.length === 0) return assigned;
     // Step 3: fetch all group members not already in the assigned set
     const assignedSet = new Set(assigned.map(c => c.id));
-    const groupMembers = await db
+    const groupMembers = await getDb()
       .select()
       .from(contestants)
       .where(inArray(contestants.groupId, groupIds));
@@ -598,7 +598,7 @@ export class DbStorage implements IStorage {
   async updateContestant(id: string, data: Partial<Contestant>): Promise<Contestant | undefined> {
     // Remove id and createdAt from update data
     const { id: _, createdAt, ...updateData } = data as any;
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(contestants)
       .set(updateData)
       .where(eq(contestants.id, id))
@@ -607,7 +607,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateContestantAvailability(id: string, status: string): Promise<Contestant | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(contestants)
       .set({ availabilityStatus: status as any })
       .where(eq(contestants.id, id))
@@ -616,7 +616,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateContestantPhoto(id: string, photoUrl: string | null): Promise<Contestant | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(contestants)
       .set({ photoUrl })
       .where(eq(contestants.id, id))
@@ -625,7 +625,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateContestantField(id: string, field: string, value: any): Promise<Contestant | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(contestants)
       .set({ [field]: value })
       .where(eq(contestants.id, id))
@@ -639,7 +639,7 @@ export class DbStorage implements IStorage {
 
   // Dedicated method to update contestant's "Attending With" field
   async updateContestantAttendingWith(id: string, attendingWith: string): Promise<Contestant | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(contestants)
       .set({ attendingWith })
       .where(eq(contestants.id, id))
@@ -682,7 +682,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateRecordDayLock(id: string, lockedAt: Date | null): Promise<RecordDay | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(recordDays)
       .set({ lockedAt })
       .where(eq(recordDays.id, id))
@@ -691,7 +691,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateRecordDayStatus(id: string, status: string): Promise<RecordDay | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(recordDays)
       .set({ status: status as any })
       .where(eq(recordDays.id, id))
@@ -701,7 +701,7 @@ export class DbStorage implements IStorage {
 
   async updateRecordDay(id: string, data: Partial<InsertRecordDay>): Promise<RecordDay | undefined> {
     const db = getDb();
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(recordDays)
       .set(data as any)
       .where(eq(recordDays.id, id))
@@ -714,7 +714,7 @@ export class DbStorage implements IStorage {
     
     // Check if record day has any seat assignments (including temporary contestants)
     // Join with contestants to get details for error message
-    const assignmentsWithContestants = await db
+    const assignmentsWithContestants = await getDb()
       .select({
         assignment: seatAssignments,
         contestant: contestants,
@@ -745,7 +745,7 @@ export class DbStorage implements IStorage {
     }
     
     // Check for standby assignments
-    const standbys = await db
+    const standbys = await getDb()
       .select()
       .from(standbyAssignments)
       .where(eq(standbyAssignments.recordDayId, id));
@@ -878,7 +878,7 @@ export class DbStorage implements IStorage {
   }
 
   async getSeatAssignmentByRecordDayAndContestant(recordDayId: string, contestantId: string): Promise<SeatAssignment | undefined> {
-    const [assignment] = await db
+    const [assignment] = await getDb()
       .select()
       .from(seatAssignments)
       .where(and(
@@ -944,7 +944,7 @@ export class DbStorage implements IStorage {
     blockNumber: number,
     seatLabel: string
   ): Promise<SeatAssignment | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(seatAssignments)
       .set({ blockNumber, seatLabel })
       .where(eq(seatAssignments.id, id))
@@ -1124,7 +1124,7 @@ export class DbStorage implements IStorage {
     id: string,
     castingCardUrl: string | null
   ): Promise<SeatAssignment | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(seatAssignments)
       .set({ castingCardUrl })
       .where(eq(seatAssignments.id, id))
@@ -1472,7 +1472,7 @@ export class DbStorage implements IStorage {
 
   async cancelSeatAssignment(id: string, reason?: string, movedBy?: string, isDecline: boolean = false): Promise<CanceledAssignment> {
     // Get the seat assignment first
-    const [assignment] = await db
+    const [assignment] = await getDb()
       .select()
       .from(seatAssignments)
       .where(eq(seatAssignments.id, id));
@@ -1526,7 +1526,7 @@ export class DbStorage implements IStorage {
     await getDb().delete(seatAssignments).where(eq(seatAssignments.id, id));
 
     // Update contestant status to 'rescheduled'
-    await db
+    await getDb()
       .update(contestants)
       .set({ availabilityStatus: 'rescheduled' })
       .where(eq(contestants.id, assignment.contestantId));
@@ -1547,7 +1547,7 @@ export class DbStorage implements IStorage {
 
   // Canceled Assignments
   async getCanceledAssignments(): Promise<Array<CanceledAssignment & { contestant: Contestant; recordDay: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         id: canceledAssignments.id,
         contestantId: canceledAssignments.contestantId,
@@ -1604,7 +1604,7 @@ export class DbStorage implements IStorage {
   }
 
   async getCanceledAssignmentByPosition(recordDayId: string, blockNumber: number, seatLabel: string): Promise<CanceledAssignment | undefined> {
-    const [result] = await db
+    const [result] = await getDb()
       .select()
       .from(canceledAssignments)
       .where(
@@ -1619,14 +1619,14 @@ export class DbStorage implements IStorage {
   }
 
   async updateCanceledAssignmentPosition(id: string, blockNumber: number, seatLabel: string): Promise<void> {
-    await db
+    await getDb()
       .update(canceledAssignments)
       .set({ blockNumber, seatLabel })
       .where(eq(canceledAssignments.id, id));
   }
 
   async createCanceledAssignment(data: Partial<InsertCanceledAssignment> & { contestantId: string; recordDayId: string }): Promise<CanceledAssignment> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(canceledAssignments)
       .values({
         contestantId: data.contestantId,
@@ -1653,7 +1653,7 @@ export class DbStorage implements IStorage {
       .returning();
     
     // Update contestant state to 'rescheduled'
-    await db
+    await getDb()
       .update(contestants)
       .set({ state: 'rescheduled' })
       .where(eq(contestants.id, data.contestantId));
@@ -1662,7 +1662,7 @@ export class DbStorage implements IStorage {
   }
 
   async getCanceledAssignmentByContestant(contestantId: string): Promise<CanceledAssignment | undefined> {
-    const [result] = await db
+    const [result] = await getDb()
       .select()
       .from(canceledAssignments)
       .where(eq(canceledAssignments.contestantId, contestantId));
@@ -1693,7 +1693,7 @@ export class DbStorage implements IStorage {
       const newHistory = [...existingHistory, historyEntry];
       
       // Update existing record with new info
-      const [updated] = await db
+      const [updated] = await getDb()
         .update(canceledAssignments)
         .set({
           recordDayId: data.recordDayId,
@@ -1729,7 +1729,7 @@ export class DbStorage implements IStorage {
         .returning();
       
       // Update contestant state to 'rescheduled'
-      await db
+      await getDb()
         .update(contestants)
         .set({ state: 'rescheduled' })
         .where(eq(contestants.id, data.contestantId));
@@ -1742,7 +1742,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateCanceledAssignment(id: string, data: Partial<CanceledAssignment>): Promise<CanceledAssignment> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(canceledAssignments)
       .set(data as any)
       .where(eq(canceledAssignments.id, id))
@@ -1761,7 +1761,7 @@ export class DbStorage implements IStorage {
   }
 
   async getAvailabilityTokenByToken(token: string): Promise<AvailabilityToken | undefined> {
-    const [result] = await db
+    const [result] = await getDb()
       .select()
       .from(availabilityTokens)
       .where(eq(availabilityTokens.token, token));
@@ -1776,7 +1776,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateTokenStatus(id: string, status: string): Promise<AvailabilityToken | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(availabilityTokens)
       .set({ status: status as any })
       .where(eq(availabilityTokens.id, id))
@@ -1785,7 +1785,7 @@ export class DbStorage implements IStorage {
   }
 
   async revokeContestantTokens(contestantId: string): Promise<void> {
-    await db
+    await getDb()
       .update(availabilityTokens)
       .set({ status: 'revoked' })
       .where(
@@ -1810,7 +1810,7 @@ export class DbStorage implements IStorage {
   }
 
   async getAvailabilityByRecordDay(recordDayId: string): Promise<Array<ContestantAvailability & { contestant: Contestant }>> {
-    const results = await db
+    const results = await getDb()
       .select()
       .from(contestantAvailability)
       .leftJoin(contestants, eq(contestantAvailability.contestantId, contestants.id))
@@ -1828,7 +1828,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateAvailabilityResponse(id: string, responseValue: string, notes?: string): Promise<ContestantAvailability | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(contestantAvailability)
       .set({ 
         responseValue: responseValue as any,
@@ -1847,7 +1847,7 @@ export class DbStorage implements IStorage {
     notes?: string
   ): Promise<ContestantAvailability> {
     // Check if record exists
-    const [existing] = await db
+    const [existing] = await getDb()
       .select()
       .from(contestantAvailability)
       .where(
@@ -1859,7 +1859,7 @@ export class DbStorage implements IStorage {
 
     if (existing) {
       // Update existing
-      const [updated] = await db
+      const [updated] = await getDb()
         .update(contestantAvailability)
         .set({
           responseValue: responseValue as any,
@@ -1871,7 +1871,7 @@ export class DbStorage implements IStorage {
       return updated;
     } else {
       // Create new
-      const [created] = await db
+      const [created] = await getDb()
         .insert(contestantAvailability)
         .values({
           contestantId,
@@ -1886,7 +1886,7 @@ export class DbStorage implements IStorage {
   }
 
   async getContestantsAvailableForRecordDay(recordDayId: string): Promise<Contestant[]> {
-    const results = await db
+    const results = await getDb()
       .select()
       .from(contestants)
       .leftJoin(contestantAvailability, eq(contestants.id, contestantAvailability.contestantId))
@@ -1902,7 +1902,7 @@ export class DbStorage implements IStorage {
 
   // Booking Confirmation Tokens
   async createBookingConfirmationToken(token: InsertBookingConfirmationToken): Promise<BookingConfirmationToken> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(bookingConfirmationTokens)
       .values(token)
       .returning();
@@ -1910,7 +1910,7 @@ export class DbStorage implements IStorage {
   }
 
   async getBookingConfirmationByToken(token: string): Promise<BookingConfirmationToken | undefined> {
-    const [confirmation] = await db
+    const [confirmation] = await getDb()
       .select()
       .from(bookingConfirmationTokens)
       .where(eq(bookingConfirmationTokens.token, token));
@@ -1918,7 +1918,7 @@ export class DbStorage implements IStorage {
   }
 
   async getBookingConfirmationBySeatAssignment(seatAssignmentId: string): Promise<BookingConfirmationToken | undefined> {
-    const [confirmation] = await db
+    const [confirmation] = await getDb()
       .select()
       .from(bookingConfirmationTokens)
       .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
@@ -1926,7 +1926,7 @@ export class DbStorage implements IStorage {
   }
 
   async getBookingConfirmationsByRecordDay(recordDayId: string): Promise<Array<BookingConfirmationToken & { seatAssignment: SeatAssignment; contestant: Contestant }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         bookingConfirmation: bookingConfirmationTokens,
         seatAssignment: seatAssignments,
@@ -1971,7 +1971,7 @@ export class DbStorage implements IStorage {
 
     // Use transactional WHERE clause to prevent race conditions
     // Only update if confirmation status is still 'pending'
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(bookingConfirmationTokens)
       .set(updateData)
       .where(
@@ -1985,7 +1985,7 @@ export class DbStorage implements IStorage {
   }
 
   async revokeBookingConfirmationToken(seatAssignmentId: string): Promise<void> {
-    await db
+    await getDb()
       .update(bookingConfirmationTokens)
       .set({ status: 'revoked' })
       .where(eq(bookingConfirmationTokens.seatAssignmentId, seatAssignmentId));
@@ -2012,7 +2012,7 @@ export class DbStorage implements IStorage {
     }
 
     // Update regardless of current confirmation status (allows resubmissions)
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(bookingConfirmationTokens)
       .set(updateData)
       .where(eq(bookingConfirmationTokens.id, id))
@@ -2022,7 +2022,7 @@ export class DbStorage implements IStorage {
 
   // Booking Messages
   async createBookingMessage(message: InsertBookingMessage): Promise<BookingMessage> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(bookingMessages)
       .values(message)
       .returning();
@@ -2031,7 +2031,7 @@ export class DbStorage implements IStorage {
 
   async upsertInboundBookingMessage(message: InsertBookingMessage): Promise<BookingMessage> {
     // Check if an inbound confirmation_response message already exists for this confirmation
-    const [existing] = await db
+    const [existing] = await getDb()
       .select()
       .from(bookingMessages)
       .where(
@@ -2045,7 +2045,7 @@ export class DbStorage implements IStorage {
 
     if (existing) {
       // Update the existing message
-      const [updated] = await db
+      const [updated] = await getDb()
         .update(bookingMessages)
         .set({
           subject: message.subject,
@@ -2058,7 +2058,7 @@ export class DbStorage implements IStorage {
       return updated;
     } else {
       // Create new message
-      const [created] = await db
+      const [created] = await getDb()
         .insert(bookingMessages)
         .values(message)
         .returning();
@@ -2075,7 +2075,7 @@ export class DbStorage implements IStorage {
   }
 
   async markMessageAsRead(messageId: string): Promise<BookingMessage | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(bookingMessages)
       .set({ readAt: new Date() })
       .where(eq(bookingMessages.id, messageId))
@@ -2085,7 +2085,7 @@ export class DbStorage implements IStorage {
 
   async getBookingConfirmationsByContestantEmail(email: string): Promise<Array<BookingConfirmationToken & { contestant: Contestant; seatAssignment: SeatAssignment }>> {
     const normalizedEmail = email.toLowerCase().trim();
-    const results = await db
+    const results = await getDb()
       .select({
         bookingConfirmation: bookingConfirmationTokens,
         seatAssignment: seatAssignments,
@@ -2104,7 +2104,7 @@ export class DbStorage implements IStorage {
   }
 
   async isGmailMessageProcessed(gmailMessageId: string): Promise<boolean> {
-    const [existing] = await db
+    const [existing] = await getDb()
       .select()
       .from(bookingMessages)
       .where(eq(bookingMessages.gmailMessageId, gmailMessageId))
@@ -2181,7 +2181,7 @@ export class DbStorage implements IStorage {
 
   // Standby Assignments
   async createStandbyAssignment(assignment: InsertStandbyAssignment): Promise<StandbyAssignment> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(standbyAssignments)
       .values(assignment)
       .returning();
@@ -2198,7 +2198,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyAssignments(): Promise<Array<StandbyAssignment & { contestant: Contestant; recordDay: RecordDay }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         standby: standbyAssignments,
         contestant: contestants,
@@ -2216,7 +2216,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyAssignmentsByRecordDay(recordDayId: string): Promise<Array<StandbyAssignment & { contestant: Contestant }>> {
-    const results = await db
+    const results = await getDb()
       .select({
         standby: standbyAssignments,
         contestant: contestants,
@@ -2232,7 +2232,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyAssignmentById(id: string): Promise<StandbyAssignment | undefined> {
-    const [standby] = await db
+    const [standby] = await getDb()
       .select()
       .from(standbyAssignments)
       .where(eq(standbyAssignments.id, id));
@@ -2240,7 +2240,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateStandbyAssignment(id: string, data: Partial<StandbyAssignment>): Promise<StandbyAssignment | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(standbyAssignments)
       .set(data)
       .where(eq(standbyAssignments.id, id))
@@ -2252,18 +2252,18 @@ export class DbStorage implements IStorage {
     const db = getDb();
     
     // Get details before deletion for history
-    const [standby] = await db
+    const [standby] = await getDb()
       .select()
       .from(standbyAssignments)
       .where(eq(standbyAssignments.id, id));
 
     // First delete any confirmation tokens that reference this standby assignment
-    await db
+    await getDb()
       .delete(standbyConfirmationTokens)
       .where(eq(standbyConfirmationTokens.standbyAssignmentId, id));
     
     // Then delete the standby assignment
-    await db
+    await getDb()
       .delete(standbyAssignments)
       .where(eq(standbyAssignments.id, id));
 
@@ -2281,7 +2281,7 @@ export class DbStorage implements IStorage {
 
   // Standby Confirmation Tokens
   async createStandbyConfirmationToken(token: InsertStandbyConfirmationToken): Promise<StandbyConfirmationToken> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(standbyConfirmationTokens)
       .values(token)
       .returning();
@@ -2289,7 +2289,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyConfirmationByToken(token: string): Promise<StandbyConfirmationToken | undefined> {
-    const [confirmation] = await db
+    const [confirmation] = await getDb()
       .select()
       .from(standbyConfirmationTokens)
       .where(eq(standbyConfirmationTokens.token, token));
@@ -2297,7 +2297,7 @@ export class DbStorage implements IStorage {
   }
 
   async getStandbyConfirmationByAssignment(standbyAssignmentId: string): Promise<StandbyConfirmationToken | undefined> {
-    const [confirmation] = await db
+    const [confirmation] = await getDb()
       .select()
       .from(standbyConfirmationTokens)
       .where(eq(standbyConfirmationTokens.standbyAssignmentId, standbyAssignmentId));
@@ -2305,7 +2305,7 @@ export class DbStorage implements IStorage {
   }
 
   async updateStandbyConfirmationToken(id: string, data: Partial<StandbyConfirmationToken>): Promise<StandbyConfirmationToken | undefined> {
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(standbyConfirmationTokens)
       .set(data)
       .where(eq(standbyConfirmationTokens.id, id))
@@ -2315,7 +2315,7 @@ export class DbStorage implements IStorage {
 
   // Standby Attendance History
   async createStandbyAttendanceHistory(data: InsertStandbyAttendanceHistory): Promise<StandbyAttendanceHistory> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(standbyAttendanceHistory)
       .values(data)
       .returning();
@@ -2375,7 +2375,7 @@ export class DbStorage implements IStorage {
   async getReturningStandbys(): Promise<Array<Contestant & { attendanceHistory: StandbyAttendanceHistory[] }>> {
     const db = getDb();
     // Get all contestants with 'returning_standby' status
-    const returningContestants = await db
+    const returningContestants = await getDb()
       .select()
       .from(contestants)
       .where(eq(contestants.availabilityStatus, 'returning_standby'));
@@ -2383,7 +2383,7 @@ export class DbStorage implements IStorage {
     // Get their attendance history
     const result = await Promise.all(
       returningContestants.map(async (contestant) => {
-        const history = await db
+        const history = await getDb()
           .select()
           .from(standbyAttendanceHistory)
           .where(eq(standbyAttendanceHistory.contestantId, contestant.id));
@@ -2405,7 +2405,7 @@ export class DbStorage implements IStorage {
 
   // System Configuration
   async getSystemConfig(key: string): Promise<string | null> {
-    const [config] = await db
+    const [config] = await getDb()
       .select()
       .from(systemConfig)
       .where(eq(systemConfig.key, key));
@@ -2413,7 +2413,7 @@ export class DbStorage implements IStorage {
   }
 
   async setSystemConfig(key: string, value: string): Promise<void> {
-    await db
+    await getDb()
       .insert(systemConfig)
       .values({ key, value })
       .onConflictDoUpdate({
@@ -2424,7 +2424,7 @@ export class DbStorage implements IStorage {
 
   // Form Configurations
   async getFormConfigurations(formType: string): Promise<Record<string, string>> {
-    const configs = await db
+    const configs = await getDb()
       .select()
       .from(formConfigurations)
       .where(eq(formConfigurations.formType, formType));
@@ -2437,7 +2437,7 @@ export class DbStorage implements IStorage {
   }
 
   async setFormConfiguration(formType: string, fieldKey: string, value: string): Promise<void> {
-    await db
+    await getDb()
       .insert(formConfigurations)
       .values({ formType, fieldKey, value })
       .onConflictDoUpdate({
@@ -2502,7 +2502,7 @@ export class DbStorage implements IStorage {
 
   async getAllRebookingHistory(): Promise<Array<RebookingHistory & { contestant: Contestant }>> {
     const db = getDb();
-    const results = await db
+    const results = await getDb()
       .select({
         history: rebookingHistory,
         contestant: contestants,
@@ -3233,7 +3233,7 @@ export class DbStorage implements IStorage {
 
   // Movement History
   async logMovement(data: InsertMovementHistory): Promise<MovementHistory> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(movementHistory)
       .values(data)
       .returning();
@@ -3295,14 +3295,14 @@ export class DbStorage implements IStorage {
 
   // Prize Winners
   async addPrizeWinner(data: InsertPrizeWinner): Promise<PrizeWinner> {
-    const [created] = await db
+    const [created] = await getDb()
       .insert(prizeWinners)
       .values(data)
       .onConflictDoNothing() // Don't error if already added
       .returning();
     // If already exists, fetch and return it
     if (!created) {
-      const [existing] = await db
+      const [existing] = await getDb()
         .select()
         .from(prizeWinners)
         .where(and(
@@ -3333,7 +3333,7 @@ export class DbStorage implements IStorage {
     if (typeof data.hasPresent === 'boolean') updateData.hasPresent = data.hasPresent;
     if (typeof data.hasBriefcase === 'boolean') updateData.hasBriefcase = data.hasBriefcase;
     
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(prizeWinners)
       .set(updateData)
       .where(eq(prizeWinners.id, id))
@@ -3346,7 +3346,7 @@ export class DbStorage implements IStorage {
   }
 
   async removePrizeWinnerByContestant(recordDayId: string, contestantId: string): Promise<void> {
-    await db
+    await getDb()
       .delete(prizeWinners)
       .where(and(
         eq(prizeWinners.recordDayId, recordDayId),
@@ -3357,7 +3357,7 @@ export class DbStorage implements IStorage {
   // Noticeboard Posts
   async createNoticeboardPost(post: InsertNoticeboardPost): Promise<NoticeboardPost> {
     const db = getDb();
-    const [created] = await db
+    const [created] = await getDb()
       .insert(noticeboardPosts)
       .values(post)
       .returning();
@@ -3366,13 +3366,13 @@ export class DbStorage implements IStorage {
 
   async getNoticeboardPosts(): Promise<Array<NoticeboardPost & { likeCount: number; commentCount: number }>> {
     const db = getDb();
-    const posts = await db
+    const posts = await getDb()
       .select()
       .from(noticeboardPosts)
       .orderBy(sql`${noticeboardPosts.isPinned} DESC, ${noticeboardPosts.createdAt} DESC`);
     
     // Get like counts for all posts
-    const likeCounts = await db
+    const likeCounts = await getDb()
       .select({
         postId: noticeboardLikes.postId,
         count: sql<number>`count(*)::int`,
@@ -3381,7 +3381,7 @@ export class DbStorage implements IStorage {
       .groupBy(noticeboardLikes.postId);
     
     // Get comment counts for all posts
-    const commentCounts = await db
+    const commentCounts = await getDb()
       .select({
         postId: noticeboardComments.postId,
         count: sql<number>`count(*)::int`,
@@ -3401,7 +3401,7 @@ export class DbStorage implements IStorage {
 
   async getNoticeboardPostById(id: string): Promise<NoticeboardPost | undefined> {
     const db = getDb();
-    const [post] = await db
+    const [post] = await getDb()
       .select()
       .from(noticeboardPosts)
       .where(eq(noticeboardPosts.id, id));
@@ -3410,7 +3410,7 @@ export class DbStorage implements IStorage {
 
   async updateNoticeboardPost(id: string, data: Partial<NoticeboardPost>): Promise<NoticeboardPost | undefined> {
     const db = getDb();
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(noticeboardPosts)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(noticeboardPosts.id, id))
@@ -3428,7 +3428,7 @@ export class DbStorage implements IStorage {
     const post = await this.getNoticeboardPostById(id);
     if (!post) return undefined;
     
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(noticeboardPosts)
       .set({ isPinned: !post.isPinned, updatedAt: new Date() })
       .where(eq(noticeboardPosts.id, id))
@@ -3439,7 +3439,7 @@ export class DbStorage implements IStorage {
   // Noticeboard Comments
   async createNoticeboardComment(comment: InsertNoticeboardComment): Promise<NoticeboardComment> {
     const db = getDb();
-    const [created] = await db
+    const [created] = await getDb()
       .insert(noticeboardComments)
       .values(comment)
       .returning();
@@ -3464,7 +3464,7 @@ export class DbStorage implements IStorage {
   async toggleLike(postId: string, browserId: string): Promise<{ liked: boolean; likeCount: number }> {
     const db = getDb();
     // Check if already liked by this browser
-    const [existing] = await db
+    const [existing] = await getDb()
       .select()
       .from(noticeboardLikes)
       .where(and(
@@ -3481,7 +3481,7 @@ export class DbStorage implements IStorage {
     }
     
     // Get new like count
-    const [result] = await db
+    const [result] = await getDb()
       .select({ count: sql<number>`count(*)::int` })
       .from(noticeboardLikes)
       .where(eq(noticeboardLikes.postId, postId));
@@ -3502,7 +3502,7 @@ export class DbStorage implements IStorage {
 
   async hasBrowserLikedPost(postId: string, browserId: string): Promise<boolean> {
     const db = getDb();
-    const [existing] = await db
+    const [existing] = await getDb()
       .select()
       .from(noticeboardLikes)
       .where(and(
@@ -3570,7 +3570,7 @@ export class DbStorage implements IStorage {
 
   async getPostRecordEntryById(id: string): Promise<PostRecordTracking | undefined> {
     const db = getDb();
-    const [entry] = await db
+    const [entry] = await getDb()
       .select()
       .from(postRecordTracking)
       .where(eq(postRecordTracking.id, id));
@@ -3580,7 +3580,7 @@ export class DbStorage implements IStorage {
   async getPostRecordEntryByContestant(contestantId: string, recordDayId?: string): Promise<PostRecordTracking | undefined> {
     const db = getDb();
     if (recordDayId) {
-      const [entry] = await db
+      const [entry] = await getDb()
         .select()
         .from(postRecordTracking)
         .where(and(
@@ -3589,7 +3589,7 @@ export class DbStorage implements IStorage {
         ));
       return entry;
     }
-    const [entry] = await db
+    const [entry] = await getDb()
       .select()
       .from(postRecordTracking)
       .where(eq(postRecordTracking.contestantId, contestantId));
@@ -3598,7 +3598,7 @@ export class DbStorage implements IStorage {
 
   async createPostRecordEntry(data: InsertPostRecordTracking): Promise<PostRecordTracking> {
     const db = getDb();
-    const [created] = await db
+    const [created] = await getDb()
       .insert(postRecordTracking)
       .values(data)
       .returning();
@@ -3607,7 +3607,7 @@ export class DbStorage implements IStorage {
 
   async updatePostRecordEntry(id: string, data: Partial<InsertPostRecordTracking>): Promise<PostRecordTracking | undefined> {
     const db = getDb();
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(postRecordTracking)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(postRecordTracking.id, id))
@@ -3628,7 +3628,7 @@ export class DbStorage implements IStorage {
 
   async getCastingCardByContestantId(contestantId: string): Promise<CastingCard | undefined> {
     const db = getDb();
-    const [card] = await db
+    const [card] = await getDb()
       .select()
       .from(castingCards)
       .where(eq(castingCards.contestantId, contestantId));
@@ -3644,7 +3644,7 @@ export class DbStorage implements IStorage {
 
   async setSystemSetting(key: string, value: string): Promise<SystemSetting> {
     const db = getDb();
-    const [updated] = await db
+    const [updated] = await getDb()
       .insert(systemSettings)
       .values({ key, value, updatedAt: new Date() })
       .onConflictDoUpdate({
@@ -3657,7 +3657,7 @@ export class DbStorage implements IStorage {
 
   async createCastingCard(data: InsertCastingCard): Promise<CastingCard> {
     const db = getDb();
-    const [created] = await db
+    const [created] = await getDb()
       .insert(castingCards)
       .values(data)
       .returning();
@@ -3666,7 +3666,7 @@ export class DbStorage implements IStorage {
 
   async updateCastingCard(contestantId: string, data: Partial<InsertCastingCard>): Promise<CastingCard | undefined> {
     const db = getDb();
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(castingCards)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(castingCards.contestantId, contestantId))
@@ -3678,7 +3678,7 @@ export class DbStorage implements IStorage {
     const db = getDb();
     const existing = await this.getCastingCardByContestantId(data.contestantId);
     if (existing) {
-      const [updated] = await db
+      const [updated] = await getDb()
         .update(castingCards)
         .set({ ...data, updatedAt: new Date() })
         .where(eq(castingCards.contestantId, data.contestantId))
@@ -3711,7 +3711,7 @@ export class DbStorage implements IStorage {
 
   async getLatestCastingCardVersion(castingCardId: string): Promise<CastingCardVersion | undefined> {
     const db = getDb();
-    const [latest] = await db
+    const [latest] = await getDb()
       .select()
       .from(castingCardVersions)
       .where(eq(castingCardVersions.castingCardId, castingCardId))
@@ -3722,7 +3722,7 @@ export class DbStorage implements IStorage {
 
   async createCastingCardVersion(data: InsertCastingCardVersion): Promise<CastingCardVersion> {
     const db = getDb();
-    const [created] = await db
+    const [created] = await getDb()
       .insert(castingCardVersions)
       .values(data)
       .returning();
@@ -3748,7 +3748,7 @@ export class DbStorage implements IStorage {
 
   async updateBirthdayEntry(id: string, data: Partial<BirthdayEntry>): Promise<BirthdayEntry | undefined> {
     const db = getDb();
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(birthdayEntries)
       .set(data)
       .where(eq(birthdayEntries.id, id))
