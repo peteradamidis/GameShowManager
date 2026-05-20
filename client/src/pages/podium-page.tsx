@@ -828,12 +828,12 @@ export default function PodiumPage() {
                 {ROWS.map(row => (
                   <div key={row.key}>
                     {row.isPlayer && (
-                      <div className="border-t border-dashed border-border my-2" />
+                      <div className="border-t border-dashed border-border mt-6 mb-6" />
                     )}
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                    <p className={`text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 ${row.isPlayer ? "text-center" : ""}`}>
                       {row.label}{row.isPlayer ? "" : ` — ${row.positions.filter(p => positionMap[p]).length}/${row.count} filled`}
                     </p>
-                    <div className={row.isPlayer ? "flex" : "flex gap-2 flex-wrap"}>
+                    <div className={row.isPlayer ? "flex justify-center" : "flex gap-2 flex-wrap"}>
                       {row.positions.map(pos => (
                         <div key={pos} className={row.isPlayer ? "w-[100px]" : "min-w-[72px] flex-1"}>
                           <PodiumPositionCard
