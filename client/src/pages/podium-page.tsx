@@ -627,6 +627,7 @@ export default function PodiumPage() {
   const [contestantPage, setContestantPage] = useState(1);
   const [selectedContestant, setSelectedContestant] = useState("");
   const [viewContestantId, setViewContestantId] = useState<string | null>(null);
+  const [editingStory, setEditingStory] = useState<{ id: string; name: string; note: string; caseNumber: string } | null>(null);
 
   const { data: recordDays = [] } = useQuery<RecordDay[]>({ queryKey: ["/api/record-days"] });
   const { data: allContestants = [] } = useQuery<Contestant[]>({ queryKey: ["/api/contestants"] });
@@ -741,6 +742,23 @@ export default function PodiumPage() {
     },
     onError: (err: any) => {
       toast({ title: "Failed to update rating", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateStoryMutation = useMutation({
+    mutationFn: ({ id, note, caseNumber }: { id: string; note: string; caseNumber: string }) =>
+      apiRequest("PATCH", `/api/contestants/${id}`, {
+        podiumStoryNote: note || null,
+        podiumStoryCaseNumber: caseNumber ? parseInt(caseNumber, 10) : null,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/podium-stories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+      setEditingStory(null);
+      toast({ title: "Story updated" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to save story", description: err.message, variant: "destructive" });
     },
   });
 
@@ -926,11 +944,12 @@ export default function PodiumPage() {
 
                   {/* Table header */}
                   <div className="rounded-md border overflow-hidden">
-                    <div className="grid grid-cols-[2fr_1fr_1fr_3fr] gap-0 bg-muted/50 border-b px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_3fr_auto] gap-0 bg-muted/50 border-b px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       <div>Contestant</div>
                       <div>Rating / RX</div>
                       <div>Case #</div>
                       <div>Story</div>
+                      <div></div>
                     </div>
 
                     {filteredStories.map((c: any, idx: number) => {
@@ -941,7 +960,7 @@ export default function PodiumPage() {
                       return (
                         <div
                           key={c.id}
-                          className={`grid grid-cols-[2fr_1fr_1fr_3fr] gap-0 px-4 py-3 hover-elevate cursor-pointer ${!isLast ? 'border-b' : ''}`}
+                          className={`grid grid-cols-[2fr_1fr_1fr_3fr_auto] gap-0 px-4 py-3 hover-elevate cursor-pointer ${!isLast ? 'border-b' : ''}`}
                           onClick={() => setViewContestantId(c.id)}
                           data-testid={`story-row-${c.id}`}
                         >
@@ -996,6 +1015,26 @@ export default function PodiumPage() {
                             ) : (
                               <span className="text-xs text-muted-foreground italic">No story notes yet</span>
                             )}
+                          </div>
+
+                          {/* Edit action */}
+                          <div className="flex items-start justify-end pl-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={e => {
+                                e.stopPropagation();
+                                setEditingStory({
+                                  id: c.id,
+                                  name: c.name,
+                                  note: c.podiumStoryNote || '',
+                                  caseNumber: c.podiumStoryCaseNumber != null ? String(c.podiumStoryCaseNumber) : '',
+                                });
+                              }}
+                              data-testid={`button-edit-story-${c.id}`}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </div>
                       );
@@ -1502,6 +1541,58 @@ export default function PodiumPage() {
       </Dialog>
 
       {/* Contestant detail dialog — used by Stories tab click and assignment dialog eye button */}
+      {/* Edit Story Dialog */}
+      <Dialog open={!!editingStory} onOpenChange={open => { if (!open) setEditingStory(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Story — {editingStory?.name}</DialogTitle>
+            <DialogDescription>Update the case number and story notes for this contestant.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Case Number</label>
+              <input
+                type="number"
+                min={1}
+                max={22}
+                placeholder="e.g. 7"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={editingStory?.caseNumber ?? ''}
+                onChange={e => setEditingStory(s => s ? { ...s, caseNumber: e.target.value } : s)}
+                data-testid="input-story-case-number"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Story Notes</label>
+              <Textarea
+                placeholder="Enter the contestant's podium story…"
+                className="resize-none min-h-[120px]"
+                value={editingStory?.note ?? ''}
+                onChange={e => setEditingStory(s => s ? { ...s, note: e.target.value } : s)}
+                data-testid="textarea-story-note"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 mt-2">
+            <Button variant="outline" onClick={() => setEditingStory(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!editingStory) return;
+                updateStoryMutation.mutate({
+                  id: editingStory.id,
+                  note: editingStory.note,
+                  caseNumber: editingStory.caseNumber,
+                });
+              }}
+              disabled={updateStoryMutation.isPending}
+              data-testid="button-save-story"
+            >
+              {updateStoryMutation.isPending ? 'Saving…' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {viewedContestant && (
         <Dialog open={!!viewContestantId} onOpenChange={open => { if (!open) setViewContestantId(null); }}>
           <DialogContent className="max-w-sm">
