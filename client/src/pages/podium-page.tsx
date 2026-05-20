@@ -77,9 +77,10 @@ const ROWS_DOND = [
 ];
 
 const ROWS_CELEB = [
-  { key: "top",    label: "Top Tier",    count: 10, positions: [16,17,18,19,20,21,22,23,24,25] },
-  { key: "middle", label: "Middle Tier", count: 8,  positions: [8,9,10,11,12,13,14,15] },
-  { key: "bottom", label: "Bottom Tier", count: 7,  positions: [1,2,3,4,5,6,7] },
+  { key: "top",    label: "Top Tier",    count: 10, positions: [16,17,18,19,20,21,22,23,24,25], isPlayer: false },
+  { key: "middle", label: "Middle Tier", count: 8,  positions: [8,9,10,11,12,13,14,15],         isPlayer: false },
+  { key: "bottom", label: "Bottom Tier", count: 7,  positions: [1,2,3,4,5,6,7],                 isPlayer: false },
+  { key: "player", label: "Player's Case", count: 1, positions: [26],                           isPlayer: true  },
 ];
 
 const RATING_COLORS: Record<string, string> = {
@@ -814,15 +815,18 @@ export default function PodiumPage() {
 
             {/* ── Positions tab ── */}
             <TabsContent value="positions" className="flex-1 overflow-auto p-5 mt-0">
-              <div className="space-y-6 max-w-3xl mx-auto">
+              <div className="space-y-6 max-w-5xl mx-auto">
                 {ROWS.map(row => (
                   <div key={row.key}>
+                    {row.isPlayer && (
+                      <div className="border-t border-dashed border-border my-2" />
+                    )}
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                      {row.label} — {row.positions.filter(p => positionMap[p]).length}/{row.count} filled
+                      {row.label}{row.isPlayer ? "" : ` — ${row.positions.filter(p => positionMap[p]).length}/${row.count} filled`}
                     </p>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className={row.isPlayer ? "flex" : "flex gap-2 flex-wrap"}>
                       {row.positions.map(pos => (
-                        <div key={pos} className="min-w-[72px] flex-1">
+                        <div key={pos} className={row.isPlayer ? "w-[100px]" : "min-w-[72px] flex-1"}>
                           <PodiumPositionCard
                             pos={pos}
                             entry={positionMap[pos]}
