@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -571,9 +572,17 @@ export default function PodiumPage() {
   const { toast } = useToast();
   const isDark = useIsDarkMode();
 
+  const [, setLocation] = useLocation();
   const { data: workspaceData } = useQuery<{ workspace: string }>({ queryKey: ['/api/workspace'] });
   const isCeleb = workspaceData?.workspace === 'celeb';
   const ROWS = isCeleb ? ROWS_CELEB : ROWS_DOND;
+
+  // Redirect to home if not in CELEB workspace (once workspace is confirmed loaded)
+  useEffect(() => {
+    if (workspaceData && !isCeleb) {
+      setLocation('/');
+    }
+  }, [workspaceData, isCeleb, setLocation]);
 
   const [recordDayId, setRecordDayId] = useState<string>(
     () => sessionStorage.getItem('podium-recordDayId') || ""
