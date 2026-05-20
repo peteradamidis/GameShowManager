@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight,
   Phone, Mail, ShieldAlert, Heart, Plus, UserPlus, Pencil, AlertTriangle,
+  Trash2, History,
 } from "lucide-react";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -103,7 +105,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
-type RecordDay = { id: string; date: string | null; rxNumber: string | null; episodeNumber?: number | null };
+type RecordDay = { id: string; date: string | null; rxNumber: string | null; episodeNumber?: number | null; lockedAt?: string | null };
 type Contestant = {
   id: string; name: string; gender: string; photoUrl?: string | null;
   auditionRating?: string | null; availabilityStatus?: string | null;
@@ -263,14 +265,21 @@ function PodiumPositionCard({
   pos,
   entry,
   onClick,
+  recordDayId,
+  recordDays,
+  onRemove,
 }: {
   pos: number;
   entry: PodiumEntry | undefined;
   onClick: () => void;
+  recordDayId: string;
+  recordDays: RecordDay[];
+  onRemove: (pos: number) => void;
 }) {
   const isDark = useIsDarkMode();
   const ratingColors = isDark ? ratingColorsDark : ratingColorsLight;
   const [hoverOpen, setHoverOpen] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   // Only fetch when the hover card is actually open — avoids 26 parallel requests on mount
   const { data: details } = useQuery({
@@ -283,6 +292,32 @@ function PodiumPositionCard({
     },
     enabled: hoverOpen && !!entry?.contestantId,
   });
+
+  // Fetch all seat assignments lazily to compute previous episode appearances
+  const { data: allSeatAssignments = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments'],
+    enabled: hoverOpen && !!entry?.contestantId,
+  });
+
+  // Previous appearances: locked days where this contestant had a seat (excluding current day)
+  const previousAppearances = useMemo(() => {
+    if (!entry?.contestantId || !allSeatAssignments.length) return [];
+    return allSeatAssignments
+      .filter((a: any) => a.contestantId === entry.contestantId && a.recordDayId !== recordDayId)
+      .map((a: any) => {
+        const day = recordDays.find(d => d.id === a.recordDayId);
+        if (!day) return null;
+        const label = day.rxNumber || (day.date ? new Date(day.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' }) : 'Unknown');
+        const isPast = !!day.lockedAt;
+        return { label, date: day.date, isPast, blockNumber: a.blockNumber, seatLabel: a.seatLabel };
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+  }, [entry?.contestantId, allSeatAssignments, recordDays, recordDayId]);
 
   const isEmpty = !entry;
   const rating = entry?.contestant.auditionRating ?? undefined;
@@ -355,6 +390,7 @@ function PodiumPositionCard({
 
   if (!isEmpty) {
     return (
+      <>
       <HoverCard open={hoverOpen} onOpenChange={setHoverOpen} openDelay={200} closeDelay={100}>
         <HoverCardTrigger asChild>{cardContent}</HoverCardTrigger>
         <HoverCardContent
@@ -437,7 +473,45 @@ function PodiumPositionCard({
                   <label className="text-xs font-medium text-muted-foreground">Status</label>
                   <div className="mt-1"><Badge variant="secondary">{details.availabilityStatus || 'Available'}</Badge></div>
                 </div>
-                <div className="pt-1 border-t text-xs text-muted-foreground">Podium Position #{pos}</div>
+
+                {/* Previous episode appearances */}
+                {previousAppearances.length > 0 && (
+                  <div className="text-sm p-2 bg-blue-50 dark:bg-blue-950/40 rounded-md border border-blue-200 dark:border-blue-800">
+                    <label className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1 mb-1.5">
+                      <History className="h-3 w-3" />
+                      Previously Appeared In
+                    </label>
+                    <div className="space-y-1">
+                      {previousAppearances.map((ep: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-xs">
+                          <span className="font-medium text-blue-800 dark:text-blue-200">{ep.label}</span>
+                          <span className="text-blue-600 dark:text-blue-400 text-[10px]">
+                            {ep.isPast ? 'Past episode' : 'Upcoming'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Remove from position */}
+                <div className="pt-2 border-t">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-destructive border-destructive/40 hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHoverOpen(false);
+                      setShowRemoveConfirm(true);
+                    }}
+                    data-testid={`button-remove-podium-${pos}`}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1.5" />
+                    Remove from Position
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground">Podium Position #{pos}</div>
               </>
             ) : (
               <div className="space-y-2 animate-pulse">
@@ -455,6 +529,29 @@ function PodiumPositionCard({
           </div>
         </HoverCardContent>
       </HoverCard>
+
+      {/* Remove confirmation dialog — rendered outside HoverCard so it stays open after hover closes */}
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from Podium?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove <strong>{entry?.contestant.name}</strong> from Position #{pos}? Their status will revert to available.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid={`button-cancel-remove-podium-${pos}`}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => onRemove(pos)}
+              data-testid={`button-confirm-remove-podium-${pos}`}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </>
     );
   }
 
@@ -719,6 +816,9 @@ export default function PodiumPage() {
                             pos={pos}
                             entry={positionMap[pos]}
                             onClick={() => openPosition(pos)}
+                            recordDayId={recordDayId}
+                            recordDays={recordDays}
+                            onRemove={(p) => removeMutation.mutate(p)}
                           />
                         </div>
                       ))}
