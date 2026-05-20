@@ -523,7 +523,7 @@ export interface IStorage {
   deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void>;
   clearRxPlanningDay(recordDayId: string): Promise<void>;
   transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }>;
-  getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>>;
+  getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }>; dondEpisodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>>;
   getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>>;
   upsertPodiumPosition(recordDayId: string, position: number, contestantId: string): Promise<PodiumPosition>;
   deletePodiumPosition(recordDayId: string, position: number): Promise<void>;
@@ -3951,9 +3951,65 @@ export class DbStorage implements IStorage {
       episodesByContestant[a.contestantId].push(a);
     }
 
+    // Cross-workspace: if running in CELEB, also fetch DOND (public schema) appearances
+    // by matching contestants by name against the DOND workspace's seat_assignments.
+    const dondEpisodesByContestantId: Record<string, typeof assignments> = {};
+    const workspace = workspaceStorage.getStore() || 'dond';
+    if (workspace === 'celeb' && db) {
+      const names = podiumContestants.map(c => c.name).filter(Boolean) as string[];
+      if (names.length > 0) {
+        const dondContestants = await db
+          .select({ id: contestants.id, name: contestants.name })
+          .from(contestants)
+          .where(inArray(contestants.name, names));
+
+        if (dondContestants.length > 0) {
+          const dondIds = dondContestants.map(c => c.id);
+          const dondAssignments = await db
+            .select({
+              contestantId: seatAssignments.contestantId,
+              recordDayId: seatAssignments.recordDayId,
+              blockNumber: seatAssignments.blockNumber,
+              seatLabel: seatAssignments.seatLabel,
+              rxNumber: recordDays.rxNumber,
+              date: recordDays.date,
+              lockedAt: recordDays.lockedAt,
+            })
+            .from(seatAssignments)
+            .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
+            .where(inArray(seatAssignments.contestantId, dondIds));
+
+          // Build a map: dond contestant id → name
+          const dondIdToName: Record<string, string> = {};
+          for (const dc of dondContestants) {
+            if (dc.name) dondIdToName[dc.id] = dc.name;
+          }
+          // Build a map: name → celeb contestant id
+          const celebNameToId: Record<string, string> = {};
+          for (const cc of podiumContestants) {
+            if (cc.name) celebNameToId[cc.name] = cc.id;
+          }
+
+          for (const a of dondAssignments) {
+            const dondName = dondIdToName[a.contestantId];
+            if (!dondName) continue;
+            const celebId = celebNameToId[dondName];
+            if (!celebId) continue;
+            if (!dondEpisodesByContestantId[celebId]) dondEpisodesByContestantId[celebId] = [];
+            dondEpisodesByContestantId[celebId].push(a);
+          }
+        }
+      }
+    }
+
     return podiumContestants.map(c => ({
       ...c,
       episodes: (episodesByContestant[c.id] || []).sort((a, b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }),
+      dondEpisodes: (dondEpisodesByContestantId[c.id] || []).sort((a, b) => {
         if (!a.date) return 1;
         if (!b.date) return -1;
         return new Date(a.date).getTime() - new Date(b.date).getTime();
