@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight,
   Phone, Mail, ShieldAlert, Heart, Plus, UserPlus, Pencil, AlertTriangle,
-  Trash2, History,
+  Trash2, History, BookOpen,
 } from "lucide-react";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -719,6 +719,31 @@ export default function PodiumPage() {
     },
   });
 
+  const togglePodiumStoryMutation = useMutation({
+    mutationFn: ({ contestantId, current }: { contestantId: string; current: boolean }) =>
+      apiRequest("PATCH", `/api/contestants/${contestantId}`, { podiumStory: !current }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/podium-stories"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update Podium Story", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateRatingMutation = useMutation({
+    mutationFn: ({ contestantId, rating }: { contestantId: string; rating: string }) =>
+      apiRequest("PATCH", `/api/contestants/${contestantId}`, { auditionRating: rating || null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update rating", description: err.message, variant: "destructive" });
+    },
+  });
+
   function closeDialog() {
     setSelectedPosition(null);
     setSelectedContestant("");
@@ -1027,6 +1052,52 @@ export default function PodiumPage() {
                   <Badge variant="secondary" className="text-xs">Position #{selectedEntry.position}</Badge>
                 </div>
               </div>
+              {/* PS tag toggle + Rating change */}
+              <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/30">
+                <div className="flex flex-col gap-1 flex-1">
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Podium Story</span>
+                  <Button
+                    variant={selectedEntry.contestant.podiumStory ? "default" : "outline"}
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => togglePodiumStoryMutation.mutate({
+                      contestantId: selectedEntry.contestant.id,
+                      current: !!selectedEntry.contestant.podiumStory,
+                    })}
+                    disabled={togglePodiumStoryMutation.isPending}
+                    data-testid="button-toggle-podium-story-dialog"
+                  >
+                    <BookOpen className="h-3.5 w-3.5 mr-1.5" />
+                    {selectedEntry.contestant.podiumStory ? "Tagged: PS" : "Tag as PS"}
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-1 flex-1">
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Rating</span>
+                  <Select
+                    value={selectedEntry.contestant.auditionRating ?? "none"}
+                    onValueChange={v => updateRatingMutation.mutate({
+                      contestantId: selectedEntry.contestant.id,
+                      rating: v === "none" ? "" : v,
+                    })}
+                    disabled={updateRatingMutation.isPending}
+                  >
+                    <SelectTrigger className="h-9" data-testid="select-podium-rating">
+                      <SelectValue placeholder="No rating" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— No rating —</SelectItem>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A">A</SelectItem>
+                      <SelectItem value="P">P</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B">B</SelectItem>
+                      <SelectItem value="C">C</SelectItem>
+                      <SelectItem value="R">R</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {selectedEntry.contestant.isTemporary && (
                 <Button
                   variant="outline"
