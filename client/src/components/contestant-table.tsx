@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft, BookOpen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +57,8 @@ export interface Contestant {
   playerType?: string;
   groupSize?: number | null;
   podiumStory?: boolean;
+  podiumStoryNote?: string | null;
+  podiumStoryCaseNumber?: number | null;
   availableForStandby?: boolean;
   isTemporary?: boolean;
   isTestSubject?: boolean;
@@ -1202,6 +1204,8 @@ export function ContestantTable({
         auditionRating: contestantDetails.auditionRating || '',
         playerType: (assignment as any)?.playerType || '',
         availabilityStatus: contestantDetails.availabilityStatus || 'available',
+        podiumStoryNote: contestantDetails.podiumStoryNote || '',
+        podiumStoryCaseNumber: contestantDetails.podiumStoryCaseNumber ?? null,
       });
     }
   }, [contestantDetails, selectedContestantId]);
@@ -1238,6 +1242,28 @@ export function ContestantTable({
       toast({
         title: "Contestant updated",
         description: "Contestant information has been saved successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const togglePodiumStoryMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('PATCH', `/api/contestants/${selectedContestantId}`, {
+        podiumStory: !contestantDetails?.podiumStory,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants', selectedContestantId] });
+      toast({
+        title: contestantDetails?.podiumStory ? "Podium Story tag removed" : "Podium Story tag added",
       });
     },
     onError: (error: Error) => {
@@ -1311,6 +1337,8 @@ export function ContestantTable({
         auditionRating: contestantDetails.auditionRating || '',
         playerType: (assignment as any)?.playerType || '',
         availabilityStatus: contestantDetails.availabilityStatus || 'available',
+        podiumStoryNote: contestantDetails.podiumStoryNote || '',
+        podiumStoryCaseNumber: contestantDetails.podiumStoryCaseNumber ?? null,
       });
     }
     setIsEditMode(false);
@@ -2121,6 +2149,34 @@ export function ContestantTable({
                         />
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-podium-story-note" className="text-xs">Podium Story Note</Label>
+                        <Textarea
+                          id="edit-podium-story-note"
+                          value={editFormData.podiumStoryNote || ''}
+                          onChange={(e) => handleEditFormChange('podiumStoryNote', e.target.value)}
+                          rows={2}
+                          data-testid="input-edit-podium-story-note"
+                          className="text-xs"
+                          placeholder="Story details..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="edit-podium-case-number" className="text-xs">Podium Case Number</Label>
+                        <Input
+                          id="edit-podium-case-number"
+                          type="number"
+                          min={1}
+                          max={22}
+                          value={editFormData.podiumStoryCaseNumber != null ? String(editFormData.podiumStoryCaseNumber) : ''}
+                          onChange={(e) => handleEditFormChange('podiumStoryCaseNumber', e.target.value ? parseInt(e.target.value) : null)}
+                          data-testid="input-edit-podium-case-number"
+                          className="h-8 text-xs"
+                          placeholder="1–22"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2423,6 +2479,29 @@ export function ContestantTable({
                     <p className={`text-sm ${contestantDetails.availabilityNotes ? '' : 'text-muted-foreground italic'}`}>
                       {contestantDetails.availabilityNotes || 'No availability notes'}
                     </p>
+                  </div>
+                </div>
+
+                {/* Podium Story Tag */}
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Tags</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      variant={contestantDetails.podiumStory ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => togglePodiumStoryMutation.mutate()}
+                      disabled={togglePodiumStoryMutation.isPending}
+                      data-testid="button-toggle-podium-story"
+                    >
+                      <BookOpen className="h-3 w-3 mr-1" />
+                      Podium Story
+                    </Button>
+                    {contestantDetails.podiumStory && contestantDetails.podiumStoryCaseNumber != null && (
+                      <span className="text-xs text-muted-foreground">Case {contestantDetails.podiumStoryCaseNumber}</span>
+                    )}
+                    {contestantDetails.podiumStory && contestantDetails.podiumStoryNote && (
+                      <span className="text-xs text-muted-foreground italic">{contestantDetails.podiumStoryNote}</span>
+                    )}
                   </div>
                 </div>
                   </div>
