@@ -1,0 +1,53 @@
+min@GameShowManager GameShowManager % echo "storage/backups/" >> .gitignore
+admin@GameShowManager GameShowManager % tail -50 ~/.pm2/logs/GameShowManager-error.log
+  port: 587,
+  command: 'CONN'
+}
+Failed to send booking confirmation email to peter.adamidis@gmail.com: connect EADDRNOTAVAIL 52.98.14.130:587 - Local (0.0.0.0:0)
+Error sending email with attachment to peter.adamidis@gmail.com: Error: connect EADDRNOTAVAIL 52.98.2.194:587 - Local (0.0.0.0:0)
+    at internalConnect (node:net:1098:16)
+    at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)
+    at node:net:1328:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11) {
+  errno: -49,
+  code: 'ESOCKET',
+  syscall: 'connect',
+  address: '52.98.2.194',
+  port: 587,
+  command: 'CONN'
+}
+Failed to send booking confirmation email to peter.adamidis@gmail.com: connect EADDRNOTAVAIL 52.98.2.194:587 - Local (0.0.0.0:0)
+Error sending email with attachment to peter.adamidis@gmail.com: Error: connect EADDRNOTAVAIL 52.98.14.130:587 - Local (0.0.0.0:0)
+    at internalConnect (node:net:1098:16)
+    at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)
+    at node:net:1328:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11) {
+  errno: -49,
+  code: 'ESOCKET',
+  syscall: 'connect',
+  address: '52.98.14.130',
+  port: 587,
+  command: 'CONN'
+}
+Failed to send booking confirmation email to peter.adamidis@gmail.com: connect EADDRNOTAVAIL 52.98.14.130:587 - Local (0.0.0.0:0)
+Error sending email with attachment to peter.adamidis@gmail.com: Error: connect EADDRNOTAVAIL 52.98.142.242:587 - Local (0.0.0.0:0)
+    at internalConnect (node:net:1098:16)
+    at defaultTriggerAsyncIdScope (node:internal/async_hooks:464:18)
+    at node:net:1328:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:77:11) {
+  errno: -49,
+  code: 'ESOCKET',
+  syscall: 'connect',
+  address: '52.98.142.242',
+  port: 587,
+  command: 'CONN'
+}
+Failed to send booking confirmation email to peter.adamidis@gmail.com: connect EADDRNOTAVAIL 52.98.142.242:587 - Local (0.0.0.0:0)
+[Backup] Automatic backup failed (attempt 1/5): Invalid string length
+[Backup] Automatic backup failed (attempt 1/5): Invalid string length
+(node:1946) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[Backup] Automatic backup failed (attempt 2/5): Invalid string length
+[Backup] Automatic backup failed (attempt 3/5): Invalid string length
+[Backup] Automatic backup failed (attempt 4/5): Invalid string length
+admin@GameShowManager GameShowManager % 

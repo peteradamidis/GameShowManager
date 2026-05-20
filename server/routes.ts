@@ -5173,10 +5173,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const assignment = await storage.createSeatAssignment(assignmentData);
 
-      // Clean up any standby entry for this contestant — mark it as seated so it
-      // doesn't linger as an orphan and cause stale badge indicators on the contestants page
-      if (standbyAssignment) {
-        await storage.updateStandbyAssignment(standbyAssignment.id, { status: 'seated' });
+      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated' so that
+      // stale entries from past episodes don't linger and cause false badge indicators.
+      // A single contestant may have multiple standby rows (e.g. one historical attended
+      // entry that was never closed out plus the current active one), so we sweep all of
+      // them rather than only the one found by the active-filter .find() above.
+      const staleStandbysRegular = allStandbys.filter(
+        (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+      );
+      for (const sb of staleStandbysRegular) {
+        await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
       }
 
       // Update contestant status to assigned
