@@ -522,7 +522,7 @@ export interface IStorage {
   saveRxPlanningBlock(recordDayId: string, blockNumber: number, contestantData: string): Promise<RxPlanningEntry>;
   deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void>;
   clearRxPlanningDay(recordDayId: string): Promise<void>;
-  transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }>;
+  transferContestantToCeleb(contestantId: string): Promise<void>;
   getDondHistoryForContestant(contestantId: string): Promise<Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number; seatLabel: string }>>;
   getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }>; dondEpisodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>>;
   getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>>;
@@ -3889,19 +3889,25 @@ export class DbStorage implements IStorage {
 
     if (!celebContestant?.name) return [];
 
-    const [dondContestant] = await db
+    // Aggregate across ALL DOND contestants sharing this name — if there are
+    // duplicates (homonyms), we surface all their appearances rather than
+    // arbitrarily picking one and silently dropping the rest.
+    const dondContestants = await db
       .select({ id: contestants.id })
       .from(contestants)
-      .where(eq(contestants.name, celebContestant.name))
-      .limit(1);
+      .where(eq(contestants.name, celebContestant.name));
 
-    if (!dondContestant) return [];
+    if (dondContestants.length === 0) return [];
 
-    const byName = await fetchByDondId(dondContestant.id);
-    return sortRows(byName);
+    const aggregated: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number; seatLabel: string }> = [];
+    for (const dc of dondContestants) {
+      const rows = await fetchByDondId(dc.id);
+      aggregated.push(...rows);
+    }
+    return sortRows(aggregated);
   }
 
-  async transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }> {
+  async transferContestantToCeleb(contestantId: string): Promise<void> {
     // Read all data from the current workspace (DOND)
     const contestant = await this.getContestantById(contestantId);
     if (!contestant) throw new Error('Contestant not found');
@@ -3911,8 +3917,6 @@ export class DbStorage implements IStorage {
       group = await this.getGroupById(contestant.groupId);
     }
     const castingCard = await this.getCastingCardByContestantId(contestantId);
-
-    let alreadyExisted = false;
 
     await runWithWorkspace('celeb', async () => {
       const celebDb = getDb();
@@ -3969,10 +3973,8 @@ export class DbStorage implements IStorage {
         }
       }
     });
-
-    return { alreadyExisted };
   }
-  async getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>> {
+  async getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }>; dondEpisodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>> {
     const currentDb = getDb();
 
     const podiumContestants = await currentDb

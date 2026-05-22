@@ -1065,7 +1065,7 @@ export default function Contestants() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: data.alreadyExisted ? "Profile updated in CELEB" : "Copied to CELEB",
+        title: "Copied to CELEB",
         description: data.message,
       });
     },
@@ -2770,7 +2770,7 @@ export default function Contestants() {
               Copy to CELEB Workspace
             </DialogTitle>
             <DialogDescription>
-              This will copy <strong>{selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}</strong> — including their profiles, groups, and casting cards — into the DOND CELEB workspace. The originals in DOND remain untouched. If any already exist in CELEB, their profiles will be updated.
+              This will copy <strong>{selectedContestants.length} contestant{selectedContestants.length !== 1 ? 's' : ''}</strong> — including their profiles, groups, and casting cards — into the DOND CELEB workspace. The originals in DOND remain untouched. Any that already exist in CELEB will be skipped.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

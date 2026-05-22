@@ -2657,7 +2657,7 @@ export function ContestantTable({
               Copy to CELEB Workspace
             </DialogTitle>
             <DialogDescription>
-              This will copy <strong>{contestantDetails?.name}</strong> — including their profile, group, and casting card — into the DOND CELEB workspace. The original record in DOND remains untouched. If they already exist in CELEB, their profile will be updated with the latest DOND data.
+              This will copy <strong>{contestantDetails?.name}</strong> — including their profile, group, and casting card — into the DOND CELEB workspace. The original record in DOND remains untouched. If they already exist in CELEB, the copy will be skipped.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
