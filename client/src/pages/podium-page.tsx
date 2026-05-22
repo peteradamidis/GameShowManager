@@ -598,7 +598,6 @@ export default function PodiumPage() {
 
   // Stories tab search/filter state
   const [storiesSearch, setStoriesSearch] = useState("");
-  const [storiesRxFilter, setStoriesRxFilter] = useState("all");
 
   // Temporary contestant dialogs
   const [tempContestantDialogOpen, setTempContestantDialogOpen] = useState(false);
@@ -646,10 +645,9 @@ export default function PodiumPage() {
   const filteredStories = useMemo(() => {
     return allPodiumStories.filter((c: any) => {
       if (storiesSearch && !c.name?.toLowerCase().includes(storiesSearch.toLowerCase())) return false;
-      if (storiesRxFilter !== "all" && !c.episodes?.some((e: any) => e.recordDayId === storiesRxFilter)) return false;
       return true;
     });
-  }, [allPodiumStories, storiesSearch, storiesRxFilter]);
+  }, [allPodiumStories, storiesSearch]);
 
   const positionMap = useMemo(() => {
     const map: Record<number, PodiumEntry> = {};
