@@ -85,9 +85,9 @@ const ratingColorsDark: Record<string, { bg: string; border: string; text: strin
 const CONTESTANTS_PER_PAGE = 50;
 
 const ROWS_DOND = [
-  { key: "top",    label: "Top Tier",    count: 8,  positions: [19,20,21,22,23,24,25,26] },
-  { key: "middle", label: "Middle Tier", count: 9,  positions: [10,11,12,13,14,15,16,17,18] },
-  { key: "bottom", label: "Bottom Tier", count: 9,  positions: [1,2,3,4,5,6,7,8,9] },
+  { key: "top",    label: "Top Tier",    count: 8,  positions: [19,20,21,22,23,24,25,26], isPlayer: false },
+  { key: "middle", label: "Middle Tier", count: 9,  positions: [10,11,12,13,14,15,16,17,18], isPlayer: false },
+  { key: "bottom", label: "Bottom Tier", count: 9,  positions: [1,2,3,4,5,6,7,8,9], isPlayer: false },
 ];
 
 const ROWS_CELEB = [
