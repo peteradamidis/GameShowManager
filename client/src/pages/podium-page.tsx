@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -20,8 +20,21 @@ import { useToast } from "@/hooks/use-toast";
 import {
   X, Search, Users, User, Eye, Check, ChevronLeft, ChevronRight,
   Phone, Mail, ShieldAlert, Heart, Plus, UserPlus, Pencil, AlertTriangle,
-  Trash2, History, BookOpen,
+  Trash2, History, BookOpen, Move,
 } from "lucide-react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
+  type DragOverEvent,
+} from "@dnd-kit/core";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -276,6 +289,10 @@ function PodiumPositionCard({
   recordDayId,
   recordDays,
   onRemove,
+  isQuickMoveMode,
+  isQuickMoveSelected,
+  isDragOver,
+  isDragging,
 }: {
   pos: number;
   entry: PodiumEntry | undefined;
@@ -283,6 +300,10 @@ function PodiumPositionCard({
   recordDayId: string;
   recordDays: RecordDay[];
   onRemove: (pos: number) => void;
+  isQuickMoveMode?: boolean;
+  isQuickMoveSelected?: boolean;
+  isDragOver?: boolean;
+  isDragging?: boolean;
 }) {
   const isDark = useIsDarkMode();
   const ratingColors = isDark ? ratingColorsDark : ratingColorsLight;
@@ -336,6 +357,9 @@ function PodiumPositionCard({
       className={[
         "p-2 min-h-[70px] flex flex-col justify-center text-xs transition-opacity border-2 relative cursor-pointer hover-elevate",
         isEmpty ? "border-dashed bg-muted/30" : "",
+        isQuickMoveSelected ? "ring-4 ring-cyan-500 dark:ring-cyan-400 rounded-md shadow-lg shadow-cyan-500/30" : "",
+        isDragOver ? "ring-4 ring-primary rounded-md scale-105" : "",
+        isDragging ? "opacity-40" : "",
       ].join(" ")}
       style={colorInfo ? {
         backgroundColor: colorInfo.bg,
@@ -399,7 +423,12 @@ function PodiumPositionCard({
   if (!isEmpty) {
     return (
       <>
-      <HoverCard open={hoverOpen} onOpenChange={setHoverOpen} openDelay={200} closeDelay={100}>
+      <HoverCard
+        open={isQuickMoveMode || isDragging ? false : hoverOpen}
+        onOpenChange={(o) => { if (!isQuickMoveMode && !isDragging) setHoverOpen(o); }}
+        openDelay={200}
+        closeDelay={100}
+      >
         <HoverCardTrigger asChild>{cardContent}</HoverCardTrigger>
         <HoverCardContent
           className="w-80 z-[100] max-h-[80vh] overflow-y-auto"
@@ -566,6 +595,81 @@ function PodiumPositionCard({
   return cardContent;
 }
 
+// ─── DraggableDroppablePodium ────────────────────────────────────────────────
+
+function DraggableDroppablePodium({
+  pos,
+  entry,
+  onClick,
+  recordDayId,
+  recordDays,
+  onRemove,
+  isQuickMoveMode,
+  isQuickMoveSelected,
+  isDragOver,
+  onQuickMoveClick,
+}: {
+  pos: number;
+  entry: PodiumEntry | undefined;
+  onClick: () => void;
+  recordDayId: string;
+  recordDays: RecordDay[];
+  onRemove: (pos: number) => void;
+  isQuickMoveMode: boolean;
+  isQuickMoveSelected: boolean;
+  isDragOver: boolean;
+  onQuickMoveClick: (pos: number) => void;
+}) {
+  const dragId = `podium-${pos}`;
+  const isOccupied = !!entry;
+
+  // Occupied seats are draggable (unless in quick-move mode)
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: dragId,
+    disabled: !isOccupied || isQuickMoveMode,
+  });
+
+  // All seats are droppable
+  const { setNodeRef: setDropRef } = useDroppable({ id: dragId });
+
+  const setRefs = (el: HTMLDivElement | null) => {
+    setDragRef(el);
+    setDropRef(el);
+  };
+
+  const handleClick = () => {
+    if (isQuickMoveMode) {
+      onQuickMoveClick(pos);
+    } else {
+      onClick();
+    }
+  };
+
+  return (
+    <div
+      ref={setRefs}
+      {...(isQuickMoveMode ? {} : attributes)}
+      {...(isQuickMoveMode ? {} : listeners)}
+      style={isDragOver || isQuickMoveSelected ? { zIndex: 10 } : undefined}
+      className={isQuickMoveMode ? "cursor-pointer" : ""}
+      data-testid={`podium-drag-${pos}`}
+    >
+      <PodiumPositionCard
+        pos={pos}
+        entry={entry}
+        onClick={handleClick}
+        recordDayId={recordDayId}
+        recordDays={recordDays}
+        onRemove={onRemove}
+        isQuickMoveMode={isQuickMoveMode}
+        isQuickMoveSelected={isQuickMoveSelected}
+        isDragOver={isDragOver}
+        isDragging={isDragging}
+      />
+    </div>
+  );
+}
+
 // ─── main page ───────────────────────────────────────────────────────────────
 
 export default function PodiumPage() {
@@ -589,6 +693,44 @@ export default function PodiumPage() {
   );
   const [activeTab, setActiveTab] = useState("positions");
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+
+  // ── Drag & Drop / Quick Move state ─────────────────────────────────────────
+  const [quickMoveEnabled, setQuickMoveEnabled] = useState(false);
+  const [quickMoveSelectedPosition, setQuickMoveSelectedPosition] = useState<number | null>(null);
+  const [activeDragPos, setActiveDragPos] = useState<number | null>(null);
+  const [overDragPos, setOverDragPos] = useState<number | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  // Clear quick move selection when mode is disabled
+  useEffect(() => {
+    if (!quickMoveEnabled) setQuickMoveSelectedPosition(null);
+  }, [quickMoveEnabled]);
+
+  // Escape to deselect in quick move mode
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && quickMoveSelectedPosition != null) {
+        setQuickMoveSelectedPosition(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [quickMoveSelectedPosition]);
+
+  const customCollisionDetection: CollisionDetection = useCallback((args) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) return pointerCollisions;
+    return rectIntersection(args);
+  }, []);
+
+  const parsePodiumDragId = (id: string | number | null | undefined): number | null => {
+    if (typeof id !== 'string' || !id.startsWith('podium-')) return null;
+    const n = parseInt(id.slice('podium-'.length), 10);
+    return Number.isFinite(n) ? n : null;
+  };
 
   // Persist selected episode across route navigations
   useEffect(() => {
@@ -706,6 +848,76 @@ export default function PodiumPage() {
     },
   });
 
+  const swapMutation = useMutation({
+    mutationFn: ({ sourcePosition, targetPosition }: { sourcePosition: number; targetPosition: number }) =>
+      apiRequest("POST", `/api/record-days/${recordDayId}/podium-positions/swap`, { sourcePosition, targetPosition }),
+    onMutate: async ({ sourcePosition, targetPosition }) => {
+      const key = ["/api/record-days", recordDayId, "podium-positions"];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<PodiumEntry[]>(key);
+      if (previous) {
+        queryClient.setQueryData<PodiumEntry[]>(key, previous.map(e => {
+          if (e.position === sourcePosition) return { ...e, position: targetPosition };
+          if (e.position === targetPosition) return { ...e, position: sourcePosition };
+          return e;
+        }));
+      }
+      return { previous };
+    },
+    onError: (err: any, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(["/api/record-days", recordDayId, "podium-positions"], ctx.previous);
+      }
+      toast({ title: "Failed to swap positions", description: err.message, variant: "destructive" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+    },
+  });
+
+  const handleDragStart = (event: any) => {
+    const pos = parsePodiumDragId(event.active?.id);
+    setActiveDragPos(pos);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const pos = parsePodiumDragId(event.over?.id ?? null);
+    setOverDragPos(pos);
+  };
+
+  const handleDragEnd = (event: any) => {
+    const source = parsePodiumDragId(event.active?.id);
+    const target = parsePodiumDragId(event.over?.id ?? null);
+    setActiveDragPos(null);
+    setOverDragPos(null);
+    if (source == null || target == null || source === target) return;
+    swapMutation.mutate({ sourcePosition: source, targetPosition: target });
+  };
+
+  const handleDragCancel = () => {
+    setActiveDragPos(null);
+    setOverDragPos(null);
+  };
+
+  const handleQuickMoveClick = (clickedPos: number) => {
+    if (!quickMoveEnabled) return;
+    const clickedHasContestant = !!positionMap[clickedPos];
+
+    // No selection yet → select if occupied
+    if (quickMoveSelectedPosition == null) {
+      if (clickedHasContestant) setQuickMoveSelectedPosition(clickedPos);
+      return;
+    }
+    // Clicking same → deselect
+    if (quickMoveSelectedPosition === clickedPos) {
+      setQuickMoveSelectedPosition(null);
+      return;
+    }
+    // Swap/move
+    swapMutation.mutate({ sourcePosition: quickMoveSelectedPosition, targetPosition: clickedPos });
+    setQuickMoveSelectedPosition(null);
+  };
+
   const removeMutation = useMutation({
     mutationFn: (position: number) =>
       apiRequest("DELETE", `/api/record-days/${recordDayId}/podium-positions/${position}`),
@@ -821,6 +1033,22 @@ export default function PodiumPage() {
               {allPodiumStories.length} {allPodiumStories.length === 1 ? 'story' : 'stories'}
             </Badge>
           )}
+          {recordDayId && activeTab === 'positions' && (
+            <Button
+              size="sm"
+              variant={quickMoveEnabled ? "default" : "outline"}
+              onClick={() => setQuickMoveEnabled(v => !v)}
+              className={quickMoveEnabled ? "bg-cyan-600 hover:bg-cyan-700 text-white" : ""}
+              data-testid="button-podium-quick-move"
+            >
+              <Move className="h-3.5 w-3.5 mr-1.5" />
+              {quickMoveEnabled
+                ? (quickMoveSelectedPosition != null
+                    ? `Quick Move · #${quickMoveSelectedPosition} selected`
+                    : "Quick Move · pick a position")
+                : "Quick Move"}
+            </Button>
+          )}
         </div>
         <Select value={recordDayId} onValueChange={setRecordDayId}>
           <SelectTrigger className="w-64" data-testid="select-record-day">
@@ -865,32 +1093,59 @@ export default function PodiumPage() {
 
             {/* ── Positions tab ── */}
             <TabsContent value="positions" className="flex-1 overflow-auto p-5 mt-0">
-              <div className="space-y-6 max-w-5xl mx-auto">
-                {ROWS.map(row => (
-                  <div key={row.key}>
-                    {row.isPlayer && (
-                      <div className="border-t border-dashed border-border mt-6 mb-6" />
-                    )}
-                    <p className={`text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 ${row.isPlayer ? "text-center" : ""}`}>
-                      {row.label}{row.isPlayer ? "" : ` — ${row.positions.filter(p => positionMap[p]).length}/${row.count} filled`}
-                    </p>
-                    <div className={row.isPlayer ? "flex justify-center" : "flex gap-2 flex-wrap"}>
-                      {row.positions.map(pos => (
-                        <div key={pos} className={row.isPlayer ? "w-[100px]" : "min-w-[72px] flex-1"}>
-                          <PodiumPositionCard
-                            pos={pos}
-                            entry={positionMap[pos]}
-                            onClick={() => openPosition(pos)}
-                            recordDayId={recordDayId}
-                            recordDays={recordDays}
-                            onRemove={(p) => removeMutation.mutate(p)}
-                          />
-                        </div>
-                      ))}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={customCollisionDetection}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+              >
+                <div className="space-y-6 max-w-5xl mx-auto">
+                  {ROWS.map(row => (
+                    <div key={row.key}>
+                      {row.isPlayer && (
+                        <div className="border-t border-dashed border-border mt-6 mb-6" />
+                      )}
+                      <p className={`text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 ${row.isPlayer ? "text-center" : ""}`}>
+                        {row.label}{row.isPlayer ? "" : ` — ${row.positions.filter(p => positionMap[p]).length}/${row.count} filled`}
+                      </p>
+                      <div className={row.isPlayer ? "flex justify-center" : "flex gap-2 flex-wrap"}>
+                        {row.positions.map(pos => (
+                          <div key={pos} className={row.isPlayer ? "w-[100px]" : "min-w-[72px] flex-1"}>
+                            <DraggableDroppablePodium
+                              pos={pos}
+                              entry={positionMap[pos]}
+                              onClick={() => openPosition(pos)}
+                              recordDayId={recordDayId}
+                              recordDays={recordDays}
+                              onRemove={(p) => removeMutation.mutate(p)}
+                              isQuickMoveMode={quickMoveEnabled}
+                              isQuickMoveSelected={quickMoveSelectedPosition === pos}
+                              isDragOver={overDragPos === pos && activeDragPos !== pos}
+                              onQuickMoveClick={handleQuickMoveClick}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                <DragOverlay dropAnimation={null}>
+                  {activeDragPos != null && positionMap[activeDragPos] ? (
+                    <div className="opacity-90 pointer-events-none">
+                      <PodiumPositionCard
+                        pos={activeDragPos}
+                        entry={positionMap[activeDragPos]}
+                        onClick={() => {}}
+                        recordDayId={recordDayId}
+                        recordDays={recordDays}
+                        onRemove={() => {}}
+                      />
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             </TabsContent>
 
             {/* ── Stories tab ── */}

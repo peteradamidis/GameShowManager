@@ -528,6 +528,7 @@ export interface IStorage {
   getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>>;
   upsertPodiumPosition(recordDayId: string, position: number, contestantId: string): Promise<PodiumPosition>;
   deletePodiumPosition(recordDayId: string, position: number): Promise<void>;
+  swapPodiumPositions(recordDayId: string, sourcePosition: number, targetPosition: number): Promise<void>;
   upsertPodiumSeatAssignment(recordDayId: string, position: number, contestantId: string): Promise<void>;
   deletePodiumSeatAssignment(recordDayId: string, position: number): Promise<void>;
 }
@@ -4115,6 +4116,74 @@ export class DbStorage implements IStorage {
         eq(podiumPositions.recordDayId, recordDayId),
         eq(podiumPositions.position, position)
       ));
+  }
+
+  async swapPodiumPositions(recordDayId: string, sourcePosition: number, targetPosition: number): Promise<void> {
+    if (sourcePosition === targetPosition) return;
+    await getDb().transaction(async (tx) => {
+      // Serialize concurrent swaps/moves on the same record day's podium with an advisory lock
+      const lockKey = this.hashSeatLocation(recordDayId, 8, 'podium');
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(${lockKey})`);
+
+      const srcRows = await tx
+        .select()
+        .from(podiumPositions)
+        .where(and(
+          eq(podiumPositions.recordDayId, recordDayId),
+          eq(podiumPositions.position, sourcePosition)
+        ))
+        .for('update')
+        .limit(1);
+      if (srcRows.length === 0) {
+        throw new Error("PODIUM_SOURCE_EMPTY: Source podium position is empty");
+      }
+      const src = srcRows[0];
+
+      const tgtRows = await tx
+        .select()
+        .from(podiumPositions)
+        .where(and(
+          eq(podiumPositions.recordDayId, recordDayId),
+          eq(podiumPositions.position, targetPosition)
+        ))
+        .for('update')
+        .limit(1);
+      const tgt = tgtRows[0];
+
+      // Swap or move within podium_positions using a temporary position to avoid unique-key collision
+      const tempPos = -1000 - sourcePosition;
+      if (tgt) {
+        await tx.update(podiumPositions)
+          .set({ position: tempPos })
+          .where(eq(podiumPositions.id, src.id));
+        await tx.update(podiumPositions)
+          .set({ position: sourcePosition })
+          .where(eq(podiumPositions.id, tgt.id));
+        await tx.update(podiumPositions)
+          .set({ position: targetPosition })
+          .where(eq(podiumPositions.id, src.id));
+      } else {
+        await tx.update(podiumPositions)
+          .set({ position: targetPosition })
+          .where(eq(podiumPositions.id, src.id));
+      }
+
+      // Mirror the change in seat_assignments (block 8, seat label P{position})
+      const srcLabel = `P${sourcePosition}`;
+      const tgtLabel = `P${targetPosition}`;
+      await tx.delete(seatAssignments).where(and(
+        eq(seatAssignments.recordDayId, recordDayId),
+        eq(seatAssignments.blockNumber, 8),
+        inArray(seatAssignments.seatLabel, [srcLabel, tgtLabel])
+      ));
+      const valuesToInsert: Array<{ recordDayId: string; contestantId: string; blockNumber: number; seatLabel: string }> = [
+        { recordDayId, contestantId: src.contestantId, blockNumber: 8, seatLabel: tgtLabel },
+      ];
+      if (tgt) {
+        valuesToInsert.push({ recordDayId, contestantId: tgt.contestantId, blockNumber: 8, seatLabel: srcLabel });
+      }
+      await tx.insert(seatAssignments).values(valuesToInsert);
+    });
   }
 
   async upsertPodiumSeatAssignment(recordDayId: string, position: number, contestantId: string): Promise<void> {

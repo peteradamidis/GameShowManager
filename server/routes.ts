@@ -18129,6 +18129,28 @@ Thank you.`;
     }
   });
 
+  app.post("/api/record-days/:recordDayId/podium-positions/swap", requireAuth, async (req, res) => {
+    try {
+      const { recordDayId } = req.params;
+      const { sourcePosition, targetPosition } = req.body;
+      const isValidPos = (v: any) => Number.isInteger(v) && v >= 1 && v <= 26;
+      if (!isValidPos(sourcePosition) || !isValidPos(targetPosition)) {
+        return res.status(400).json({ error: "sourcePosition and targetPosition must be integers in 1..26" });
+      }
+      if (sourcePosition === targetPosition) {
+        return res.status(400).json({ error: "sourcePosition and targetPosition must differ" });
+      }
+      await storage.swapPodiumPositions(recordDayId, sourcePosition, targetPosition);
+      res.json({ success: true });
+    } catch (error: any) {
+      if (error?.message?.startsWith?.('PODIUM_SOURCE_EMPTY')) {
+        return res.status(404).json({ error: error.message });
+      }
+      console.error("Swap podium positions error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.delete("/api/record-days/:recordDayId/podium-positions/:position", requireAuth, async (req, res) => {
     try {
       const { recordDayId, position } = req.params;
