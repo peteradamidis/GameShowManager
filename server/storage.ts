@@ -3850,25 +3850,55 @@ export class DbStorage implements IStorage {
   async getDondHistoryForContestant(contestantId: string): Promise<Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number; seatLabel: string }>> {
     const workspace = workspaceStorage.getStore() || 'dond';
     if (workspace !== 'celeb' || !db) return [];
-    // `db` is the module-level DOND (public schema) connection.
-    // The contestant ID is preserved during transfer so we can match directly.
-    const rows = await db
-      .select({
-        recordDayId: seatAssignments.recordDayId,
-        blockNumber: seatAssignments.blockNumber,
-        seatLabel: seatAssignments.seatLabel,
-        rxNumber: recordDays.rxNumber,
-        date: recordDays.date,
-        lockedAt: recordDays.lockedAt,
-      })
-      .from(seatAssignments)
-      .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
-      .where(eq(seatAssignments.contestantId, contestantId));
-    return rows.sort((a, b) => {
-      if (!a.date) return 1;
-      if (!b.date) return -1;
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
+
+    const sortRows = (rows: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number; seatLabel: string }>) =>
+      rows.sort((a, b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      });
+
+    const fetchByDondId = async (dondContestantId: string) =>
+      db!
+        .select({
+          recordDayId: seatAssignments.recordDayId,
+          blockNumber: seatAssignments.blockNumber,
+          seatLabel: seatAssignments.seatLabel,
+          rxNumber: recordDays.rxNumber,
+          date: recordDays.date,
+          lockedAt: recordDays.lockedAt,
+        })
+        .from(seatAssignments)
+        .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
+        .where(eq(seatAssignments.contestantId, dondContestantId));
+
+    // 1. Try direct ID match — works for contestants transferred via "Copy to CELEB"
+    //    (transfer preserves the same UUID).
+    const byId = await fetchByDondId(contestantId);
+    if (byId.length > 0) return sortRows(byId);
+
+    // 2. Name-based fallback — for contestants imported fresh into CELEB whose UUID
+    //    differs from any DOND record. Look up the contestant's name in the CELEB db,
+    //    then find the matching DOND contestant and return their appearances.
+    const celebDb = getDb();
+    const [celebContestant] = await celebDb
+      .select({ name: contestants.name })
+      .from(contestants)
+      .where(eq(contestants.id, contestantId))
+      .limit(1);
+
+    if (!celebContestant?.name) return [];
+
+    const [dondContestant] = await db
+      .select({ id: contestants.id })
+      .from(contestants)
+      .where(eq(contestants.name, celebContestant.name))
+      .limit(1);
+
+    if (!dondContestant) return [];
+
+    const byName = await fetchByDondId(dondContestant.id);
+    return sortRows(byName);
   }
 
   async transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }> {
