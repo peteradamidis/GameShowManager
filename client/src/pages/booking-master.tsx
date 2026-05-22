@@ -786,11 +786,36 @@ export default function BookingMaster() {
       });
     }
 
+    // Add podium entries (block 8 = "Podium") at the very top of the list.
+    // Podium positions are stored as seat assignments with blockNumber: 8 and
+    // seatLabel "P1".."P22". They are NOT iterated by the block 1-7 loop above.
+    const podiumEntries = assignments.filter((a) => a.blockNumber === 8);
+    for (const assignment of podiumEntries) {
+      const contestant = contestants.find(c => c.id === assignment.contestantId);
+      rows.push({
+        seatId: `08-${assignment.seatLabel}`,
+        blockNumber: 8,
+        seatLabel: assignment.seatLabel,
+        assignment,
+        contestant,
+      });
+    }
+
+    // Sort order: PODIUM (block 8) first, then BLOCK 1..7, then TO SEAT ON DAY (block 0) last
+    const blockOrderKey = (n: number) => (n === 8 ? -1 : n === 0 ? 999 : n);
     rows.sort((a, b) => {
-      if (a.blockNumber !== b.blockNumber) return a.blockNumber - b.blockNumber;
+      const aKey = blockOrderKey(a.blockNumber);
+      const bKey = blockOrderKey(b.blockNumber);
+      if (aKey !== bKey) return aKey - bKey;
       if (a.blockNumber === 0) {
         const aNum = parseInt(a.seatLabel.replace(/\D/g, '') || '0');
         const bNum = parseInt(b.seatLabel.replace(/\D/g, '') || '0');
+        return aNum - bNum;
+      }
+      if (a.blockNumber === 8) {
+        // P1, P2, ... P22
+        const aNum = parseInt(a.seatLabel.slice(1) || '0');
+        const bNum = parseInt(b.seatLabel.slice(1) || '0');
         return aNum - bNum;
       }
       const rowOrder = ['A', 'B', 'C', 'D', 'E'];
