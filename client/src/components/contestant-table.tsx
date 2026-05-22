@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft, BookOpen } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft, BookOpen, History } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -1100,6 +1100,19 @@ export function ContestantTable({
   const { data: blockTypes = [] } = useQuery<BlockType[]>({
     queryKey: ['/api/block-types'],
     enabled: detailDialogOpen,
+  });
+
+  interface DondEpisode {
+    recordDayId: string;
+    rxNumber: string | null;
+    date: string | null;
+    lockedAt: string | null;
+    blockNumber: number;
+    seatLabel: string;
+  }
+  const { data: dondHistory = [] } = useQuery<DondEpisode[]>({
+    queryKey: ['/api/contestants', selectedContestantId, 'dond-history'],
+    enabled: !!selectedContestantId && detailDialogOpen && workspaceData?.workspace === 'celeb',
   });
 
   // Get seat assignment for the selected contestant
@@ -2359,6 +2372,26 @@ export function ContestantTable({
                     </div>
                   );
                 })()}
+
+                {/* DOND Episode History (CELEB workspace only) */}
+                {dondHistory.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <History className="h-4 w-4 text-amber-500" />
+                      <span className="text-xs font-semibold uppercase text-amber-600 dark:text-amber-400 tracking-wide">DOND Appearances</span>
+                    </div>
+                    {dondHistory.map((ep, idx) => (
+                      <div key={idx} className="rounded-md px-3 py-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                        <div className="flex items-center gap-4 text-sm">
+                          <span><span className="text-xs text-muted-foreground mr-1">Day:</span><span className="font-medium">{ep.date ? new Date(ep.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}</span></span>
+                          {ep.rxNumber && <span><span className="text-xs text-muted-foreground mr-1">RX:</span><span className="font-medium">{ep.rxNumber}</span></span>}
+                          <span><span className="text-xs text-muted-foreground mr-1">Block:</span><span className="font-medium">{ep.blockNumber}</span></span>
+                          <span><span className="text-xs text-muted-foreground mr-1">Seat:</span><span className="font-mono font-medium text-amber-600 dark:text-amber-400">{String(ep.blockNumber).padStart(2,'0')}-{ep.seatLabel}</span></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Paperwork Status */}
                 {contestantDetails && paperworkStatusMap.get(contestantDetails.id) && (

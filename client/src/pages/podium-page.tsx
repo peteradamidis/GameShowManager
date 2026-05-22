@@ -1631,10 +1631,23 @@ export default function PodiumPage() {
 
               {viewedContestant.episodes?.length > 0 && (
                 <div className="border-t pt-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Episode History</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">CELEB Episodes</p>
                   <div className="flex flex-wrap gap-1.5">
                     {viewedContestant.episodes.map((e: any, i: number) => (
                       <Badge key={i} variant="secondary" className="text-xs">
+                        {e.rxNumber || (e.date ? new Date(e.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' }) : 'Unknown')}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {viewedContestant.dondEpisodes?.length > 0 && (
+                <div className="border-t pt-3">
+                  <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">DOND Appearances</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewedContestant.dondEpisodes.map((e: any, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400">
                         {e.rxNumber || (e.date ? new Date(e.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' }) : 'Unknown')}
                       </Badge>
                     ))}

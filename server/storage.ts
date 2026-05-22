@@ -523,6 +523,7 @@ export interface IStorage {
   deleteRxPlanningBlock(recordDayId: string, blockNumber: number): Promise<void>;
   clearRxPlanningDay(recordDayId: string): Promise<void>;
   transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }>;
+  getDondHistoryForContestant(contestantId: string): Promise<Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number; seatLabel: string }>>;
   getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }>; dondEpisodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>>;
   getPodiumPositions(recordDayId: string): Promise<Array<PodiumPosition & { contestant: Contestant }>>;
   upsertPodiumPosition(recordDayId: string, position: number, contestantId: string): Promise<PodiumPosition>;
@@ -3844,6 +3845,30 @@ export class DbStorage implements IStorage {
   async clearRxPlanningDay(recordDayId: string): Promise<void> {
     const db = getDb();
     await getDb().delete(rxPlanningEntries).where(eq(rxPlanningEntries.recordDayId, recordDayId));
+  }
+
+  async getDondHistoryForContestant(contestantId: string): Promise<Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number; seatLabel: string }>> {
+    const workspace = workspaceStorage.getStore() || 'dond';
+    if (workspace !== 'celeb' || !db) return [];
+    // `db` is the module-level DOND (public schema) connection.
+    // The contestant ID is preserved during transfer so we can match directly.
+    const rows = await db
+      .select({
+        recordDayId: seatAssignments.recordDayId,
+        blockNumber: seatAssignments.blockNumber,
+        seatLabel: seatAssignments.seatLabel,
+        rxNumber: recordDays.rxNumber,
+        date: recordDays.date,
+        lockedAt: recordDays.lockedAt,
+      })
+      .from(seatAssignments)
+      .innerJoin(recordDays, eq(seatAssignments.recordDayId, recordDays.id))
+      .where(eq(seatAssignments.contestantId, contestantId));
+    return rows.sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
   }
 
   async transferContestantToCeleb(contestantId: string): Promise<{ alreadyExisted: boolean }> {

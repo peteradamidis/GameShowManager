@@ -2793,6 +2793,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cross-workspace: DOND episode history for a CELEB contestant
+  // Returns all DOND seat assignments for the contestant (matched by same ID).
+  // Only meaningful when called from the CELEB workspace; returns [] in DOND.
+  app.get("/api/contestants/:id/dond-history", requireAuth, async (req, res) => {
+    try {
+      const history = await storage.getDondHistoryForContestant(req.params.id);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update contestant
   app.patch("/api/contestants/:id", async (req, res) => {
     try {
