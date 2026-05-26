@@ -841,6 +841,7 @@ export default function PodiumPage() {
       apiRequest("PUT", `/api/record-days/${recordDayId}/podium-positions/${position}`, { contestantId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/podium-stories"] });
       closeDialog();
     },
     onError: (err: any) => {
@@ -872,6 +873,7 @@ export default function PodiumPage() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/podium-stories"] });
     },
   });
 
@@ -923,6 +925,7 @@ export default function PodiumPage() {
       apiRequest("DELETE", `/api/record-days/${recordDayId}/podium-positions/${position}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/record-days", recordDayId, "podium-positions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/podium-stories"] });
       closeDialog();
     },
     onError: (err: any) => {
