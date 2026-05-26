@@ -447,6 +447,7 @@ function SortableStandbyItem({
     'B': 'bg-orange-500 text-white',
     'C': 'bg-red-500 text-white',
     'R': 'bg-violet-400 text-white',
+    'V': 'bg-slate-500 text-white',
   };
 
   // Group styling
@@ -783,6 +784,7 @@ function DraggableStandby({
     'B': 'bg-orange-500 text-white',
     'C': 'bg-red-500 text-white',
     'R': 'bg-violet-400 text-white',
+    'V': 'bg-slate-500 text-white',
   };
 
   return (
@@ -1193,7 +1195,7 @@ function calculateBlockStats(block: SeatData[]) {
 
   // Audition rating breakdown
   const ratingCounts: Record<string, number> = {
-    'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'R': 0
+    'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'C': 0, 'R': 0, 'V': 0
   };
   filled.forEach(s => {
     if (s.auditionRating && ratingCounts.hasOwnProperty(s.auditionRating)) {

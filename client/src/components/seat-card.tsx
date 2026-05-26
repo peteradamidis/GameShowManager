@@ -151,6 +151,7 @@ const ratingColorsLight: Record<string, { bg: string; border: string; text: stri
   'B': { bg: '#fed7aa', border: '#f97316', text: '#7c2d12' }, // Orange - dark text
   'C': { bg: '#fee2e2', border: '#ef4444', text: '#7f1d1d' }, // Red - dark text
   'R': { bg: '#ede9fe', border: '#7c3aed', text: '#3b0764' }, // Duller violet - reserve
+  'V': { bg: '#f1f5f9', border: '#64748b', text: '#1e293b' }, // Slate - audience / viewer
 };
 
 const ratingColorsDark: Record<string, { bg: string; border: string; text: string }> = {
@@ -161,6 +162,7 @@ const ratingColorsDark: Record<string, { bg: string; border: string; text: strin
   'B': { bg: '#431407', border: '#fb923c', text: '#fed7aa' }, // Dark orange bg - light text
   'C': { bg: '#450a0a', border: '#f87171', text: '#fee2e2' }, // Dark red bg - light text
   'R': { bg: '#2d1b69', border: '#8b5cf6', text: '#ede9fe' }, // Dark duller violet - reserve
+  'V': { bg: '#1e293b', border: '#94a3b8', text: '#f1f5f9' }, // Dark slate - audience / viewer
 };
 
 // Standby styling - purple to distinguish from regular contestants
@@ -882,7 +884,7 @@ export function SeatCard({
                                 onCloseAutoFocus={(e) => e.preventDefault()}
                               >
                                 <div className="flex flex-wrap gap-1 p-1">
-                                  {['A+', 'A', 'P', 'B+', 'B', 'C', 'R'].map((rating) => {
+                                  {['A+', 'A', 'P', 'B+', 'B', 'C', 'R', 'V'].map((rating) => {
                                     const isSelected = contestantDetails?.auditionRating === rating;
                                     const colors = isDarkMode ? ratingColorsDark[rating] : ratingColorsLight[rating];
                                     return (

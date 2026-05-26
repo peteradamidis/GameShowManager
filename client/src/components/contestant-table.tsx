@@ -1484,8 +1484,8 @@ export function ContestantTable({
           bVal = b.availabilityStatus || '';
           break;
         case 'auditionRating':
-          // Sort ratings: A+ > A > B > C > D > DNU > P > empty
-          const ratingOrder: Record<string, number> = { 'A+': 1, 'A': 2, 'B+': 2.5, 'B': 3, 'C': 4, 'R': 4.5, 'D': 5, 'DNU': 6, 'P': 7 };
+          // Sort ratings: A+ > A > B > C > D > DNU > P > V > empty
+          const ratingOrder: Record<string, number> = { 'A+': 1, 'A': 2, 'B+': 2.5, 'B': 3, 'C': 4, 'R': 4.5, 'D': 5, 'DNU': 6, 'P': 7, 'V': 8 };
           aVal = ratingOrder[a.auditionRating || ''] || 99;
           bVal = ratingOrder[b.auditionRating || ''] || 99;
           break;
@@ -1789,7 +1789,8 @@ export function ContestantTable({
                         contestant.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
                         contestant.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
                         contestant.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
-                        contestant.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : ''
+                        contestant.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' :
+                        contestant.auditionRating === 'V' ? 'text-slate-500 dark:text-slate-400' : ''
                       }`}>
                         {contestant.auditionRating}
                       </span>
@@ -2056,6 +2057,7 @@ export function ContestantTable({
                             <SelectItem value="C">C</SelectItem>
                             <SelectItem value="R">R</SelectItem>
                             <SelectItem value="P">P</SelectItem>
+                            <SelectItem value="V">V (Audience / Viewer)</SelectItem>
                             <SelectItem value="DNU">DNU (Do Not Use)</SelectItem>
                           </SelectContent>
                         </Select>
@@ -2313,7 +2315,8 @@ export function ContestantTable({
                             contestantDetails.auditionRating === 'B+' ? 'text-amber-600 dark:text-amber-400' :
                             contestantDetails.auditionRating === 'B' ? 'text-orange-600 dark:text-orange-400' :
                             contestantDetails.auditionRating === 'C' ? 'text-red-500 dark:text-red-400' :
-                            contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'
+                            contestantDetails.auditionRating === 'P' ? 'text-purple-600 dark:text-purple-400' :
+                            contestantDetails.auditionRating === 'V' ? 'text-slate-500 dark:text-slate-400' : 'text-muted-foreground'
                           }`}>
                             {contestantDetails.auditionRating || '-'}
                           </p>
