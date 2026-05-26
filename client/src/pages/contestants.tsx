@@ -142,6 +142,7 @@ export default function Contestants() {
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
   const [filterAudienceDate, setFilterAudienceDate] = useState<string>("all");
   const [filterState, setFilterState] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
   const [postcodeFrom, setPostcodeFrom] = useState<string>("");
   const [postcodeTo, setPostcodeTo] = useState<string>("");
   const [filterPodiumStory, setFilterPodiumStory] = useState(false);
@@ -753,12 +754,31 @@ export default function Contestants() {
     );
   }
 
+  // Apply sort (after all filters, before pagination)
+  if (sortBy === "recent") {
+    displayedContestants = [...displayedContestants].sort((a, b) => {
+      const aT = a.createdAt ? new Date(a.createdAt as any).getTime() : 0;
+      const bT = b.createdAt ? new Date(b.createdAt as any).getTime() : 0;
+      return bT - aT;
+    });
+  } else if (sortBy === "oldest") {
+    displayedContestants = [...displayedContestants].sort((a, b) => {
+      const aT = a.createdAt ? new Date(a.createdAt as any).getTime() : 0;
+      const bT = b.createdAt ? new Date(b.createdAt as any).getTime() : 0;
+      return aT - bT;
+    });
+  } else if (sortBy === "name") {
+    displayedContestants = [...displayedContestants].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "")
+    );
+  }
+
   const isLoading = loadingContestants || (filterRecordDayId && loadingFiltered);
 
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterAudienceDate, filterState, filterAllGroupAvailable, filterGroupNeverAttended, filterOver60km, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterAudienceDate, filterState, filterAllGroupAvailable, filterGroupNeverAttended, filterOver60km, searchTerm, sortBy]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -1750,6 +1770,20 @@ export default function Contestants() {
       <div className="space-y-4">
         {/* Basic Filters Row - Always visible */}
         <div className="flex gap-4 items-end flex-wrap">
+          <div className="flex-1 min-w-[150px] max-w-[180px]">
+            <label className="text-sm font-medium mb-2 block">Sort by</label>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger data-testid="select-sort-by">
+                <SelectValue placeholder="Default" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default order</SelectItem>
+                <SelectItem value="recent">Most recently uploaded</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="name">Name (A–Z)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex-1 min-w-[150px] max-w-[180px]">
             <label className="text-sm font-medium mb-2 block">
               <Filter className="w-3 h-3 inline mr-1" />
