@@ -127,10 +127,11 @@ function PhotoOnlySeat({ seat, seatLabel, blockIndex, seatIndex }: {
   seatIndex: number;
 }) {
   const isEmpty = !seat.contestantName;
+  const isLinked = !!(seat.attendingWith || seat.groupId);
   
   return (
     <div 
-      className="aspect-square rounded-lg overflow-hidden bg-muted/30 border border-border flex items-center justify-center"
+      className={`relative aspect-square rounded-lg overflow-hidden bg-muted/30 border flex items-center justify-center ${isLinked ? 'border-blue-500 dark:border-blue-400 ring-1 ring-blue-500/40' : 'border-border'}`}
       data-testid={`podium-seat-${blockIndex}-${seatIndex}`}
     >
       {isEmpty ? (
@@ -1118,69 +1119,65 @@ function SeatingBlock({
                       : (seatIdxInRow + 1);          // Normal: leftmost is 1, rightmost is 5
                     const seatLabel = `${row.label}${seatNumber}`;
                     
-                    // In Podium Visualiser mode, show only photos
-                    if (isPodiumVisualizerMode) {
-                      return (
-                        <PhotoOnlySeat
-                          key={seat.id}
-                          seat={seat}
-                          seatLabel={seatLabel}
-                          blockIndex={blockIndex}
-                          seatIndex={absoluteSeatIdx}
-                        />
-                      );
-                    }
-                    
                     return (
                       <div key={seat.id} className="relative">
-                        <DraggableDroppableSeat
-                          seat={seat}
-                          blockIndex={blockIndex}
-                          seatIndex={absoluteSeatIdx}
-                          isOver={overId === seat.id}
-                          isGlobalDragging={isGlobalDragging}
-                          isRXDayLocked={isRXDayLocked}
-                          isHighlighted={matchedSeatIds?.has(seat.id)}
-                          onEmptySeatClick={onEmptySeatClick}
-                          onRemove={onRemove}
-                          onCancel={onCancel}
-                          onWinningMoneyClick={onWinningMoneyClick}
-                          onRemoveWinningMoney={onRemoveWinningMoney}
-                          onReturnToStandby={onReturnToStandby}
-                          onNoShow={onNoShow}
-                          onEarlyLeaver={onEarlyLeaver}
-                          onNoLongerWantToAttend={onNoLongerWantToAttend}
-                          onPrizeWinner={onPrizeWinner}
-                          onEditTempContestant={onEditTempContestant}
-                          onDeleteTestSubject={onDeleteTestSubject}
-                          neighbors={getNeighborsForSeat?.(blockIndex, absoluteSeatIdx) || []}
-                          onLinkWithNeighbor={onLinkWithNeighbor}
-                          isQuickMoveMode={quickMoveEnabled}
-                          isQuickMoveSelected={quickMoveSelectedSeatId === seat.id}
-                          onQuickMoveClick={onQuickMoveClick}
-                          showBookingStatus={showBookingStatus}
-                          onRatingChange={onRatingChange}
-                        />
-                        {/* Horizontal link to next seat in same row */}
+                        {isPodiumVisualizerMode ? (
+                          <PhotoOnlySeat
+                            seat={seat}
+                            seatLabel={seatLabel}
+                            blockIndex={blockIndex}
+                            seatIndex={absoluteSeatIdx}
+                          />
+                        ) : (
+                          <DraggableDroppableSeat
+                            seat={seat}
+                            blockIndex={blockIndex}
+                            seatIndex={absoluteSeatIdx}
+                            isOver={overId === seat.id}
+                            isGlobalDragging={isGlobalDragging}
+                            isRXDayLocked={isRXDayLocked}
+                            isHighlighted={matchedSeatIds?.has(seat.id)}
+                            onEmptySeatClick={onEmptySeatClick}
+                            onRemove={onRemove}
+                            onCancel={onCancel}
+                            onWinningMoneyClick={onWinningMoneyClick}
+                            onRemoveWinningMoney={onRemoveWinningMoney}
+                            onReturnToStandby={onReturnToStandby}
+                            onNoShow={onNoShow}
+                            onEarlyLeaver={onEarlyLeaver}
+                            onNoLongerWantToAttend={onNoLongerWantToAttend}
+                            onPrizeWinner={onPrizeWinner}
+                            onEditTempContestant={onEditTempContestant}
+                            onDeleteTestSubject={onDeleteTestSubject}
+                            neighbors={getNeighborsForSeat?.(blockIndex, absoluteSeatIdx) || []}
+                            onLinkWithNeighbor={onLinkWithNeighbor}
+                            isQuickMoveMode={quickMoveEnabled}
+                            isQuickMoveSelected={quickMoveSelectedSeatId === seat.id}
+                            onQuickMoveClick={onQuickMoveClick}
+                            showBookingStatus={showBookingStatus}
+                            onRatingChange={onRatingChange}
+                          />
+                        )}
+                        {/* Horizontal link to next seat in same row (shown in both modes) */}
                         {hasLinkToNext && (
                           <div 
-                            className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-30"
+                            className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-30 pointer-events-none"
                             data-testid={`link-icon-h-${row.label}-${seatIdxInRow}`}
                           >
                             <Link2
-                              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 drop-shadow-[0_0_2px_rgba(255,255,255,0.9)]"
                               strokeWidth={2.5}
                             />
                           </div>
                         )}
-                        {/* Vertical link to seat in row below */}
+                        {/* Vertical link to seat in row below (shown in both modes) */}
                         {hasVerticalLink && (
                           <div 
-                            className="absolute bottom-0 left-1/2 transform translate-y-1/2 -translate-x-1/2 z-30"
+                            className="absolute bottom-0 left-1/2 transform translate-y-1/2 -translate-x-1/2 z-30 pointer-events-none"
                             data-testid={`link-icon-v-${row.label}-${seatIdxInRow}`}
                           >
                             <Link2
-                              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 rotate-90"
+                              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 rotate-90 drop-shadow-[0_0_2px_rgba(255,255,255,0.9)]"
                               strokeWidth={2.5}
                             />
                           </div>
