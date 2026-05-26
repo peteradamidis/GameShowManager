@@ -784,14 +784,13 @@ export default function PodiumPage() {
     queryKey: ["/api/podium-stories"],
   });
 
-  // Episode-scoped stories: only show PS contestants assigned to the CURRENT episode
-  // AND who actually have a story note written (empty notes are hidden from all story sections)
+  // Episode-scoped stories: show all PS-tagged contestants assigned to the CURRENT episode.
+  // A note is not required — newly tagged contestants appear immediately so the user can
+  // open them in the stories tab and add a note/case number from there.
   const episodeStories = useMemo(() => {
     if (!podiumData.length) return [];
     const currentIds = new Set(podiumData.map(p => p.contestantId));
-    return allPodiumStories.filter((c: any) =>
-      currentIds.has(c.id) && typeof c.podiumStoryNote === 'string' && c.podiumStoryNote.trim().length > 0
-    );
+    return allPodiumStories.filter((c: any) => currentIds.has(c.id));
   }, [allPodiumStories, podiumData]);
 
   // Filtered stories based on name search — scoped to current episode
