@@ -14697,16 +14697,21 @@ Thank you.`;
         }
       }
       
-      // Enrich with contestant and record day data
-      const enrichedAssignments = statusFilteredAssignments.map((a: SeatAssignment) => {
-        const contestant = contestants.find(c => c.id === a.contestantId);
-        const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
-        return {
-          ...a,
-          contestant: contestant || null,
-          recordDay: recordDay || null,
-        };
-      });
+      // Enrich with contestant and record day data.
+      // Drop any orphaned seat assignments whose recordDay no longer exists —
+      // these are stale rows left over from old deletes and would otherwise
+      // show up in the tracker as ghost duplicates with no date.
+      const enrichedAssignments = statusFilteredAssignments
+        .map((a: SeatAssignment) => {
+          const contestant = contestants.find(c => c.id === a.contestantId);
+          const recordDay = recordDays.find(rd => rd.id === a.recordDayId);
+          return {
+            ...a,
+            contestant: contestant || null,
+            recordDay: recordDay || null,
+          };
+        })
+        .filter((a: any) => a.recordDay !== null);
       
       // Sort by record day date, then block, then seat
       enrichedAssignments.sort((a: any, b: any) => {

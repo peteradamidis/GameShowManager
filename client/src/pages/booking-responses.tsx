@@ -1293,11 +1293,16 @@ export default function BookingResponses() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Record Days</SelectItem>
-              {sortedRecordDays.map((rd) => (
-                <SelectItem key={rd.id} value={rd.id}>
-                  {format(new Date(rd.date), "EEE, d MMM yyyy")} {rd.rxNumber ? `- ${rd.rxNumber}` : ""}
-                </SelectItem>
-              ))}
+              {sortedRecordDays.map((rd) => {
+                const epLabel = rd.episodeNumber != null ? `Ep ${rd.episodeNumber}` : "";
+                const rxLabel = rd.rxNumber || "";
+                const suffix = [epLabel, rxLabel].filter(Boolean).join(" · ");
+                return (
+                  <SelectItem key={rd.id} value={rd.id}>
+                    {format(new Date(rd.date), "EEE, d MMM yyyy")}{suffix ? ` - ${suffix}` : ""}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -2527,11 +2532,16 @@ export default function BookingResponses() {
                 <SelectContent>
                   {sortedRecordDays
                     .filter(rd => rd.id !== changeDateAssignment?.recordDayId)
-                    .map((rd) => (
-                      <SelectItem key={rd.id} value={rd.id}>
-                        {rd.rxNumber ? `${rd.rxNumber} - ` : ""}{format(new Date(rd.date), "EEE, d MMM yyyy")}
-                      </SelectItem>
-                    ))}
+                    .map((rd) => {
+                      const epLabel = rd.episodeNumber != null ? `Ep ${rd.episodeNumber}` : "";
+                      const rxLabel = rd.rxNumber || "";
+                      const prefix = [epLabel, rxLabel].filter(Boolean).join(" · ");
+                      return (
+                        <SelectItem key={rd.id} value={rd.id}>
+                          {prefix ? `${prefix} - ` : ""}{format(new Date(rd.date), "EEE, d MMM yyyy")}
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </div>
