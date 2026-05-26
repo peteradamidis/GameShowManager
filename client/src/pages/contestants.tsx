@@ -140,6 +140,7 @@ export default function Contestants() {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [filterStandbyStatus, setFilterStandbyStatus] = useState<string>("all");
   const [filterGroupSize, setFilterGroupSize] = useState<string>("all");
+  const [filterAudienceDate, setFilterAudienceDate] = useState<string>("all");
   const [filterState, setFilterState] = useState<string>("all");
   const [postcodeFrom, setPostcodeFrom] = useState<string>("");
   const [postcodeTo, setPostcodeTo] = useState<string>("");
@@ -599,6 +600,17 @@ export default function Contestants() {
       displayedContestants = displayedContestants.filter(c => !standbyContestantIds.has(c.id) && !c.availableForStandby);
     }
   }
+  if (filterAudienceDate !== "all") {
+    if (filterAudienceDate === "any") {
+      displayedContestants = displayedContestants.filter(
+        c => Array.isArray((c as any).audienceAvailableDates) && (c as any).audienceAvailableDates.length > 0
+      );
+    } else {
+      displayedContestants = displayedContestants.filter(
+        c => Array.isArray((c as any).audienceAvailableDates) && (c as any).audienceAvailableDates.includes(filterAudienceDate)
+      );
+    }
+  }
   if (filterGroupSize !== "all") {
     displayedContestants = displayedContestants.filter(c => {
       // Use shared parser for consistent group size calculation across the system
@@ -746,7 +758,7 @@ export default function Contestants() {
   // Reset page when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterState, filterAllGroupAvailable, filterGroupNeverAttended, filterOver60km, searchTerm]);
+  }, [filterStatus, filterGender, filterRating, filterLocation, filterRecordDayId, filterResponseValue, filterStandbyStatus, filterGroupSize, filterAudienceDate, filterState, filterAllGroupAvailable, filterGroupNeverAttended, filterOver60km, searchTerm]);
 
   // Pagination calculations
   const totalPages = Math.ceil(displayedContestants.length / ITEMS_PER_PAGE);
@@ -1788,6 +1800,41 @@ export default function Contestants() {
             </Select>
           </div>
 
+          {!isDond && (() => {
+            const dateSet = new Set<string>();
+            for (const c of contestants) {
+              const dates = (c as any).audienceAvailableDates;
+              if (Array.isArray(dates)) for (const d of dates) if (d) dateSet.add(d);
+            }
+            const dateOptions = Array.from(dateSet).sort();
+            const labelFor = (iso: string) => {
+              const d = new Date(iso + 'T00:00:00');
+              return isNaN(d.getTime())
+                ? iso
+                : `${d.toLocaleDateString('en-AU', { weekday: 'short' })} ${d.getDate()} ${d.toLocaleDateString('en-AU', { month: 'short' })}`;
+            };
+            return (
+              <div className="flex-1 min-w-[150px] max-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">Availability</label>
+                <Select value={filterAudienceDate} onValueChange={(value) => {
+                  setSelectedContestants([]);
+                  setFilterAudienceDate(value);
+                }}>
+                  <SelectTrigger data-testid="select-filter-audience-date">
+                    <SelectValue placeholder="All dates" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All dates</SelectItem>
+                    <SelectItem value="any">Any date specified</SelectItem>
+                    {dateOptions.map((iso) => (
+                      <SelectItem key={iso} value={iso}>{labelFor(iso)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            );
+          })()}
+
           <div className="flex-1 min-w-[150px] max-w-[180px]">
             <label className="text-sm font-medium mb-2 block">Group Size</label>
             <Select value={filterGroupSize} onValueChange={(value) => {
@@ -1817,7 +1864,7 @@ export default function Contestants() {
 
           {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
             filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-            filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable) && (
+            filterGroupSize !== "all" || filterAudienceDate !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable) && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -1832,6 +1879,7 @@ export default function Contestants() {
                 setPostcodeFrom("");
                 setPostcodeTo("");
                 setFilterGroupSize("all");
+                setFilterAudienceDate("all");
                 setFilterPodiumStory(false);
                 setFilterWithin60km(false);
                 setFilterWithin20km(false);
@@ -2122,7 +2170,7 @@ export default function Contestants() {
       {/* Results Summary */}
       {(filterStatus !== "all" || filterGender !== "all" || filterRating !== "all" || 
         filterLocation !== "all" || filterRecordDayId || filterStandbyStatus !== "all" || 
-        filterGroupSize !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable || filterGroupNeverAttended) && (
+        filterGroupSize !== "all" || filterAudienceDate !== "all" || filterState !== "all" || postcodeFrom || postcodeTo || filterPodiumStory || filterWithin60km || filterWithin20km || filterOver60km || filterAllGroupAvailable || filterGroupNeverAttended) && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" data-testid="badge-filter-count">
             {displayedContestants.length} contestant{displayedContestants.length !== 1 ? 's' : ''}
@@ -2151,6 +2199,16 @@ export default function Contestants() {
           {filterStandbyStatus !== "all" && (
             <Badge variant="outline">
               Standby: {filterStandbyStatus === "is_standby" ? "Yes" : "No"}
+            </Badge>
+          )}
+          {filterAudienceDate !== "all" && (
+            <Badge variant="outline">
+              Availability: {filterAudienceDate === "any" ? "Any date" : (() => {
+                const d = new Date(filterAudienceDate + 'T00:00:00');
+                return isNaN(d.getTime())
+                  ? filterAudienceDate
+                  : `${d.toLocaleDateString('en-AU', { weekday: 'short' })} ${d.getDate()} ${d.toLocaleDateString('en-AU', { month: 'short' })}`;
+              })()}
             </Badge>
           )}
           {filterGroupSize !== "all" && (
