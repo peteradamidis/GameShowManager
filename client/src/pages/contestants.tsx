@@ -984,6 +984,37 @@ export default function Contestants() {
     },
   });
 
+  const importAudienceMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const url = `${window.location.origin}/api/contestants/import-audience`;
+      const response = await fetch(url, { method: 'POST', body: formData, credentials: 'same-origin' });
+      const responseText = await response.text();
+      if (!response.ok) {
+        let errorMsg = `Import failed: Server returned ${response.status}`;
+        try { errorMsg = JSON.parse(responseText).error || errorMsg; } catch {}
+        throw new Error(errorMsg);
+      }
+      return JSON.parse(responseText);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/contestants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      broadcastContestantChange();
+      const parts: string[] = [];
+      if (data.contestantsCreated > 0) parts.push(`${data.contestantsCreated} new audience contestant${data.contestantsCreated !== 1 ? 's' : ''} (rated V)`);
+      if (data.temporaryContestantsUpdated > 0) parts.push(`${data.temporaryContestantsUpdated} temp contestant${data.temporaryContestantsUpdated !== 1 ? 's' : ''} updated`);
+      if (data.skippedDuplicates > 0) parts.push(`${data.skippedDuplicates} duplicate${data.skippedDuplicates !== 1 ? 's' : ''} skipped`);
+      const description = parts.length > 0 ? parts.join(', ') + '.' : 'No new contestants imported.';
+      const hasNew = data.contestantsCreated > 0 || data.temporaryContestantsUpdated > 0;
+      toast({ title: hasNew ? "Audience import successful" : "Audience import complete", description });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Audience import failed", description: error.message || "Could not import the audience file.", variant: "destructive" });
+    },
+  });
+
   // Add as standby mutation
   const addStandbyMutation = useMutation({
     mutationFn: async ({ contestantIds, recordDayId }: { contestantIds: string[]; recordDayId: string }) => {
@@ -1633,6 +1664,16 @@ export default function Contestants() {
             dialogDescription="Upload a Microsoft Forms survey Excel export. All imported contestants will be rated R."
             data-testid="button-import-survey"
           />
+          {!isDond && (
+            <ImportExcelDialog
+              onImport={(file) => importAudienceMutation.mutate(file)}
+              previewEndpoint="/api/contestants/import-audience-preview"
+              triggerLabel="Import Audience"
+              dialogTitle="Import Audience Members"
+              dialogDescription="Upload an Excel file of audience members (Name, Email, Phone). All imported contestants will be rated V."
+              data-testid="button-import-audience"
+            />
+          )}
           <Button 
             variant="outline"
             onClick={handleExportToExcel}
