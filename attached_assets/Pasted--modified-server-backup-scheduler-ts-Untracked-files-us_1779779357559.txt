@@ -1,0 +1,237 @@
+	modified:   server/backup-scheduler.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	COPYRIGHT
+	ecosystem.config.cjs
+	storage/data.json
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (469507ab32d77cc1ae785cc24064b1a4a25a834d)
+admin@GameShowManager GameShowManager % npm run build && pm2 restart all --update-env
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.21 building for production...
+transforming (4) src/App.tsx
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 3370 modules transformed.
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/admin/projects/GameShowManager/node_modules/xlsx/xlsx.mjs is dynamically imported by /Users/admin/projects/GameShowManager/client/src/pages/contestants.tsx, /Users/admin/projects/GameShowManager/client/src/pages/players.tsx but also statically imported by /Users/admin/projects/GameShowManager/client/src/pages/booking-master.tsx, /Users/admin/projects/GameShowManager/client/src/pages/winners.tsx, dynamic import will not move module into another chunk.
+
+../dist/public/index.html                                                                  2.07 kB │ gzip:   0.80 kB
+../dist/public/assets/dond-logo-QD_SPDoK.png                                              38.47 kB
+../dist/public/assets/cute_robot_holding_deal_or_no_deal_clapperboard-OZfWcIrC.png     1,088.11 kB
+../dist/public/assets/6b13f568-ecb4-421a-8c1d-6edbe0b1a6c7_1764305481833-BtA7jm15.png  1,175.91 kB
+../dist/public/assets/stage-backdrop-CJ8BtoEI.png                                      1,241.24 kB
+../dist/public/assets/podium-set-BDckeEJU.png                                          1,942.53 kB
+../dist/public/assets/centre-stage-CzGLmQka.png                                        2,639.42 kB
+../dist/public/assets/index-uTX9Ts_3.css                                                 157.38 kB │ gzip:  23.29 kB
+../dist/public/assets/purify.es-C5KSVp3G.js                                               22.74 kB │ gzip:   8.75 kB
+../dist/public/assets/index.es-iCKg8t9b.js                                               150.62 kB │ gzip:  51.36 kB
+../dist/public/assets/html2canvas.esm-CBrSDip1.js                                        201.42 kB │ gzip:  47.70 kB
+../dist/public/assets/jspdf.es.min-CBgxnLwp.js                                           413.72 kB │ gzip: 133.51 kB
+../dist/public/assets/index-CH9vQdpF.js                                                2,392.30 kB │ gzip: 637.08 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.18s
+
+  dist/index.js  972.7kb
+
+⚡ Done in 30ms
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [GameShowManager](0) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ GameShowManager    │ default     │ 1.0.0   │ fork    │ 721      │ 0s     │ 11   │ online    │ 0%       │ 1.2mb    │ admin    │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@GameShowManager GameShowManager % cd ~/projects/GameShowManager
+git stash
+Saved working directory and index state WIP on main: b1659c66 Merge branch 'main' of https://github.com/peteradamidis/GameShowManager
+admin@GameShowManager GameShowManager % git pull origin main
+remote: Enumerating objects: 133, done.
+remote: Counting objects: 100% (133/133), done.
+remote: Compressing objects: 100% (31/31), done.
+remote: Total 113 (delta 97), reused 90 (delta 74), pack-reused 0 (from 0)
+Receiving objects: 100% (113/113), 421.43 KiB | 19.16 MiB/s, done.
+Resolving deltas: 100% (97/97), completed with 18 local objects.
+From https://github.com/peteradamidis/GameShowManager
+ * branch              main       -> FETCH_HEAD
+   d300f11b..f2e26c55  main       -> origin/main
+Auto-merging server/storage.ts
+Auto-merging shared/schema.ts
+Merge made by the 'ort' strategy.
+ .replit                                                                       |     2 +-
+ attached_assets/INTERESTED_IN_JOINING_OUR_STUDIO_AUDIENCE__1779776039227.xlsx |   Bin 0 -> 48894 bytes
+ client/src/components/import-excel-dialog.tsx                                 |    10 +
+ client/src/components/seating-chart.tsx                                       |   113 +-
+ client/src/pages/contestants.tsx                                              |    99 +-
+ client/src/pages/podium-page.tsx                                              |    17 +-
+ server/routes.ts                                                              |   178 +-
+ server/storage.ts                                                             |    51 +-
+ shared/schema.ts                                                              |     1 +
+ storage/backups/celeb/backup_celeb_2026-05-26_05-32-24.json                   |   302 +
+ storage/backups/celeb/backup_celeb_2026-05-26_05-32-24.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_05-49-09.json                   |   302 +
+ storage/backups/celeb/backup_celeb_2026-05-26_05-49-09.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_05-51-44.json                   |   302 +
+ storage/backups/celeb/backup_celeb_2026-05-26_05-51-44.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-16-13.json                   |   302 +
+ storage/backups/celeb/backup_celeb_2026-05-26_06-16-13.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-23-03.json                   |   304 +
+ storage/backups/celeb/backup_celeb_2026-05-26_06-23-03.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-27-44.json                   |   304 +
+ storage/backups/celeb/backup_celeb_2026-05-26_06-27-44.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-38-47.json                   |   304 +
+ storage/backups/celeb/backup_celeb_2026-05-26_06-38-47.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-40-17.json                   |   304 +
+ storage/backups/celeb/backup_celeb_2026-05-26_06-40-17.xlsx                   |   Bin 0 -> 24488 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-42-52.json                   |  7002 +++++++++++++++++++++
+ storage/backups/celeb/backup_celeb_2026-05-26_06-42-52.xlsx                   |   Bin 0 -> 118719 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-53-26.json                   |  7002 +++++++++++++++++++++
+ storage/backups/celeb/backup_celeb_2026-05-26_06-53-26.xlsx                   |   Bin 0 -> 118719 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_06-54-59.json                   |  7002 +++++++++++++++++++++
+ storage/backups/celeb/backup_celeb_2026-05-26_06-54-59.xlsx                   |   Bin 0 -> 118719 bytes
+ storage/backups/celeb/backup_celeb_2026-05-26_07-02-21.json                   |  5276 ++++++++++++++++
+ storage/backups/celeb/backup_celeb_2026-05-26_07-02-21.xlsx                   |   Bin 0 -> 94626 bytes
+ storage/backups/dond/backup_dond_2026-05-26_05-32-24.json                     | 32037 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_05-32-24.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_05-49-09.json                     | 32037 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_05-49-09.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_05-51-44.json                     | 32037 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_05-51-44.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-16-14.json                     | 32037 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-16-14.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-23-04.json                     | 32814 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-23-04.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-27-46.json                     | 32814 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-27-46.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-38-49.json                     | 39512 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-38-49.xlsx                     |   Bin 0 -> 634487 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-40-18.json                     | 39512 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-40-18.xlsx                     |   Bin 0 -> 634487 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-42-53.json                     | 32814 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-42-53.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-53-27.json                     | 32814 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-53-27.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_06-54-59.json                     | 32814 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_06-54-59.xlsx                     |   Bin 0 -> 538995 bytes
+ storage/backups/dond/backup_dond_2026-05-26_07-02-21.json                     | 32814 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ storage/backups/dond/backup_dond_2026-05-26_07-02-21.xlsx                     |   Bin 0 -> 538995 bytes
+ 57 files changed, 433166 insertions(+), 67 deletions(-)
+ create mode 100644 attached_assets/INTERESTED_IN_JOINING_OUR_STUDIO_AUDIENCE__1779776039227.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_05-32-24.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_05-32-24.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_05-49-09.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_05-49-09.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_05-51-44.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_05-51-44.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-16-13.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-16-13.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-23-03.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-23-03.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-27-44.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-27-44.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-38-47.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-38-47.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-40-17.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-40-17.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-42-52.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-42-52.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-53-26.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-53-26.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-54-59.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_06-54-59.xlsx
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_07-02-21.json
+ create mode 100644 storage/backups/celeb/backup_celeb_2026-05-26_07-02-21.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_05-32-24.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_05-32-24.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_05-49-09.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_05-49-09.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_05-51-44.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_05-51-44.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-16-14.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-16-14.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-23-04.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-23-04.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-27-46.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-27-46.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-38-49.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-38-49.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-40-18.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-40-18.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-42-53.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-42-53.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-53-27.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-53-27.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-54-59.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_06-54-59.xlsx
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_07-02-21.json
+ create mode 100644 storage/backups/dond/backup_dond_2026-05-26_07-02-21.xlsx
+admin@GameShowManager GameShowManager % git stash pop
+On branch main
+Your branch is ahead of 'origin/main' by 19 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .gitignore
+	modified:   server/backup-scheduler.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	COPYRIGHT
+	ecosystem.config.cjs
+	storage/data.json
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (5225ac10ec4ad7b968c200d71bf551f8d79761b7)
+admin@GameShowManager GameShowManager % npm run build && pm2 restart all --update-env
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.21 building for production...
+transforming (4) src/App.tsx
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 3370 modules transformed.
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/admin/projects/GameShowManager/node_modules/xlsx/xlsx.mjs is dynamically imported by /Users/admin/projects/GameShowManager/client/src/pages/contestants.tsx, /Users/admin/projects/GameShowManager/client/src/pages/players.tsx but also statically imported by /Users/admin/projects/GameShowManager/client/src/pages/booking-master.tsx, /Users/admin/projects/GameShowManager/client/src/pages/winners.tsx, dynamic import will not move module into another chunk.
+
+../dist/public/index.html                                                                  2.07 kB │ gzip:   0.79 kB
+../dist/public/assets/dond-logo-QD_SPDoK.png                                              38.47 kB
+../dist/public/assets/cute_robot_holding_deal_or_no_deal_clapperboard-OZfWcIrC.png     1,088.11 kB
+../dist/public/assets/6b13f568-ecb4-421a-8c1d-6edbe0b1a6c7_1764305481833-BtA7jm15.png  1,175.91 kB
+../dist/public/assets/stage-backdrop-CJ8BtoEI.png                                      1,241.24 kB
+../dist/public/assets/podium-set-BDckeEJU.png                                          1,942.53 kB
+../dist/public/assets/centre-stage-CzGLmQka.png                                        2,639.42 kB
+../dist/public/assets/index-CQzvmz8Q.css                                                 158.41 kB │ gzip:  23.44 kB
+../dist/public/assets/purify.es-C5KSVp3G.js                                               22.74 kB │ gzip:   8.75 kB
+../dist/public/assets/index.es-7CEyEIF0.js                                               150.62 kB │ gzip:  51.36 kB
+../dist/public/assets/html2canvas.esm-CBrSDip1.js                                        201.42 kB │ gzip:  47.70 kB
+../dist/public/assets/jspdf.es.min-D2CbIuCv.js                                           413.72 kB │ gzip: 133.51 kB
+../dist/public/assets/index-CL6nYN5R.js                                                2,397.05 kB │ gzip: 638.32 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.19s
+
+  dist/index.js  982.1kb
+
+⚡ Done in 31ms
+[PM2] Applying action restartProcessId on app [all](ids: [ 0 ])
+[PM2] [GameShowManager](0) ✓
+┌────┬────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name               │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ GameShowManager    │ default     │ 1.0.0   │ fork    │ 6020     │ 0s     │ 12   │ online    │ 0%       │ 1.3mb    │ admin    │ disabled │
+└────┴────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+admin@GameShowManager GameShowManager % 
