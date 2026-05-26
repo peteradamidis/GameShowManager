@@ -776,20 +776,28 @@ export default function PodiumPage() {
   const { data: podiumData = [], isLoading: podiumLoading } = useQuery<PodiumEntry[]>({
     queryKey: ["/api/record-days", recordDayId, "podium-positions"],
     enabled: !!recordDayId,
+    staleTime: 0, // Always refetch when switching episodes
   });
 
-  // All podium-story-tagged contestants across all record days
+  // All podium-story-tagged contestants (PS-tagged + currently in any podium slot)
   const { data: allPodiumStories = [], isLoading: storiesLoading } = useQuery<any[]>({
     queryKey: ["/api/podium-stories"],
   });
 
-  // Filtered stories based on name search and RX filter
+  // Episode-scoped stories: only show PS contestants assigned to the CURRENT episode
+  const episodeStories = useMemo(() => {
+    if (!podiumData.length) return [];
+    const currentIds = new Set(podiumData.map(p => p.contestantId));
+    return allPodiumStories.filter((c: any) => currentIds.has(c.id));
+  }, [allPodiumStories, podiumData]);
+
+  // Filtered stories based on name search — scoped to current episode
   const filteredStories = useMemo(() => {
-    return allPodiumStories.filter((c: any) => {
+    return episodeStories.filter((c: any) => {
       if (storiesSearch && !c.name?.toLowerCase().includes(storiesSearch.toLowerCase())) return false;
       return true;
     });
-  }, [allPodiumStories, storiesSearch]);
+  }, [episodeStories, storiesSearch]);
 
   const positionMap = useMemo(() => {
     const map: Record<number, PodiumEntry> = {};
@@ -1085,9 +1093,9 @@ export default function PodiumPage() {
                 <TabsTrigger value="positions" data-testid="tab-positions">Positions</TabsTrigger>
                 <TabsTrigger value="stories" data-testid="tab-stories">
                   Podium Stories
-                  {allPodiumStories.length > 0 && (
+                  {episodeStories.length > 0 && (
                     <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-pink-500 text-white">
-                      {allPodiumStories.length}
+                      {episodeStories.length}
                     </Badge>
                   )}
                 </TabsTrigger>
