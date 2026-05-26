@@ -785,10 +785,13 @@ export default function PodiumPage() {
   });
 
   // Episode-scoped stories: only show PS contestants assigned to the CURRENT episode
+  // AND who actually have a story note written (empty notes are hidden from all story sections)
   const episodeStories = useMemo(() => {
     if (!podiumData.length) return [];
     const currentIds = new Set(podiumData.map(p => p.contestantId));
-    return allPodiumStories.filter((c: any) => currentIds.has(c.id));
+    return allPodiumStories.filter((c: any) =>
+      currentIds.has(c.id) && typeof c.podiumStoryNote === 'string' && c.podiumStoryNote.trim().length > 0
+    );
   }, [allPodiumStories, podiumData]);
 
   // Filtered stories based on name search — scoped to current episode

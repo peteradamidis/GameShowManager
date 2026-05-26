@@ -5217,11 +5217,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
-      // Using a loop over all standbys (not just the one found above) ensures stale
-      // movedToReschedule entries and any duplicates from past episodes are also cleared
+      // CLEANUP: Mark stale active standbys for this contestant as 'seated'
+      // Excludes terminal states ('seated', 'attended', 'rescheduled') to preserve audit history
       const staleStandbys = allStandbys.filter(
-        (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+        (s: any) => s.contestantId === contestantId
+          && s.status !== 'seated'
+          && s.status !== 'attended'
+          && s.status !== 'rescheduled'
       );
       for (const sb of staleStandbys) {
         await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
@@ -5425,9 +5427,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
+      // CLEANUP: Mark stale active standbys for this contestant as 'seated'
+      // Excludes terminal states ('seated', 'attended', 'rescheduled') to preserve audit history
       const staleStandbysOverflow = allStandbys.filter(
-        (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+        (s: any) => s.contestantId === contestantId
+          && s.status !== 'seated'
+          && s.status !== 'attended'
+          && s.status !== 'rescheduled'
       );
       for (const sb of staleStandbysOverflow) {
         await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
@@ -5672,9 +5678,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
+        // CLEANUP: Mark stale active standbys for this contestant as 'seated'
+        // Excludes terminal states ('seated', 'attended', 'rescheduled') to preserve audit history
         const staleStandbysBulk = allStandbys.filter(
-          (s: any) => s.contestantId === contestantId && s.status !== 'seated'
+          (s: any) => s.contestantId === contestantId
+            && s.status !== 'seated'
+            && s.status !== 'attended'
+            && s.status !== 'rescheduled'
         );
         for (const sb of staleStandbysBulk) {
           await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
@@ -7700,7 +7710,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (persistError: any) {
         // Handle conflict errors from database constraints
-        if (persistError.message?.startsWith('SEAT_CONFLICT:') || persistError.message?.startsWith('CONTESTANT_CONFLICT:') || persistError.message?.startsWith('CONFLICT:')) {
+        if (persistError.message?.startsWith('SEAT_CONFLICT:') || persistError.message?.startsWith('CONTESTANT_CONFLICT:') || persistError.message?.startsWith('CONFLICT:') || persistError.message?.startsWith('CONTESTANT_ALREADY_ACTIVE:')) {
           // Cleanup any created assignments before returning conflict error
           for (const assignment of createdAssignments) {
             try {
@@ -9022,6 +9032,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error.message?.startsWith('CONFLICT:')) {
         return res.status(409).json({ error: 'A conflict occurred. Another user may have made changes. Please refresh and try again.' });
       }
+      if (error.message?.startsWith('CONTESTANT_ALREADY_ACTIVE:')) {
+        return res.status(409).json({ error: 'This contestant is already assigned to another record day. Please refresh.' });
+      }
       res.status(500).json({ error: error.message });
     }
   });
@@ -9392,10 +9405,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rebookedBy: rebookedBy,
       });
 
-      // CLEANUP: Mark ALL non-seated standbys for this contestant as 'seated'
-      // This ensures stale standby records (from movedToReschedule or past episodes) are cleared
+      // CLEANUP: Mark stale active standbys for this contestant as 'seated'
+      // Excludes terminal states ('seated', 'attended', 'rescheduled') to preserve audit history
       const allStaleStandbys = allStandbys.filter(
-        (s: any) => s.contestantId === canceled.contestantId && s.status !== 'seated'
+        (s: any) => s.contestantId === canceled.contestantId
+          && s.status !== 'seated'
+          && s.status !== 'attended'
+          && s.status !== 'rescheduled'
       );
       for (const sb of allStaleStandbys) {
         await storage.updateStandbyAssignment(sb.id, { status: 'seated' });
