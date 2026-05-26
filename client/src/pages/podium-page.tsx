@@ -1044,10 +1044,10 @@ export default function PodiumPage() {
               {filledCount}/26 assigned
             </Badge>
           )}
-          {allPodiumStories.length > 0 && (
+          {episodeStories.length > 0 && (
             <Badge variant="outline" className="text-xs bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800">
               <Heart className="h-3 w-3 mr-1" />
-              {allPodiumStories.length} {allPodiumStories.length === 1 ? 'story' : 'stories'}
+              {episodeStories.length} {episodeStories.length === 1 ? 'story' : 'stories'}
             </Badge>
           )}
           {recordDayId && activeTab === 'positions' && (
