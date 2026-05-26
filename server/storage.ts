@@ -667,6 +667,26 @@ export class DbStorage implements IStorage {
   // Record Days
   async createRecordDay(recordDay: InsertRecordDay): Promise<RecordDay> {
     const [created] = await getDb().insert(recordDays).values(recordDay).returning();
+    // For CELEB the block layout is fixed (blocks 1-3 = PB, blocks 4-7 = AUDIENCE).
+    // Seed the defaults so the server-side block-config gate (and seat-assignment
+    // endpoint) immediately treats the new day as fully configured. Without this,
+    // CELEB users hit a misleading "5 PB / 2 NPB" error when trying to seat.
+    const workspace = workspaceStorage.getStore() || 'dond';
+    if (workspace === 'celeb') {
+      try {
+        await this.upsertBlockTypes(created.id, [
+          { blockNumber: 1, blockType: 'PB' },
+          { blockNumber: 2, blockType: 'PB' },
+          { blockNumber: 3, blockType: 'PB' },
+          { blockNumber: 4, blockType: 'AUDIENCE' },
+          { blockNumber: 5, blockType: 'AUDIENCE' },
+          { blockNumber: 6, blockType: 'AUDIENCE' },
+          { blockNumber: 7, blockType: 'AUDIENCE' },
+        ]);
+      } catch (err) {
+        console.error(`[createRecordDay] Failed to seed CELEB block config for ${created.id}:`, err);
+      }
+    }
     return created;
   }
 
@@ -2179,14 +2199,37 @@ export class DbStorage implements IStorage {
   }
 
   async isBlockConfigurationComplete(recordDayId: string): Promise<{complete: boolean; pbCount: number; npbCount: number; audienceCount: number}> {
-    const blockConfigs = await this.getBlockTypesByRecordDay(recordDayId);
-    const pbCount = blockConfigs.filter(b => b.blockType === 'PB').length;
-    const npbCount = blockConfigs.filter(b => b.blockType === 'NPB').length;
-    const audienceCount = blockConfigs.filter(b => (b.blockType as string) === 'AUDIENCE').length;
+    let blockConfigs = await this.getBlockTypesByRecordDay(recordDayId);
+    let pbCount = blockConfigs.filter(b => b.blockType === 'PB').length;
+    let npbCount = blockConfigs.filter(b => b.blockType === 'NPB').length;
+    let audienceCount = blockConfigs.filter(b => (b.blockType as string) === 'AUDIENCE').length;
     // Workspace-aware completion check:
     //   DOND:  5 PB + 2 NPB
     //   CELEB: 3 PB + 4 AUDIENCE
     const workspace = workspaceStorage.getStore() || 'dond';
+    // Lazy backfill for CELEB: if a record day pre-dates the auto-seed in
+    // createRecordDay (or was otherwise never configured), seed the fixed
+    // CELEB layout now so the seat-assignment gate stops blocking with a
+    // misleading "5 PB / 2 NPB" error.
+    if (workspace === 'celeb' && pbCount === 0 && audienceCount === 0 && npbCount === 0) {
+      try {
+        await this.upsertBlockTypes(recordDayId, [
+          { blockNumber: 1, blockType: 'PB' },
+          { blockNumber: 2, blockType: 'PB' },
+          { blockNumber: 3, blockType: 'PB' },
+          { blockNumber: 4, blockType: 'AUDIENCE' },
+          { blockNumber: 5, blockType: 'AUDIENCE' },
+          { blockNumber: 6, blockType: 'AUDIENCE' },
+          { blockNumber: 7, blockType: 'AUDIENCE' },
+        ]);
+        blockConfigs = await this.getBlockTypesByRecordDay(recordDayId);
+        pbCount = blockConfigs.filter(b => b.blockType === 'PB').length;
+        npbCount = blockConfigs.filter(b => b.blockType === 'NPB').length;
+        audienceCount = blockConfigs.filter(b => (b.blockType as string) === 'AUDIENCE').length;
+      } catch (err) {
+        console.error(`[isBlockConfigurationComplete] CELEB backfill failed for ${recordDayId}:`, err);
+      }
+    }
     const complete = workspace === 'celeb'
       ? pbCount === 3 && audienceCount === 4
       : pbCount === 5 && npbCount === 2;
