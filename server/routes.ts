@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage, db } from "./storage";
+import { storage, db, runWithWorkspace } from "./storage";
 import { 
   insertContestantSchema, 
   insertRecordDaySchema, 
@@ -2611,6 +2611,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ─── Audience Import (Celeb workspace) — same parser as Survey, sets rating "V" ───
   app.post("/api/contestants/import-audience-preview", upload.single("file"), async (req, res) => {
+   const workspace = (req as any).session?.activeWorkspace || 'dond';
+   return runWithWorkspace(workspace, async () => {
     try {
       if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
@@ -2715,12 +2717,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Audience import preview error:", error);
       res.status(500).json({ error: error.message });
     }
+   });
   });
 
   app.post("/api/contestants/import-audience", upload.single("file"), async (req, res) => {
+   const workspace = (req as any).session?.activeWorkspace || 'dond';
+   return runWithWorkspace(workspace, async () => {
     try {
       if (!req.file) return res.status(400).json({ error: "No file uploaded" });
       console.log(`[Audience Import] Starting import for file: ${req.file.originalname}`);
+      console.log(`[Audience Import] Workspace context: ${workspace}`);
 
       const rawData = parseSurveyWorkbook(req.file.buffer);
       if (!rawData || rawData.length === 0) {
@@ -2872,6 +2878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Audience import error:", error);
       res.status(500).json({ error: error.message });
     }
+   });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
