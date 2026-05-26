@@ -5368,12 +5368,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Only consider ACTIVE standbys (not already seated, rescheduled, or moved to reschedule)
       // so stale records from past episodes don't shadow current active ones
       const standbyAssignment = allStandbys.find((s: any) =>
-        s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled'
+        s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended'
       );
       
       // Allow seating if they're being seated from standby (status 'seated') or moved to reschedule
       // Otherwise, block if they have an active standby assignment anywhere
-      if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
+      if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated' && standbyAssignment.status !== 'attended') {
         const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
         const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
         const dayName = standbyRecordDay?.date 
@@ -5592,9 +5592,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allStandbys = await storage.getStandbyAssignments();
       // Only consider ACTIVE standbys so stale past-episode records don't shadow current ones
       const standbyAssignment = allStandbys.find((s: any) =>
-        s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled'
+        s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended'
       );
-      if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
+      if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated' && standbyAssignment.status !== 'attended') {
         const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
         const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
         const dayName = standbyRecordDay?.date 
@@ -5853,9 +5853,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Only consider ACTIVE standbys so stale past-episode records don't shadow current ones
         const standbyAssignment = allStandbys.find((s: any) =>
-          s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled'
+          s.contestantId === contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended'
         );
-        if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated') {
+        if (standbyAssignment && !standbyAssignment.movedToReschedule && standbyAssignment.status !== 'seated' && standbyAssignment.status !== 'attended') {
           const standbyRecordDay = await storage.getRecordDayById(standbyAssignment.recordDayId);
           const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;
           
@@ -7896,7 +7896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Check if contestant is already a standby in ANY record day
-          const existingStandby = allStandbys.find((s: any) => s.contestantId === item.contestant.id && !s.movedToReschedule && s.status !== 'seated');
+          const existingStandby = allStandbys.find((s: any) => s.contestantId === item.contestant.id && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended');
           if (existingStandby) {
             console.log(`Skipping assignment for contestant ${item.contestant.id} - already a standby in record day ${existingStandby.recordDayId}`);
             continue;
@@ -9602,7 +9602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if contestant is already a standby in ANY record day
       const allStandbys = await storage.getStandbyAssignments();
-      const existingStandby = allStandbys.find((s: any) => s.contestantId === canceled.contestantId && !s.movedToReschedule && s.status !== 'seated');
+      const existingStandby = allStandbys.find((s: any) => s.contestantId === canceled.contestantId && !s.movedToReschedule && s.status !== 'seated' && s.status !== 'rescheduled' && s.status !== 'attended');
       if (existingStandby) {
         const standbyRecordDay = await storage.getRecordDayById(existingStandby.recordDayId);
         const isStandbyOnLockedDay = standbyRecordDay?.lockedAt != null;

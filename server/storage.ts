@@ -775,6 +775,18 @@ export class DbStorage implements IStorage {
     // Use transaction to atomically create assignment and update contestant status
     try {
       return await getDb().transaction(async (tx) => {
+        // RACE-SAFE: Acquire a contestant-scoped advisory lock so concurrent
+        // createSeatAssignment calls for the same contestant serialize. This
+        // ensures the active-assignment check below cannot be bypassed by two
+        // simultaneous transactions both passing the check and both inserting.
+        let contestantLockKey = 0;
+        for (let i = 0; i < assignment.contestantId.length; i++) {
+          contestantLockKey = ((contestantLockKey << 5) - contestantLockKey) + assignment.contestantId.charCodeAt(i);
+          contestantLockKey = contestantLockKey & contestantLockKey;
+        }
+        contestantLockKey = Math.abs(contestantLockKey);
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${contestantLockKey})`);
+
         // Check if contestant is returning to auto-fill paperwork
         const seatHistory = await tx
           .select({
