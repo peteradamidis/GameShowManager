@@ -73,7 +73,7 @@ interface AdobeSignConfig {
 type StatusFilter = "all" | "invited" | "confirmed" | "declined";
 type PaperworkStatusFilter = "all" | "ready_to_send" | "awaiting_return" | "complete" | "new_only";
 type BlockFilter = "all" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
-type ViewMode = "all" | "seats" | "standbys" | "podium";
+type ViewMode = "all" | "seats" | "standbys";
 
 const PAPERWORK_TRACKER_STORAGE_KEY = 'paperwork-tracker-state';
 
@@ -562,10 +562,6 @@ Deal or No Deal Production Team`);
     if (blockFilter !== "all" && item.blockNumber !== parseInt(blockFilter)) {
       return false;
     }
-    // Podium view: only contestants currently placed in a podium position (blockNumber 8)
-    if (viewMode === "podium" && item.blockNumber !== 8) {
-      return false;
-    }
     // Filter by paperwork status
     if (paperworkStatusFilter !== "all") {
       if (paperworkStatusFilter === "ready_to_send" && item.paperworkSent) {
@@ -759,7 +755,6 @@ Deal or No Deal Production Team`);
                     <SelectItem value="all">All Bookings</SelectItem>
                     <SelectItem value="seats">Seat Bookings</SelectItem>
                     <SelectItem value="standbys">Standbys</SelectItem>
-                    <SelectItem value="podium">Podium</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1114,17 +1109,13 @@ Deal or No Deal Production Team`);
                           ? `All Bookings (${totalInvitedCount + totalStandbyCount})`
                           : viewMode === "standbys"
                             ? `Standby Contestants (${totalStandbyCount})`
-                            : viewMode === "podium"
-                              ? `Podium Contestants (${totalInvitedCount})`
-                              : `Invited Contestants (${totalInvitedCount})`}
+                            : `Invited Contestants (${totalInvitedCount})`}
                     </CardTitle>
                     <CardDescription>
                       {statusFilter === "declined"
                         ? "Contestants who have declined their booking and are on the reschedule list"
                         : viewMode === "all"
                           ? `Seat bookings and standbys combined${declinedCount > 0 ? ` (including ${declinedCount} declined)` : ''}`
-                          : viewMode === "podium"
-                            ? "Contestants currently placed in a podium position"
                           : statusFilter === "all" && declinedCount > 0
                             ? `Contestants who have been sent a booking invitation (including ${declinedCount} declined)`
                             : "Contestants who have been sent a booking invitation"}
@@ -1184,7 +1175,7 @@ Deal or No Deal Production Team`);
                   </TableHeader>
                           <TableBody>
                             {/* Regular seat assignments - hide when viewing declined filter */}
-                            {statusFilter !== "declined" && (viewMode === "all" || viewMode === "seats" || viewMode === "podium") && filteredData.map((item) => (
+                            {statusFilter !== "declined" && (viewMode === "all" || viewMode === "seats") && filteredData.map((item) => (
                               <TableRow 
                                 key={item.id} 
                                 className={`

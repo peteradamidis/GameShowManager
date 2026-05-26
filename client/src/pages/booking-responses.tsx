@@ -81,7 +81,7 @@ interface BookingTrackerResponse {
 
 type StatusFilter = "all" | "not_sent" | "awaiting" | "confirmed" | "declined" | "failed_send";
 type EmailTypeFilter = "all" | "bigpond_only" | "exclude_bigpond";
-type ViewMode = "seats" | "standbys";
+type ViewMode = "seats" | "standbys" | "podium";
 
 const BOOKING_TRACKER_STORAGE_KEY = 'booking-tracker-state';
 
@@ -915,6 +915,10 @@ export default function BookingResponses() {
 
   // Filter by block, email type, failed sends, and search
   const filteredData = trackerData.filter((item) => {
+    // Podium view: only contestants currently placed in a podium position (blockNumber 8)
+    if (viewMode === "podium" && item.blockNumber !== 8) {
+      return false;
+    }
     // Filter by block
     if (selectedBlock !== "all" && item.blockNumber !== parseInt(selectedBlock)) {
       return false;
@@ -1251,6 +1255,7 @@ export default function BookingResponses() {
             <SelectContent>
               <SelectItem value="seats">Seat Bookings</SelectItem>
               <SelectItem value="standbys">Standbys</SelectItem>
+              <SelectItem value="podium">Podium</SelectItem>
             </SelectContent>
           </Select>
         </div>
