@@ -919,6 +919,10 @@ export default function BookingResponses() {
     if (viewMode === "podium" && item.blockNumber !== 8) {
       return false;
     }
+    // Seat Bookings view: exclude podium contestants — they live in the Podium view
+    if (viewMode === "seats" && item.blockNumber === 8) {
+      return false;
+    }
     // Filter by block
     if (selectedBlock !== "all" && item.blockNumber !== parseInt(selectedBlock)) {
       return false;
