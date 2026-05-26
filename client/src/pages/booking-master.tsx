@@ -318,6 +318,7 @@ export default function BookingMaster() {
   const [filterPaperworkNotSent, setFilterPaperworkNotSent] = useState(false);
   const [filterPaperworkReceived, setFilterPaperworkReceived] = useState<'all' | 'received' | 'not_received'>('all');
   const [isStandbyMode, setIsStandbyMode] = useState(false);
+  const [isPodiumMode, setIsPodiumMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCheckInMode, setIsCheckInMode] = useState(false);
   const [filterNotSignedIn, setFilterNotSignedIn] = useState(false);
@@ -483,6 +484,19 @@ export default function BookingMaster() {
 
   // Filter standbys to get ones for the current record day - only show confirmed standbys
   const standbysForRecordDay = standbys.filter(s => s.recordDayId === selectedRecordDay && s.status === 'confirmed');
+
+  // Fetch podium positions for the currently selected record day. Used by the
+  // "Podium" view option to filter the booking master rows down to only the
+  // contestants currently placed in a podium position for this episode.
+  type PodiumEntry = { id: string; position: number; contestantId: string };
+  const { data: podiumEntries = [] } = useQuery<PodiumEntry[]>({
+    queryKey: ['/api/record-days', selectedRecordDay, 'podium-positions'],
+    enabled: !!selectedRecordDay,
+  });
+  const podiumContestantIds = useMemo(
+    () => new Set(podiumEntries.map(p => p.contestantId).filter(Boolean)),
+    [podiumEntries],
+  );
 
   // Fetch email assets (images and PDFs) for attachments
   interface EmailAsset {
@@ -871,6 +885,15 @@ export default function BookingMaster() {
     // Filter to only show those NOT signed in (when check-in mode is active)
     if (isCheckInMode && filterNotSignedIn && row.assignment?.signedIn) {
       return false;
+    }
+    // Podium view: only show contestants currently placed in a podium position
+    // for the selected episode/record day. Empty seats are hidden because they
+    // have no assignment/contestantId.
+    if (isPodiumMode) {
+      const cid = row.assignment?.contestantId;
+      if (!cid || !podiumContestantIds.has(cid)) {
+        return false;
+      }
     }
     return true;
   });
@@ -1712,15 +1735,29 @@ export default function BookingMaster() {
         {selectedRecordDay && (
           <div className="flex items-center gap-2 px-3 py-1 rounded-md border bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
             <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            <Label htmlFor="standby-toggle" className="text-sm font-medium text-purple-700 dark:text-purple-300 cursor-pointer">
-              Standby
+            <Label htmlFor="view-mode-select" className="text-sm font-medium text-purple-700 dark:text-purple-300 cursor-pointer">
+              View
             </Label>
-            <Switch
-              id="standby-toggle"
-              checked={isStandbyMode}
-              onCheckedChange={setIsStandbyMode}
-              data-testid="toggle-standby-mode"
-            />
+            <Select
+              value={isStandbyMode ? 'standby' : isPodiumMode ? 'podium' : 'seated'}
+              onValueChange={(v) => {
+                setIsStandbyMode(v === 'standby');
+                setIsPodiumMode(v === 'podium');
+              }}
+            >
+              <SelectTrigger
+                id="view-mode-select"
+                className="h-7 w-32 text-xs bg-white dark:bg-purple-950/40 border-purple-200 dark:border-purple-800"
+                data-testid="select-view-mode"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="seated" data-testid="option-view-seated">Seated</SelectItem>
+                <SelectItem value="standby" data-testid="option-view-standby">Standby</SelectItem>
+                <SelectItem value="podium" data-testid="option-view-podium">Podium</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
         {selectedRecordDay && (
