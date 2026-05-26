@@ -68,6 +68,7 @@ const ratingColorsLight: Record<string, { bg: string; border: string; text: stri
   'B':  { bg: '#fed7aa', border: '#f97316', text: '#7c2d12' },
   'C':  { bg: '#fee2e2', border: '#ef4444', text: '#7f1d1d' },
   'R':  { bg: '#ede9fe', border: '#7c3aed', text: '#3b0764' },
+  'V':  { bg: '#fce7f3', border: '#ec4899', text: '#831843' },
 };
 
 const ratingColorsDark: Record<string, { bg: string; border: string; text: string }> = {
@@ -78,6 +79,7 @@ const ratingColorsDark: Record<string, { bg: string; border: string; text: strin
   'B':  { bg: '#431407', border: '#fb923c', text: '#fed7aa' },
   'C':  { bg: '#450a0a', border: '#f87171', text: '#fee2e2' },
   'R':  { bg: '#2d1b69', border: '#8b5cf6', text: '#ede9fe' },
+  'V':  { bg: '#831843', border: '#f472b6', text: '#fce7f3' },
 };
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -104,6 +106,8 @@ const RATING_COLORS: Record<string, string> = {
   'B':  'bg-orange-500 text-white',
   'C':  'bg-red-500 text-white',
   'P':  'bg-cyan-500 text-white',
+  'R':  'bg-violet-500 text-white',
+  'V':  'bg-pink-500 text-white',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -1385,6 +1389,7 @@ export default function PodiumPage() {
                       <SelectItem value="B">B</SelectItem>
                       <SelectItem value="C">C</SelectItem>
                       <SelectItem value="R">R</SelectItem>
+                      <SelectItem value="V">V</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1469,6 +1474,7 @@ export default function PodiumPage() {
                           <SelectItem value="B">B</SelectItem>
                           <SelectItem value="C">C</SelectItem>
                           <SelectItem value="R">R</SelectItem>
+                          <SelectItem value="V">V</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

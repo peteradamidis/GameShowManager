@@ -708,6 +708,7 @@ export default function ReschedulePage() {
                   <SelectItem value="B">B</SelectItem>
                   <SelectItem value="C">C</SelectItem>
                   <SelectItem value="R">R</SelectItem>
+                  <SelectItem value="V">V</SelectItem>
                   <SelectItem value="D">D</SelectItem>
                   <SelectItem value="DNU">DNU</SelectItem>
                   <SelectItem value="P">P</SelectItem>
@@ -1310,6 +1311,7 @@ export default function ReschedulePage() {
                             <SelectItem value="B">B</SelectItem>
                             <SelectItem value="C">C</SelectItem>
                             <SelectItem value="R">R</SelectItem>
+                            <SelectItem value="V">V</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

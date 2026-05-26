@@ -1036,6 +1036,11 @@ function SeatingBlock({
                       R:{stats.ratingCounts['R']}
                     </Badge>
                   )}
+                  {stats.ratingCounts['V'] > 0 && (
+                    <Badge className="text-[10px] px-1 py-0 h-4 bg-pink-500 hover:bg-pink-600 text-white">
+                      V:{stats.ratingCounts['V']}
+                    </Badge>
+                  )}
                 </div>
                 {stats.avgAge > 0 && (
                   <Badge variant="secondary" className="text-[10px] w-fit">

@@ -894,17 +894,32 @@ export default function BookingResponses() {
     },
   });
 
-  // Use stats from API (computed from record-day-filtered but not status-filtered data)
-  // Note: stats.declined already includes both active declined assignments AND canceled assignments with wasDeclined
-  const totalCount = stats.total;
-  const notSentCount = stats.notSent;
-  const awaitingCount = stats.awaiting;
-  const confirmedCount = stats.confirmed;
-  // stats.declined already includes canceled assignments - no need to add them again
-  const declinedCount = stats.declined;
-  
   // Helper to check if assignment is declined
   const isDeclined = (a: BookingAssignment) => a.notes?.startsWith('[DECLINED]');
+
+  // Scope headline stats to the current view mode so Podium view doesn't show seat totals.
+  // Standbys view continues to use its own data source below; for seats/podium we derive
+  // counts from trackerData filtered only by viewMode (ignoring search/block/etc).
+  const viewScopedTracker = trackerData.filter((item) => {
+    if (viewMode === "podium") return item.blockNumber === 8;
+    if (viewMode === "seats") return item.blockNumber !== 8;
+    return true;
+  });
+  const isDefaultSeatsView = viewMode === "seats";
+  const totalCount = isDefaultSeatsView ? stats.total : viewScopedTracker.length;
+  const notSentCount = isDefaultSeatsView
+    ? stats.notSent
+    : viewScopedTracker.filter(a => !a.bookingEmailSent && !isDeclined(a)).length;
+  const awaitingCount = isDefaultSeatsView
+    ? stats.awaiting
+    : viewScopedTracker.filter(a => a.bookingEmailSent && !a.confirmedRsvp && !isDeclined(a)).length;
+  const confirmedCount = isDefaultSeatsView
+    ? stats.confirmed
+    : viewScopedTracker.filter(a => a.confirmedRsvp && !isDeclined(a)).length;
+  // stats.declined already includes canceled assignments; for podium it doesn't matter (declined live in canceled list anyway)
+  const declinedCount = isDefaultSeatsView
+    ? stats.declined
+    : viewScopedTracker.filter(a => isDeclined(a)).length;
   
   // Helper to check if email is a Bigpond address
   const isBigpondEmail = (email: string | undefined | null) => {
@@ -1252,7 +1267,13 @@ export default function BookingResponses() {
       <div className="flex flex-wrap gap-4 items-center">
         <div className="flex items-center gap-2">
           <Label htmlFor="view-mode-filter">View:</Label>
-          <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+          <Select value={viewMode} onValueChange={(v) => {
+            setViewMode(v as ViewMode);
+            // Reset block filter when switching views so prior selection doesn't hide everything
+            // (e.g. block "8" while switching to Seats, or block "3" while switching to Podium)
+            setSelectedBlock("all");
+            setSelectedAssignments(new Set());
+          }}>
             <SelectTrigger className="w-[140px]" data-testid="select-view-mode">
               <SelectValue placeholder="Seats" />
             </SelectTrigger>
@@ -1281,23 +1302,24 @@ export default function BookingResponses() {
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Label htmlFor="block-filter">Block:</Label>
-          <Select value={selectedBlock} onValueChange={handleBlockChange}>
-            <SelectTrigger className="w-[120px]" data-testid="select-block">
-              <SelectValue placeholder="All Blocks" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Blocks</SelectItem>
-              {[1, 2, 3, 4, 5, 6, 7].map((block) => (
-                <SelectItem key={block} value={String(block)}>
-                  Block {block}
-                </SelectItem>
-              ))}
-              <SelectItem value="8">Podium</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {viewMode !== "standbys" && viewMode !== "podium" && (
+          <div className="flex items-center gap-2">
+            <Label htmlFor="block-filter">Block:</Label>
+            <Select value={selectedBlock} onValueChange={handleBlockChange}>
+              <SelectTrigger className="w-[120px]" data-testid="select-block">
+                <SelectValue placeholder="All Blocks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Blocks</SelectItem>
+                {[1, 2, 3, 4, 5, 6, 7].map((block) => (
+                  <SelectItem key={block} value={String(block)}>
+                    Block {block}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <Label htmlFor="status-filter">Status:</Label>
