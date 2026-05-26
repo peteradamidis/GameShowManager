@@ -3978,39 +3978,13 @@ export class DbStorage implements IStorage {
   async getPodiumStoryContestants(): Promise<Array<Contestant & { episodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }>; dondEpisodes: Array<{ recordDayId: string; rxNumber: string | null; date: string | null; lockedAt: Date | null; blockNumber: number | null; seatLabel: string | null }> }>> {
     const currentDb = getDb();
 
-    // Only include podium-story-tagged contestants who currently occupy a podium slot
-    // on some record day. Tag + note remain saved so they reappear when re-assigned.
+    // Include every contestant tagged podiumStory=true, regardless of whether
+    // they currently occupy a podium slot. The main "Podium Stories" tab shows
+    // the full tagged roster; the per-episode story panel filters this list
+    // client-side using that episode's current podium positions.
     const podiumContestants = await currentDb
-      .selectDistinct({
-        id: contestants.id,
-        name: contestants.name,
-        gender: contestants.gender,
-        age: contestants.age,
-        phone: contestants.phone,
-        email: contestants.email,
-        attendingWith: contestants.attendingWith,
-        auditionRating: contestants.auditionRating,
-        availabilityStatus: contestants.availabilityStatus,
-        availabilityNotes: contestants.availabilityNotes,
-        availableForStandby: contestants.availableForStandby,
-        groupId: contestants.groupId,
-        groupSize: contestants.groupSize,
-        location: contestants.location,
-        postcode: contestants.postcode,
-        distanceFromStudio: contestants.distanceFromStudio,
-        notes: contestants.notes,
-        photoUrl: contestants.photoUrl,
-        podiumStory: contestants.podiumStory,
-        podiumStoryNote: contestants.podiumStoryNote,
-        podiumStoryCaseNumber: contestants.podiumStoryCaseNumber,
-        noShowCount: contestants.noShowCount,
-        earlyLeaverCount: contestants.earlyLeaverCount,
-        isTemporary: contestants.isTemporary,
-        isTestSubject: contestants.isTestSubject,
-        createdAt: contestants.createdAt,
-      })
+      .select()
       .from(contestants)
-      .innerJoin(podiumPositions, eq(podiumPositions.contestantId, contestants.id))
       .where(eq(contestants.podiumStory, true)) as Contestant[];
 
     if (podiumContestants.length === 0) return [];
