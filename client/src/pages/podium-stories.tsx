@@ -67,10 +67,18 @@ export default function PodiumStoriesPage() {
     queryKey: ["/api/podium-stories"],
   });
 
+  // Only show contestants who actually have a story written (non-empty note).
+  // Being merely tagged with the podium-story flag is not enough — the page is
+  // meant to surface real stories, not empty tags left over from removed/edited
+  // contestants.
+  const withStories = useMemo(() => {
+    return contestants.filter((c) => (c.podiumStoryNote || "").trim().length > 0);
+  }, [contestants]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return contestants;
-    return contestants.filter(
+    if (!q) return withStories;
+    return withStories.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         (c.podiumStoryNote || "").toLowerCase().includes(q) ||
@@ -78,7 +86,7 @@ export default function PodiumStoriesPage() {
           (ep.rxNumber || "").toLowerCase().includes(q)
         )
     );
-  }, [contestants, search]);
+  }, [withStories, search]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -99,12 +107,12 @@ export default function PodiumStoriesPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Podium Stories</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              All contestants tagged with a podium story across every episode
+              All contestants with a written podium story across every episode
             </p>
           </div>
         </div>
         <Badge variant="secondary" className="text-sm px-3 py-1">
-          {contestants.length} contestant{contestants.length !== 1 ? "s" : ""}
+          {withStories.length} contestant{withStories.length !== 1 ? "s" : ""}
         </Badge>
       </div>
 
