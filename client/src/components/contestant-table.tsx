@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft, BookOpen, History } from "lucide-react";
+import { Search, Mail, Phone, MapPin, Heart, Camera, Upload, Trash2, User, Pencil, X, Save, Calendar, AlertTriangle, Users, CalendarPlus, ArrowUp, ArrowDown, ArrowUpDown, FileCheck, ArrowRightLeft, BookOpen, History, Trophy } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +88,7 @@ interface ContestantTableProps {
   onSearchChange?: (term: string) => void;
   rescheduleContestantIds?: Set<string>;
   standbyContestantIds?: Set<string>;
+  contestantWinningsMap?: Map<string, { totalAmount: number; appearances: number }>;
   paperworkStatusMap?: Map<string, PaperworkStatus>;
   allContestants?: Contestant[];
   onBookWithGroup?: (contestantIds: string[]) => void;
@@ -964,6 +965,7 @@ export function ContestantTable({
   onSearchChange,
   rescheduleContestantIds = new Set(),
   standbyContestantIds = new Set(),
+  contestantWinningsMap = new Map(),
   paperworkStatusMap = new Map(),
   allContestants,
   onBookWithGroup,
@@ -1739,6 +1741,25 @@ export function ContestantTable({
                         Standby
                       </Badge>
                     )}
+                    {contestantWinningsMap.has(contestant.id) && (() => {
+                      const w = contestantWinningsMap.get(contestant.id)!;
+                      const label = w.totalAmount > 0 ? `$${w.totalAmount.toLocaleString()}` : 'Won';
+                      const title = w.appearances > 1
+                        ? `Won money across ${w.appearances} appearances${w.totalAmount > 0 ? ` (total $${w.totalAmount.toLocaleString()})` : ''}`
+                        : `Won money on the show${w.totalAmount > 0 ? ` ($${w.totalAmount.toLocaleString()})` : ''}`;
+                      return (
+                        <Badge
+                          variant="outline"
+                          className="border-green-300 bg-green-500/20 text-green-800 dark:border-green-700 dark:text-green-400 text-xs px-1.5 gap-1"
+                          title={title}
+                          aria-label={title}
+                          data-testid={`badge-winnings-${contestant.id}`}
+                        >
+                          <Trophy className="h-3 w-3" aria-hidden="true" />
+                          {label}
+                        </Badge>
+                      );
+                    })()}
                     {paperworkStatusMap.get(contestant.id)?.status === 'received' && (
                       <Badge variant="outline" className="border-teal-300 bg-teal-500/20 text-teal-800 dark:border-teal-700 dark:text-teal-400 text-xs px-1.5" title="Paperwork received" data-testid={`badge-paperwork-${contestant.id}`}>
                         <FileCheck className="h-3 w-3" />
@@ -2248,6 +2269,25 @@ export function ContestantTable({
                               Standby
                             </Badge>
                           )}
+                          {contestantWinningsMap.has(contestantDetails.id) && (() => {
+                            const w = contestantWinningsMap.get(contestantDetails.id)!;
+                            const label = w.totalAmount > 0 ? `$${w.totalAmount.toLocaleString()}` : 'Won money';
+                            const title = w.appearances > 1
+                              ? `Won money across ${w.appearances} appearances${w.totalAmount > 0 ? ` (total $${w.totalAmount.toLocaleString()})` : ''}`
+                              : `Won money on the show${w.totalAmount > 0 ? ` ($${w.totalAmount.toLocaleString()})` : ''}`;
+                            return (
+                              <Badge
+                                variant="outline"
+                                className="border-green-300 bg-green-500/20 text-green-800 dark:border-green-700 dark:text-green-400 text-xs py-0 gap-1"
+                                title={title}
+                                aria-label={title}
+                                data-testid={`badge-winnings-detail-${contestantDetails.id}`}
+                              >
+                                <Trophy className="h-3 w-3" aria-hidden="true" />
+                                {label}
+                              </Badge>
+                            );
+                          })()}
                           {contestantDetails.podiumStory && (
                             <Badge variant="outline" className="border-purple-300 bg-purple-500/20 text-purple-800 dark:border-purple-700 dark:text-purple-400 text-xs py-0">
                               Podium Story

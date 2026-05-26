@@ -218,6 +218,29 @@ export default function Contestants() {
     queryKey: ['/api/attendance-issues'],
   });
 
+  // Fetch all winners (contestants who have won money at any point — across seats, canceled, and attendance issues)
+  const { data: winnersData = [] } = useQuery<any[]>({
+    queryKey: ['/api/seat-assignments/with-winning-money'],
+  });
+
+  // Build a map: contestantId → { totalAmount, appearances } summing winnings across all their appearances
+  const contestantWinningsMap = useMemo(() => {
+    const map = new Map<string, { totalAmount: number; appearances: number }>();
+    for (const w of winnersData) {
+      const cid = w.contestantId;
+      if (!cid) continue;
+      const amt = typeof w.winningMoneyAmount === 'number' ? w.winningMoneyAmount : 0;
+      const existing = map.get(cid);
+      if (existing) {
+        existing.totalAmount += amt;
+        existing.appearances += 1;
+      } else {
+        map.set(cid, { totalAmount: amt, appearances: 1 });
+      }
+    }
+    return map;
+  }, [winnersData]);
+
   // Create a set of contestant IDs who are ACTIVE standbys (exclude inactive/stale entries)
   const standbyContestantIds = useMemo(() => {
     return new Set(
@@ -2196,6 +2219,7 @@ export default function Contestants() {
             onSearchChange={setSearchTerm}
             rescheduleContestantIds={rescheduleContestantIds}
             standbyContestantIds={standbyContestantIds}
+            contestantWinningsMap={contestantWinningsMap}
             paperworkStatusMap={paperworkStatusMap}
             allContestants={contestants}
             onBookWithGroup={(contestantIds) => {
