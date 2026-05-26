@@ -2049,6 +2049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (row.auditionRating) updateData.auditionRating = row.auditionRating;
           if (row.groupSize !== undefined && row.groupSize !== null) updateData.groupSize = row.groupSize;
           if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
+          if ((row as any).audienceAvailableDates) updateData.audienceAvailableDates = (row as any).audienceAvailableDates;
           if (row.podiumStory !== undefined) updateData.podiumStory = row.podiumStory;
           if (row.availableForStandby !== undefined) updateData.availableForStandby = row.availableForStandby;
           
@@ -2138,6 +2139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           availableForStandby: row.availableForStandby,
           podiumStory: row.podiumStory,
           availabilityNotes: row.availabilityNotes,
+          audienceAvailableDates: (row as any).audienceAvailableDates ?? null,
         });
         createdContestants.push(contestant);
         
@@ -2210,10 +2212,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
+  // Parse a "23 June;25 June;" style dates list into ISO date strings (YYYY-MM-DD).
+  // The audience form does not include a year, so we use the current year and
+  // bump dates that have already passed by >30 days into next year.
+  const MONTHS: Record<string, number> = {
+    jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+    may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7,
+    sep: 8, sept: 8, september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+  };
+  const parseAudienceDateList = (raw: any): string[] | null => {
+    if (raw == null) return null;
+    const text = raw.toString().trim();
+    if (!text) return null;
+    const now = new Date();
+    const nowYear = now.getFullYear();
+    const out: string[] = [];
+    text.split(/[;,\n]+/).map(s => s.trim()).filter(Boolean).forEach(token => {
+      // accept "23 June", "June 23", "23/06", "2026-06-23"
+      let y: number | null = null, m: number | null = null, d: number | null = null;
+      let match = token.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (match) { y = +match[1]; m = +match[2] - 1; d = +match[3]; }
+      if (m == null) {
+        match = token.match(/^(\d{1,2})\s+([A-Za-z]+)$/);
+        if (match) { d = +match[1]; m = MONTHS[match[2].toLowerCase()] ?? null; }
+      }
+      if (m == null) {
+        match = token.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
+        if (match) { m = MONTHS[match[1].toLowerCase()] ?? null; d = +match[2]; }
+      }
+      if (m == null) {
+        match = token.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+        if (match) { d = +match[1]; m = +match[2] - 1; if (match[3]) y = +match[3] < 100 ? 2000 + +match[3] : +match[3]; }
+      }
+      if (m == null || d == null) return;
+      if (y == null) {
+        y = nowYear;
+        const candidate = new Date(y, m, d);
+        if ((now.getTime() - candidate.getTime()) > 30 * 24 * 60 * 60 * 1000) y += 1;
+      }
+      const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      if (!out.includes(iso)) out.push(iso);
+    });
+    return out.length > 0 ? out : null;
+  };
+
   // Helper: map a raw survey row to a normalised contestant-shaped object
   const mapSurveyRow = (row: any): {
     name: string; email: string | null; phone: string | null; location: string | null;
     groupSize: number | null; attendingWith: string | null; availabilityNotes: string | null;
+    audienceAvailableDates: string[] | null;
     auditionRating: string;
   } | null => {
     // Prefer "Full name", then "Name"
@@ -2239,26 +2286,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const locationRaw = row["Suburb"] ?? row["suburb"] ?? row["SUBURB"] ?? row["City"] ?? row["city"] ?? row["Location"] ?? null;
 
+    // Group size: audience form returns "Solo" / "With a group" (text), survey may return an integer.
+    // Solo → 1, With a group → derive from comma/semicolon-separated member names, fallback to 2.
     const groupSizeRaw = row["Group size"] ?? row["Group Size"] ?? row["GROUP SIZE"] ?? null;
-    const groupSize = groupSizeRaw ? parseInt(groupSizeRaw.toString()) : null;
-
     const attendingWithRaw = row["Group Members Names"] ?? row["Group members names"] ?? row["Group Member Names"] ?? row["Group Members"] ?? null;
+    let groupSize: number | null = null;
+    if (groupSizeRaw != null) {
+      const s = groupSizeRaw.toString().trim();
+      const asNum = parseInt(s);
+      if (!isNaN(asNum) && asNum > 0) {
+        groupSize = asNum;
+      } else if (/solo/i.test(s)) {
+        groupSize = 1;
+      } else if (/group/i.test(s)) {
+        const members = attendingWithRaw ? attendingWithRaw.toString().split(/[,;\n]+/).map((p: string) => p.trim()).filter(Boolean) : [];
+        groupSize = members.length > 0 ? members.length + 1 : 2;
+      }
+    }
 
     // Find the availability/dates column by scanning keys
     const datesKey = Object.keys(row).find(k => {
       const lk = k.toLowerCase();
-      return lk.includes("available to attend") || lk.includes("studio recording") || (lk.includes("date") && lk.includes("available"));
+      return lk.includes("available to attend") || lk.includes("studio recording") || lk.includes("filming date") || (lk.includes("date") && lk.includes("available"));
     });
-    const availabilityNotesRaw = datesKey ? row[datesKey] : null;
+    const datesRaw = datesKey ? row[datesKey] : null;
+    const audienceAvailableDates = parseAudienceDateList(datesRaw);
+
+    // Collect optional free-form audience fields into combined availabilityNotes
+    // (Filming dates kept verbatim, plus Superfan interest, Tell us more, Radio hosts.)
+    const notesParts: string[] = [];
+    if (datesRaw && datesRaw.toString().trim()) notesParts.push(`Available: ${datesRaw.toString().trim()}`);
+    const findCol = (predicate: (k: string) => boolean) => {
+      const k = Object.keys(row).find(predicate);
+      return k ? (row[k] ?? "").toString().trim() : "";
+    };
+    const superfan = findCol(k => k.toLowerCase().includes("superfan"));
+    if (superfan) notesParts.push(`Superfan: ${superfan}`);
+    const tellMore = findCol(k => k.toLowerCase().includes("tell us more"));
+    if (tellMore) notesParts.push(`Tell us more: ${tellMore}`);
+    const radio = findCol(k => k.toLowerCase().includes("radio host"));
+    if (radio) notesParts.push(`Radio hosts: ${radio}`);
+    const availabilityNotes = notesParts.length > 0 ? notesParts.join("\n") : null;
 
     return {
       name: nameRaw.toString().trim(),
       email: emailNormalized,
       phone,
       location: locationRaw ? locationRaw.toString().trim() : null,
-      groupSize: groupSize && !isNaN(groupSize) ? groupSize : null,
+      groupSize,
       attendingWith: attendingWithRaw ? attendingWithRaw.toString().trim() : null,
-      availabilityNotes: availabilityNotesRaw ? availabilityNotesRaw.toString().trim() : null,
+      availabilityNotes,
+      audienceAvailableDates,
       auditionRating: "R",
     };
   };
@@ -2448,6 +2526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (row.groupSize != null) updateData.groupSize = row.groupSize;
           if (row.attendingWith) updateData.attendingWith = row.attendingWith;
           if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
+          if (row.audienceAvailableDates) updateData.audienceAvailableDates = row.audienceAvailableDates;
 
           const updated = await storage.updateContestant(tempMatch.id, updateData);
           updatedTemporaryContestants.push(updated);
@@ -2713,6 +2792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (row.groupSize != null) updateData.groupSize = row.groupSize;
           if (row.attendingWith) updateData.attendingWith = row.attendingWith;
           if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
+          if (row.audienceAvailableDates) updateData.audienceAvailableDates = row.audienceAvailableDates;
 
           const updated = await storage.updateContestant(tempMatch.id, updateData);
           updatedTemporaryContestants.push(updated);
@@ -2755,6 +2835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           groupSize: row.groupSize,
           attendingWith: row.attendingWith,
           availabilityNotes: row.availabilityNotes,
+          audienceAvailableDates: row.audienceAvailableDates ?? null,
           availabilityStatus: "available",
           availableForStandby: false,
           podiumStory: false,

@@ -843,6 +843,7 @@ export default function Contestants() {
           'No-Show Count': (c as any).noShowCount || 0,
           'Early Leaver Count': (c as any).earlyLeaverCount || 0,
           'Availability Notes': (c as any).availabilityNotes || '',
+          'Audience Available Dates': Array.isArray((c as any).audienceAvailableDates) ? (c as any).audienceAvailableDates.join('; ') : '',
           // Booking
           'Booked Record Day': recordDayLabel,
           'Seat': seat,

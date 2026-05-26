@@ -55,6 +55,7 @@ export const contestants = pgTable("contestants", {
   podiumStoryCaseNumber: integer("podium_story_case_number"), // Case number (1-22) for podium story
   availableForStandby: boolean("available_for_standby").default(false), // Marked as available for standby in import
   availabilityNotes: text("availability_notes"), // Free-form availability notes from Excel import
+  audienceAvailableDates: text("audience_available_dates").array(), // ISO date strings (YYYY-MM-DD) parsed from the audience form's filming-dates column
   noShowCount: integer("no_show_count").default(0), // Number of times contestant was a no-show
   earlyLeaverCount: integer("early_leaver_count").default(0), // Number of times contestant left early
   isTemporary: boolean("is_temporary").default(false), // Temporary contestant added on-the-fly, pending proper audition/import

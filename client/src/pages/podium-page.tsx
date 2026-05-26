@@ -138,6 +138,7 @@ type Contestant = {
   availableForStandby?: boolean | null; podiumStory?: boolean | null;
   postcode?: string | null; isTemporary?: boolean | null;
   phone?: string | null; email?: string | null; availabilityNotes?: string | null;
+  audienceAvailableDates?: string[] | null;
 };
 type PodiumEntry = { id: string; position: number; contestantId: string; contestant: Contestant };
 
@@ -486,10 +487,24 @@ function PodiumPositionCard({
                     <p className="text-xs mt-0.5">{details.attendingWith}</p>
                   </div>
                 )}
+                {details.audienceAvailableDates && details.audienceAvailableDates.length > 0 && (
+                  <div className="text-sm">
+                    <label className="text-xs font-medium text-muted-foreground">Available For</label>
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {details.audienceAvailableDates.map((iso) => {
+                        const d = new Date(iso + 'T00:00:00');
+                        const label = isNaN(d.getTime())
+                          ? iso
+                          : `${d.toLocaleDateString('en-AU', { weekday: 'short' })} ${d.getDate()} ${d.toLocaleDateString('en-AU', { month: 'short' })}`;
+                        return <Badge key={iso} variant="secondary" className="text-xs">{label}</Badge>;
+                      })}
+                    </div>
+                  </div>
+                )}
                 {details.availabilityNotes && (
                   <div className="text-sm">
                     <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
-                    <p className="text-xs mt-0.5">{details.availabilityNotes}</p>
+                    <p className="text-xs mt-0.5 whitespace-pre-line">{details.availabilityNotes}</p>
                   </div>
                 )}
                 {hasMeaningfulMedicalNote(details.medicalInfo) && (

@@ -201,6 +201,7 @@ interface StandbyData {
     mobilityNotes?: string | null;
     criminalRecord?: string | null;
     availabilityNotes?: string | null;
+    audienceAvailableDates?: string[] | null;
     availabilityStatus?: string | null;
     podiumStory?: boolean;
   };
@@ -229,6 +230,7 @@ export interface OverflowAssignment {
   medicalInfo?: string;
   criminalRecord?: string;
   availabilityNotes?: string;
+  audienceAvailableDates?: string[] | null;
   podiumStory?: boolean;
   attendingWithRaw?: string;
   availableForStandby?: boolean;
@@ -693,11 +695,27 @@ function SortableStandbyItem({
               </div>
             )}
 
+            {/* Audience available dates (from form import) */}
+            {standby.contestant.audienceAvailableDates && standby.contestant.audienceAvailableDates.length > 0 && (
+              <div className="text-sm">
+                <label className="text-xs font-medium text-muted-foreground">Available For</label>
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {standby.contestant.audienceAvailableDates.map((iso) => {
+                    const d = new Date(iso + 'T00:00:00');
+                    const label = isNaN(d.getTime())
+                      ? iso
+                      : `${d.toLocaleDateString('en-AU', { weekday: 'short' })} ${d.getDate()} ${d.toLocaleDateString('en-AU', { month: 'short' })}`;
+                    return <Badge key={iso} variant="secondary" className="text-xs">{label}</Badge>;
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Availability Notes */}
             {standby.contestant.availabilityNotes && (
               <div className="text-sm">
                 <label className="text-xs font-medium text-muted-foreground">Availability Notes</label>
-                <p className="text-xs">{standby.contestant.availabilityNotes}</p>
+                <p className="text-xs whitespace-pre-line">{standby.contestant.availabilityNotes}</p>
               </div>
             )}
 
