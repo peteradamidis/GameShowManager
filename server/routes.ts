@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage, db, runWithWorkspace } from "./storage";
+import { storage, db, runWithWorkspace, pool } from "./storage";
 import { 
   insertContestantSchema, 
   insertRecordDaySchema, 
@@ -2610,6 +2610,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ─── Audience Import (Celeb workspace) — same parser as Survey, sets rating "V" ───
+  // Helper: look up a contestant's history in the DOND (public) schema by email or phone.
+  // Returns a one-line summary string suitable for appending to availability notes,
+  // or null if no match / no meaningful history exists.
+  async function lookupDondHistorySummary(email: string | null | undefined, phone: string | null | undefined): Promise<string | null> {
+    if (!pool) return null;
+    const normalizedEmail = (email || '').toString().trim();
+    const normalizedPhone = (phone || '').toString().replace(/\D/g, '');
+    if (!normalizedEmail && !normalizedPhone) return null;
+    try {
+      const result = await pool.query(
+        `SELECT c.id, c.name, c.no_show_count, c.early_leaver_count,
+                (SELECT COUNT(*) FROM public.seat_assignments sa WHERE sa.contestant_id = c.id) AS sa_count,
+                (SELECT COALESCE(SUM(winning_money_amount),0) FROM public.seat_assignments WHERE contestant_id = c.id) AS money,
+                (SELECT MAX(rd.date)
+                   FROM public.seat_assignments sa
+                   JOIN public.record_days rd ON rd.id = sa.record_day_id
+                  WHERE sa.contestant_id = c.id) AS latest_date
+           FROM public.contestants c
+          WHERE (NULLIF($1,'') IS NOT NULL AND LOWER(TRIM(c.email)) = LOWER($1))
+             OR (NULLIF($2,'') IS NOT NULL AND REGEXP_REPLACE(COALESCE(c.phone,''),'\\D','','g') = $2)
+          LIMIT 1`,
+        [normalizedEmail, normalizedPhone]
+      );
+      if (result.rows.length === 0) return null;
+      const r: any = result.rows[0];
+      const parts: string[] = [];
+      const saCount = Number(r.sa_count) || 0;
+      const money = Number(r.money) || 0;
+      const noShow = Number(r.no_show_count) || 0;
+      const earlyLeaver = Number(r.early_leaver_count) || 0;
+      if (saCount > 0) parts.push(`${saCount} DOND record day${saCount !== 1 ? 's' : ''}`);
+      if (r.latest_date) {
+        const d = new Date(r.latest_date);
+        if (!isNaN(d.getTime())) {
+          parts.push(`latest ${d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+        }
+      }
+      if (money > 0) parts.push(`won $${money.toLocaleString('en-AU')}`);
+      if (noShow > 0) parts.push(`${noShow} no-show${noShow !== 1 ? 's' : ''}`);
+      if (earlyLeaver > 0) parts.push(`${earlyLeaver} early leaver${earlyLeaver !== 1 ? 's' : ''}`);
+      if (parts.length === 0) return null;
+      return `Previously in DOND: ${parts.join(', ')}`;
+    } catch (err) {
+      console.warn('[lookupDondHistorySummary] failed:', (err as any)?.message);
+      return null;
+    }
+  }
+
   app.post("/api/contestants/import-audience-preview", upload.single("file"), async (req, res) => {
    const workspace = (req as any).session?.activeWorkspace || 'dond';
    return runWithWorkspace(workspace, async () => {
@@ -2703,6 +2751,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uniqueContestants.push(contestant);
       }
 
+      let dondHistoryMatchCount = 0;
+      if (workspace === 'celeb') {
+        const candidates = [
+          ...uniqueContestants.map((c) => ({ email: c.email, phone: c.phone })),
+          ...temporaryContestantsToUpdate.map((t) => {
+            const src = importedContestants.find((ic) => ic.name === t.importName);
+            return { email: src?.email || null, phone: src?.phone || null };
+          }),
+        ];
+        const lookups = await Promise.all(
+          candidates.map((c) => lookupDondHistorySummary(c.email, c.phone))
+        );
+        dondHistoryMatchCount = lookups.filter((s) => s !== null).length;
+      }
+
       res.json({
         totalInFile: importedContestants.length,
         uniqueCount: uniqueContestants.length,
@@ -2712,6 +2775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temporaryUpdates: temporaryContestantsToUpdate,
         emailPatchCount: emailPatches.length,
         emailPatches,
+        dondHistoryMatchCount,
       });
     } catch (error: any) {
       console.error("Audience import preview error:", error);
@@ -2789,6 +2853,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (emailMatch?.isTemporary ? emailMatch : null) ||
           (phoneMatch?.isTemporary ? phoneMatch : null);
 
+        // Cross-workspace enrichment: for celeb imports, look up DOND history by email/phone
+        // and prepare a summary line to append to availability notes.
+        const dondSummary = workspace === 'celeb'
+          ? await lookupDondHistorySummary(row.email, row.phone)
+          : null;
+        const mergedNotes = [row.availabilityNotes, dondSummary].filter(Boolean).join('\n\n') || null;
+
         if (tempMatch) {
           const updateData: Record<string, any> = { isTemporary: false, auditionRating: "V" };
           if (row.name) updateData.name = row.name;
@@ -2797,7 +2868,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (row.location) updateData.location = row.location;
           if (row.groupSize != null) updateData.groupSize = row.groupSize;
           if (row.attendingWith) updateData.attendingWith = row.attendingWith;
-          if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
+          if (mergedNotes) updateData.availabilityNotes = mergedNotes;
+          else if (row.availabilityNotes) updateData.availabilityNotes = row.availabilityNotes;
           if (row.audienceAvailableDates) updateData.audienceAvailableDates = row.audienceAvailableDates;
 
           const updated = await storage.updateContestant(tempMatch.id, updateData);
@@ -2840,7 +2912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           location: row.location,
           groupSize: row.groupSize,
           attendingWith: row.attendingWith,
-          availabilityNotes: row.availabilityNotes,
+          availabilityNotes: mergedNotes ?? row.availabilityNotes,
           audienceAvailableDates: row.audienceAvailableDates ?? null,
           availabilityStatus: "available",
           availableForStandby: false,

@@ -42,6 +42,7 @@ interface PreviewData {
   temporaryUpdates: TemporaryUpdateInfo[];
   emailPatchCount: number;
   emailPatches: Array<{ importName: string; email: string }>;
+  dondHistoryMatchCount?: number;
 }
 
 interface ImportExcelDialogProps {
@@ -274,6 +275,15 @@ export function ImportExcelDialog({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {(previewData.dondHistoryMatchCount || 0) > 0 && (
+              <div className="flex items-center gap-2 p-2 rounded-md border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20">
+                <CheckCircle className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="text-sm text-indigo-700 dark:text-indigo-300">
+                  <strong>{previewData.dondHistoryMatchCount}</strong> {previewData.dondHistoryMatchCount === 1 ? 'contestant has' : 'contestants have'} prior DOND history — a summary will be appended to their availability notes.
+                </span>
               </div>
             )}
 
