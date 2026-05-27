@@ -233,21 +233,28 @@ export async function fixContestantStatuses(): Promise<number> {
     const seatedIds = new Set(allAssignments.map(a => a.contestantId));
     if (seatedIds.size === 0) return 0;
     const allContestants = await database.select().from(contestants);
+    // Only "upgrade" contestants who have a seat but are still marked as
+    // available / unset. NEVER downgrade 'confirmed', 'rescheduled',
+    // 'returning_standby', or 'invited' back to 'assigned' — those are stronger
+    // states that the user/contestants have explicitly moved into. The old
+    // behavior reset every confirmed contestant back to 'assigned' on every
+    // server restart, because past record-day seat rows still exist.
     const toFix = allContestants.filter(c =>
-      seatedIds.has(c.id) && c.availabilityStatus !== 'assigned'
+      seatedIds.has(c.id) &&
+      (!c.availabilityStatus || c.availabilityStatus === 'available')
     );
     if (toFix.length === 0) {
       console.log('  [Fix Status] All contestant statuses are correct');
       return 0;
     }
-    console.log(`  [Fix Status] Fixing ${toFix.length} contestants with stale status...`);
+    console.log(`  [Fix Status] Upgrading ${toFix.length} contestants from 'available' → 'assigned' (have seats)...`);
     for (const contestant of toFix) {
       await database
         .update(contestants)
         .set({ availabilityStatus: 'assigned' })
         .where(eq(contestants.id, contestant.id));
     }
-    console.log(`  [Fix Status] Fixed ${toFix.length} contestant statuses to 'assigned'`);
+    console.log(`  [Fix Status] Upgraded ${toFix.length} contestant statuses to 'assigned'`);
     return toFix.length;
   } catch (error) {
     console.error('  [Fix Status] Error fixing contestant statuses:', error);
