@@ -5436,13 +5436,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Check block configuration is complete (5 PB + 2 NPB)
+      // Check block configuration is complete
+      //   DOND:  5 PB + 2 NPB
+      //   CELEB: all 7 AUDIENCE (Playing is tracked on the Podium tab)
       const blockConfig = await storage.isBlockConfigurationComplete(recordDayId);
       if (!blockConfig.complete) {
-        return res.status(400).json({ 
-          error: "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
+        const ws = (req as any).session?.activeWorkspace || 'dond';
+        return res.status(400).json({
+          error: ws === 'celeb'
+            ? "Block configuration incomplete. All 7 CELEB blocks should be Audience — try reloading the page so it auto-repairs."
+            : "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
           code: "BLOCK_CONFIG_INCOMPLETE",
-          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount }
+          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount, audienceCount: blockConfig.audienceCount }
         });
       }
 
@@ -5883,13 +5888,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Check block configuration is complete (5 PB + 2 NPB)
+      // Check block configuration is complete (DOND: 5 PB + 2 NPB, CELEB: 7 AUDIENCE)
       const blockConfig = await storage.isBlockConfigurationComplete(recordDayId);
       if (!blockConfig.complete) {
-        return res.status(400).json({ 
-          error: "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
+        const ws = (req as any).session?.activeWorkspace || 'dond';
+        return res.status(400).json({
+          error: ws === 'celeb'
+            ? "Block configuration incomplete. All 7 CELEB blocks should be Audience — try reloading the page so it auto-repairs."
+            : "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
           code: "BLOCK_CONFIG_INCOMPLETE",
-          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount }
+          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount, audienceCount: blockConfig.audienceCount }
         });
       }
 
@@ -6483,13 +6491,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "recordDayId is required" });
       }
 
-      // Check block configuration is complete (5 PB + 2 NPB)
+      // Check block configuration is complete (DOND: 5 PB + 2 NPB, CELEB: 7 AUDIENCE)
       const blockConfig = await storage.isBlockConfigurationComplete(recordDayId);
       if (!blockConfig.complete) {
-        return res.status(400).json({ 
-          error: "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before auto-assigning seats.",
+        const ws = (req as any).session?.activeWorkspace || 'dond';
+        return res.status(400).json({
+          error: ws === 'celeb'
+            ? "Block configuration incomplete. All 7 CELEB blocks should be Audience — try reloading the page so it auto-repairs."
+            : "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before auto-assigning seats.",
           code: "BLOCK_CONFIG_INCOMPLETE",
-          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount }
+          current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount, audienceCount: blockConfig.audienceCount }
         });
       }
 
@@ -8327,7 +8338,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!['PB', 'NPB', 'AUDIENCE'].includes(blockType)) {
         return res.status(400).json({ error: "Block type must be 'PB', 'NPB', or 'AUDIENCE'" });
       }
-      
+
+      // In CELEB the seating chart is purely audience — Playing is tracked on
+      // the Podium tab. Reject any attempt to set a CELEB block to PB/NPB.
+      const workspace = (req as any).session?.activeWorkspace || 'dond';
+      if (workspace === 'celeb' && blockType !== 'AUDIENCE') {
+        return res.status(400).json({
+          error: "DOND CELEB blocks must be AUDIENCE (Playing is tracked on the Podium tab)"
+        });
+      }
+
       const updated = await storage.upsertBlockType(recordDayId, blockNum, blockType);
       res.json(updated);
     } catch (error: any) {

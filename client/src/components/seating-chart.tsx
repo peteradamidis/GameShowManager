@@ -2201,16 +2201,16 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   </h4>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
                     {isCeleb
-                      ? <>You must select exactly <strong>3 Playing Blocks (PB)</strong> and <strong>4 Audience Blocks (AUDIENCE)</strong> before you can book seats.</>
+                      ? <>All <strong>7 blocks</strong> should be <strong>Audience</strong> in CELEB. Reload the page — the server will auto-repair the configuration.</>
                       : <>You must select exactly <strong>5 Playing Blocks (PB)</strong> and <strong>2 Non-Playing Blocks (NPB)</strong> before you can book seats.</>
                     }
                   </p>
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     {isCeleb
-                      ? <>Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.audienceCount ?? 0} AUDIENCE</>
+                      ? <>Current: {blockConfigStatus?.audienceCount ?? 0} / 7 Audience</>
                       : <>Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.npbCount ?? 0} NPB</>
                     }
-                    {(blockConfigStatus?.pbCount ?? 0) + ((isCeleb ? (blockConfigStatus?.audienceCount ?? 0) : (blockConfigStatus?.npbCount ?? 0))) < 7 && (
+                    {!isCeleb && (blockConfigStatus?.pbCount ?? 0) + (blockConfigStatus?.npbCount ?? 0) < 7 && (
                       <span> — Click the block type badges below to configure each block</span>
                     )}
                   </p>

@@ -2216,9 +2216,11 @@ export class DbStorage implements IStorage {
     //          podium tab handles who's actually playing, and the seating
     //          chart is purely the studio audience).
     const workspace = workspaceStorage.getStore() || 'dond';
-    // Lazy backfill for CELEB: if a record day was never configured, seed
-    // all 7 blocks as AUDIENCE so the seat-assignment gate stops blocking.
-    if (workspace === 'celeb' && pbCount === 0 && audienceCount === 0 && npbCount === 0) {
+    // Lazy backfill / migration for CELEB: if a record day was never configured
+    // OR still has legacy PB/NPB rows from the old "3 PB + 4 AUDIENCE" model,
+    // rewrite it to the new all-AUDIENCE model so the seat-assignment gate
+    // stops blocking. This is a self-healing migration — no manual SQL needed.
+    if (workspace === 'celeb' && audienceCount !== 7) {
       try {
         await this.upsertBlockTypes(recordDayId, [
           { blockNumber: 1, blockType: 'AUDIENCE' },
