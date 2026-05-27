@@ -2578,9 +2578,16 @@ export default function Settings() {
             {/* Auto-Confirmation PDF Selection */}
             <div className="border-t pt-4">
               <h4 className="font-medium mb-2">Auto-Confirmation Email PDF</h4>
-              <p className="text-sm text-muted-foreground mb-3">
-                Select the PDF to attach when contestants confirm their booking. This works offline once configured.
-              </p>
+              <div className="text-sm text-muted-foreground mb-3 space-y-1">
+                <p>
+                  Select the PDF to attach when contestants confirm their booking. This works offline once configured.
+                </p>
+                <p className="text-xs">
+                  <strong>To add a new PDF:</strong> click <span className="font-mono px-1 py-0.5 rounded bg-muted">Upload PDF</span> above,
+                  wait for it to appear in the <em>Uploaded Files</em> list, then pick it from the dropdown below and press <em>Save</em>.
+                  This setting is shared across DOND and CELEB workspaces.
+                </p>
+              </div>
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
                   <Select 

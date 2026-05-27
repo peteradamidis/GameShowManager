@@ -2461,8 +2461,14 @@ export class DbStorage implements IStorage {
   }
 
   // System Configuration
+  // Note: system_config is INTENTIONALLY shared across all workspaces (uses public schema,
+  // not workspace-aware getDb()). This way SMTP credentials, email templates, the
+  // auto-confirmation PDF path, Google Sheets config, etc. configured in DOND are
+  // automatically available in CELEB and vice versa. Edits in either workspace
+  // affect both.
   async getSystemConfig(key: string): Promise<string | null> {
-    const [config] = await getDb()
+    if (!db) throw new Error("DATABASE_URL is not configured.");
+    const [config] = await db
       .select()
       .from(systemConfig)
       .where(eq(systemConfig.key, key));
@@ -2470,7 +2476,8 @@ export class DbStorage implements IStorage {
   }
 
   async setSystemConfig(key: string, value: string): Promise<void> {
-    await getDb()
+    if (!db) throw new Error("DATABASE_URL is not configured.");
+    await db
       .insert(systemConfig)
       .values({ key, value })
       .onConflictDoUpdate({
@@ -3692,16 +3699,17 @@ export class DbStorage implements IStorage {
     return card;
   }
 
-  // System Settings
+  // System Settings — shared across all workspaces (uses public schema directly,
+  // same rationale as system_config above).
   async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
-    const db = getDb();
-    const [setting] = await getDb().select().from(systemSettings).where(eq(systemSettings.key, key));
+    if (!db) throw new Error("DATABASE_URL is not configured.");
+    const [setting] = await db.select().from(systemSettings).where(eq(systemSettings.key, key));
     return setting;
   }
 
   async setSystemSetting(key: string, value: string): Promise<SystemSetting> {
-    const db = getDb();
-    const [updated] = await getDb()
+    if (!db) throw new Error("DATABASE_URL is not configured.");
+    const [updated] = await db
       .insert(systemSettings)
       .values({ key, value, updatedAt: new Date() })
       .onConflictDoUpdate({
