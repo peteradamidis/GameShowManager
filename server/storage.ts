@@ -674,17 +674,17 @@ export class DbStorage implements IStorage {
   // Record Days
   async createRecordDay(recordDay: InsertRecordDay): Promise<RecordDay> {
     const [created] = await getDb().insert(recordDays).values(recordDay).returning();
-    // For CELEB the block layout is fixed (blocks 1-3 = PB, blocks 4-7 = AUDIENCE).
+    // For CELEB the seating chart is purely the studio audience — all 7 blocks
+    // are AUDIENCE. Who actually plays is tracked separately on the Podium tab.
     // Seed the defaults so the server-side block-config gate (and seat-assignment
-    // endpoint) immediately treats the new day as fully configured. Without this,
-    // CELEB users hit a misleading "5 PB / 2 NPB" error when trying to seat.
+    // endpoint) immediately treats the new day as fully configured.
     const workspace = workspaceStorage.getStore() || 'dond';
     if (workspace === 'celeb') {
       try {
         await this.upsertBlockTypes(created.id, [
-          { blockNumber: 1, blockType: 'PB' },
-          { blockNumber: 2, blockType: 'PB' },
-          { blockNumber: 3, blockType: 'PB' },
+          { blockNumber: 1, blockType: 'AUDIENCE' },
+          { blockNumber: 2, blockType: 'AUDIENCE' },
+          { blockNumber: 3, blockType: 'AUDIENCE' },
           { blockNumber: 4, blockType: 'AUDIENCE' },
           { blockNumber: 5, blockType: 'AUDIENCE' },
           { blockNumber: 6, blockType: 'AUDIENCE' },
@@ -2212,18 +2212,18 @@ export class DbStorage implements IStorage {
     let audienceCount = blockConfigs.filter(b => (b.blockType as string) === 'AUDIENCE').length;
     // Workspace-aware completion check:
     //   DOND:  5 PB + 2 NPB
-    //   CELEB: 3 PB + 4 AUDIENCE
+    //   CELEB: all 7 AUDIENCE (Playing is a DOND-only concept; in CELEB the
+    //          podium tab handles who's actually playing, and the seating
+    //          chart is purely the studio audience).
     const workspace = workspaceStorage.getStore() || 'dond';
-    // Lazy backfill for CELEB: if a record day pre-dates the auto-seed in
-    // createRecordDay (or was otherwise never configured), seed the fixed
-    // CELEB layout now so the seat-assignment gate stops blocking with a
-    // misleading "5 PB / 2 NPB" error.
+    // Lazy backfill for CELEB: if a record day was never configured, seed
+    // all 7 blocks as AUDIENCE so the seat-assignment gate stops blocking.
     if (workspace === 'celeb' && pbCount === 0 && audienceCount === 0 && npbCount === 0) {
       try {
         await this.upsertBlockTypes(recordDayId, [
-          { blockNumber: 1, blockType: 'PB' },
-          { blockNumber: 2, blockType: 'PB' },
-          { blockNumber: 3, blockType: 'PB' },
+          { blockNumber: 1, blockType: 'AUDIENCE' },
+          { blockNumber: 2, blockType: 'AUDIENCE' },
+          { blockNumber: 3, blockType: 'AUDIENCE' },
           { blockNumber: 4, blockType: 'AUDIENCE' },
           { blockNumber: 5, blockType: 'AUDIENCE' },
           { blockNumber: 6, blockType: 'AUDIENCE' },
@@ -2238,7 +2238,7 @@ export class DbStorage implements IStorage {
       }
     }
     const complete = workspace === 'celeb'
-      ? pbCount === 3 && audienceCount === 4
+      ? audienceCount === 7
       : pbCount === 5 && npbCount === 2;
     return { complete, pbCount, npbCount, audienceCount };
   }

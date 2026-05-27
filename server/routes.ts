@@ -8362,9 +8362,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const workspace = (req as any).session?.activeWorkspace || 'dond';
       
       if (workspace === 'celeb') {
-        if (pbCount !== 3 || audienceCount !== 4) {
+        if (audienceCount !== 7) {
           return res.status(400).json({
-            error: "DOND CELEB requires exactly 3 Playing Blocks (PB) and 4 Audience Blocks (AUDIENCE)",
+            error: "DOND CELEB requires all 7 blocks to be AUDIENCE (Playing is tracked on the Podium tab)",
             current: { pbCount, audienceCount }
           });
         }

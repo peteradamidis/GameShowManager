@@ -987,16 +987,15 @@ function SeatingBlock({
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">{blockLabel}</CardTitle>
           {isCeleb ? (
+            // CELEB seating chart is purely audience — Playing is tracked on the
+            // Podium tab. Always render the Audience badge regardless of any
+            // legacy PB/NPB rows still in block_types.
             <Badge
               variant="outline"
-              className={`text-xs font-medium ${
-                blockType === 'AUDIENCE'
-                  ? 'border-teal-500 text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40'
-                  : 'border-primary/50 text-primary bg-primary/10'
-              }`}
+              className="text-xs font-medium border-teal-500 text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40"
               data-testid={`block-type-label-${blockIndex}`}
             >
-              {blockType === 'AUDIENCE' ? 'Audience' : blockType === 'PB' ? 'Playing' : blockType || '—'}
+              Audience
             </Badge>
           ) : isPodiumVisualizerMode ? (
             <Badge 
