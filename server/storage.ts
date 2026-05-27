@@ -262,6 +262,50 @@ export async function fixContestantStatuses(): Promise<number> {
   }
 }
 
+// Cleans up orphaned podium seat assignments in the CELEB workspace.
+// Background: a previous schema-routing bug caused some podium-remove operations
+// to delete the podium_positions row in celeb but leave the matching
+// block_number=8 row in celeb.seat_assignments. Those orphans then block
+// re-seating the same contestant with a confusing "already seated Block 8, Seat
+// P1" 409. This sweep removes any block 8 seat_assignment on an UNLOCKED record
+// day that has no corresponding podium_positions row. Locked days are left
+// alone so historic recordings are not modified.
+export async function cleanupOrphanedPodiumSeats(): Promise<number> {
+  if (!dbCeleb) {
+    console.log('  [Fix Podium Orphans] No CELEB DB configured, skipping');
+    return 0;
+  }
+  try {
+    return await runWithWorkspace('celeb', async () => {
+      const database = getDb();
+      const result: any = await database.execute(sql`
+        DELETE FROM celeb.seat_assignments sa
+        USING celeb.record_days rd
+        WHERE sa.record_day_id = rd.id
+          AND sa.block_number  = 8
+          AND rd.locked_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM celeb.podium_positions pp
+            WHERE pp.record_day_id = sa.record_day_id
+              AND pp.contestant_id = sa.contestant_id
+              AND pp.position      = CAST(SUBSTRING(sa.seat_label FROM 2) AS INTEGER)
+          )
+        RETURNING sa.id
+      `);
+      const deleted = result?.rowCount ?? result?.rows?.length ?? 0;
+      if (deleted === 0) {
+        console.log('  [Fix Podium Orphans] No orphaned podium seats found');
+      } else {
+        console.log(`  [Fix Podium Orphans] Removed ${deleted} orphaned podium seat_assignment row(s) on unlocked record days`);
+      }
+      return deleted;
+    });
+  } catch (error) {
+    console.error('  [Fix Podium Orphans] Error cleaning orphaned podium seats:', error);
+    return 0;
+  }
+}
+
 export async function fixPhoneNumbers(): Promise<number> {
   if (!pool) {
     console.log('  [Fix Phone] No pool available');

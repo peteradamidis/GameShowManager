@@ -18,7 +18,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db-init";
-import { warmupDatabaseConnection, fixPhoneNumbers, fixContestantStatuses, workspaceStorage } from "./storage";
+import { warmupDatabaseConnection, fixPhoneNumbers, fixContestantStatuses, cleanupOrphanedPodiumSeats, workspaceStorage } from "./storage";
 import { startBackupScheduler } from "./backup-scheduler";
 import { getSessionConfig, createDefaultAdmin } from "./auth";
 
@@ -163,6 +163,12 @@ app.use((req, res, next) => {
           // Reconcile contestant statuses — any seated contestant must be 'assigned'
           console.log('Step 5.6: Reconciling contestant statuses...');
           await fixContestantStatuses();
+
+          // Clean up orphaned CELEB podium seat assignments left over from the
+          // earlier cross-schema bug (block_number=8 rows with no matching
+          // podium_positions row on an unlocked day).
+          console.log('Step 5.7: Cleaning orphaned podium seat assignments (CELEB)...');
+          await cleanupOrphanedPodiumSeats();
           
           // Start automatic backup scheduler after database is ready
           console.log('Step 6: Starting automatic backup scheduler...');

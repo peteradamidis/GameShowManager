@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Auto-generated hourly backups (contain PII — never commit)
+storage/backups/
