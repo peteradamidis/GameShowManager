@@ -912,7 +912,7 @@ export class DbStorage implements IStorage {
   }
 
   async getSeatAssignmentsByRecordDay(recordDayId: string): Promise<SeatAssignment[]> {
-    return db
+    return getDb()
       .select()
       .from(seatAssignments)
       .where(eq(seatAssignments.recordDayId, recordDayId));
@@ -1810,7 +1810,7 @@ export class DbStorage implements IStorage {
   }
 
   async getAvailabilityTokensByContestant(contestantId: string): Promise<AvailabilityToken[]> {
-    return db
+    return getDb()
       .select()
       .from(availabilityTokens)
       .where(eq(availabilityTokens.contestantId, contestantId));
@@ -1844,7 +1844,7 @@ export class DbStorage implements IStorage {
   }
 
   async getContestantAvailability(contestantId: string): Promise<ContestantAvailability[]> {
-    return db
+    return getDb()
       .select()
       .from(contestantAvailability)
       .where(eq(contestantAvailability.contestantId, contestantId));
@@ -2108,7 +2108,7 @@ export class DbStorage implements IStorage {
   }
 
   async getBookingMessagesByConfirmation(confirmationId: string): Promise<BookingMessage[]> {
-    return db
+    return getDb()
       .select()
       .from(bookingMessages)
       .where(eq(bookingMessages.confirmationId, confirmationId))
@@ -2256,7 +2256,7 @@ export class DbStorage implements IStorage {
 
   async createStandbyAssignments(assignments: InsertStandbyAssignment[]): Promise<StandbyAssignment[]> {
     if (assignments.length === 0) return [];
-    return db
+    return getDb()
       .insert(standbyAssignments)
       .values(assignments)
       .onConflictDoNothing()
@@ -3388,14 +3388,14 @@ export class DbStorage implements IStorage {
   }
 
   async getPrizeWinnersByRecordDay(recordDayId: string): Promise<PrizeWinner[]> {
-    return db
+    return getDb()
       .select()
       .from(prizeWinners)
       .where(eq(prizeWinners.recordDayId, recordDayId));
   }
 
   async getPrizeWinnersByContestant(contestantId: string): Promise<PrizeWinner[]> {
-    return db
+    return getDb()
       .select()
       .from(prizeWinners)
       .where(eq(prizeWinners.contestantId, contestantId));
