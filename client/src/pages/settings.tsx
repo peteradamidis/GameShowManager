@@ -261,6 +261,7 @@ const EMAIL_TEMPLATE_DEFAULTS = {
   ticket_email_headline: 'Your Official Ticket',
   ticket_email_intro: 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.',
   ticket_email_important: 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.',
+  ticket_email_additional: '',
   ticket_email_footer: 'This is an automated email from the Deal or No Deal production team.',
   // Shared reminder message (appears in all emails)
   email_reminder_message: 'Please ensure you bring your own water bottle.',
@@ -850,6 +851,7 @@ export default function Settings() {
   const [ticketEmailHeadline, setTicketEmailHeadline] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_headline);
   const [ticketEmailIntro, setTicketEmailIntro] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_intro);
   const [ticketEmailImportant, setTicketEmailImportant] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_important);
+  const [ticketEmailAdditional, setTicketEmailAdditional] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_additional);
   const [ticketEmailFooter, setTicketEmailFooter] = useState(EMAIL_TEMPLATE_DEFAULTS.ticket_email_footer);
   const [ticketTemplateChanged, setTicketTemplateChanged] = useState(false);
   
@@ -899,6 +901,7 @@ export default function Settings() {
   const { data: savedTicketHeadline } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_headline"] });
   const { data: savedTicketIntro } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_intro"] });
   const { data: savedTicketImportant } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_important"] });
+  const { data: savedTicketAdditional } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_additional"] });
   const { data: savedTicketFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/ticket_email_footer"] });
   
   // Fetch saved shared reminder message
@@ -991,6 +994,9 @@ export default function Settings() {
   useEffect(() => {
     if (savedTicketImportant) setTicketEmailImportant(savedTicketImportant);
   }, [savedTicketImportant]);
+  useEffect(() => {
+    if (savedTicketAdditional !== undefined && savedTicketAdditional !== null) setTicketEmailAdditional(savedTicketAdditional);
+  }, [savedTicketAdditional]);
   useEffect(() => {
     if (savedTicketFooter) setTicketEmailFooter(savedTicketFooter);
   }, [savedTicketFooter]);
@@ -1115,6 +1121,7 @@ export default function Settings() {
         apiRequest("PUT", "/api/system-config/ticket_email_headline", { value: ticketEmailHeadline }),
         apiRequest("PUT", "/api/system-config/ticket_email_intro", { value: ticketEmailIntro }),
         apiRequest("PUT", "/api/system-config/ticket_email_important", { value: ticketEmailImportant }),
+        apiRequest("PUT", "/api/system-config/ticket_email_additional", { value: ticketEmailAdditional }),
         apiRequest("PUT", "/api/system-config/ticket_email_footer", { value: ticketEmailFooter }),
       ]);
     },
@@ -1124,6 +1131,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_headline"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_intro"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_important"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_additional"] });
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/ticket_email_footer"] });
     },
     onError: (error: any) => {
@@ -2317,7 +2325,7 @@ export default function Settings() {
               Ticket Email Template
             </CardTitle>
             <CardDescription>
-              Customize the wording of ticket emails sent to contestants after they confirm their booking. This email includes the Record Day Information PDF.
+              Customize the wording of ticket emails sent to contestants after they confirm their booking.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -2354,7 +2362,7 @@ export default function Settings() {
             
             <div className="space-y-2">
               <Label htmlFor="ticket-email-important">Important Notice</Label>
-              <p className="text-xs text-muted-foreground">Yellow warning box text about the PDF attachment</p>
+              <p className="text-xs text-muted-foreground">Yellow warning box text shown at the top of the email</p>
               <Textarea
                 id="ticket-email-important"
                 value={ticketEmailImportant}
@@ -2365,6 +2373,22 @@ export default function Settings() {
                 placeholder="IMPORTANT INFORMATION is attached in the PDF..."
                 className="min-h-[60px]"
                 data-testid="input-ticket-email-important"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ticket-email-additional">Additional Paragraph (below Booking Details)</Label>
+              <p className="text-xs text-muted-foreground">Optional extra paragraph shown directly underneath the booking details box. Leave blank to hide. Supports plain text or HTML; blank lines separate paragraphs.</p>
+              <Textarea
+                id="ticket-email-additional"
+                value={ticketEmailAdditional}
+                onChange={(e) => {
+                  setTicketEmailAdditional(e.target.value);
+                  setTicketTemplateChanged(true);
+                }}
+                placeholder="e.g. Parking info, what to bring, dress code, additional reminders…"
+                className="min-h-[100px]"
+                data-testid="input-ticket-email-additional"
               />
             </div>
             

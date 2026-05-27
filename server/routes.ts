@@ -11571,16 +11571,6 @@ Thank you.`;
         day: 'numeric' 
       });
 
-      // Read the static PDF file for attachment
-      const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
-      let pdfBuffer: Buffer;
-      try {
-        pdfBuffer = fs.readFileSync(pdfPath);
-      } catch (error) {
-        console.error("Error reading PDF file:", error);
-        return res.status(500).json({ error: "Contestant information PDF not found" });
-      }
-
       // Prepare banner image for CID embedding
       const ticketBannerCid = 'ticket-banner-image';
       let ticketBannerBuffer: Buffer | null = null;
@@ -11615,6 +11605,7 @@ Thank you.`;
       const ticketHeadline = await storage.getSystemConfig('ticket_email_headline') || 'Your Official Ticket';
       const ticketIntro = await storage.getSystemConfig('ticket_email_intro') || 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.';
       const ticketImportant = await storage.getSystemConfig('ticket_email_important') || 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.';
+      const ticketAdditional = (await storage.getSystemConfig('ticket_email_additional')) || '';
       const ticketFooter = await storage.getSystemConfig('ticket_email_footer') || 'This is an automated email from the Deal or No Deal production team.';
       
       // Create email HTML with banner
@@ -11686,7 +11677,13 @@ Thank you.`;
                   </td>
                 </tr>
               </table>
-              
+              ${ticketAdditional.trim() ? `
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketAdditional.split('\n\n').map((paragraph: string) =>
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              ` : ''}
               <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
                 We look forward to seeing you!
               </p>
@@ -11718,12 +11715,8 @@ Thank you.`;
         senderName: senderNameConfig || 'Deal or No Deal',
       };
 
-      // Build attachments array
-      const attachments: any[] = [{
-        filename: 'Record_Day_Information.pdf',
-        content: pdfBuffer,
-        contentType: 'application/pdf'
-      }];
+      // Build attachments array (PDF removed — was Record_Day_Information.pdf)
+      const attachments: any[] = [];
       
       // Add banner as CID attachment if available
       if (ticketBannerBuffer) {
@@ -11778,16 +11771,6 @@ Thank you.`;
         return res.status(400).json({ error: "Must provide at least one seat assignment ID" });
       }
 
-      // Pre-load shared resources once
-      const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
-      let pdfBuffer: Buffer;
-      try {
-        pdfBuffer = fs.readFileSync(pdfPath);
-      } catch (error) {
-        console.error("Error reading PDF file:", error);
-        return res.status(500).json({ error: "Contestant information PDF not found" });
-      }
-
       // Prepare banner image buffer once
       const ticketBannerCid = 'ticket-banner-image';
       let ticketBannerBuffer: Buffer | null = null;
@@ -11814,6 +11797,7 @@ Thank you.`;
       const ticketHeadline = await storage.getSystemConfig('ticket_email_headline') || 'Your Official Ticket';
       const ticketIntro = await storage.getSystemConfig('ticket_email_intro') || 'Thank you for confirming your attendance! This is your official ticket for the Deal or No Deal recording.';
       const ticketImportant = await storage.getSystemConfig('ticket_email_important') || 'IMPORTANT INFORMATION is attached in the PDF. Please read it carefully before your record day.';
+      const ticketAdditional = (await storage.getSystemConfig('ticket_email_additional')) || '';
       const ticketFooter = await storage.getSystemConfig('ticket_email_footer') || 'This is an automated email from the Deal or No Deal production team.';
       const senderNameConfig = await storage.getSystemConfig('email_sender_name');
       
@@ -11922,7 +11906,13 @@ Thank you.`;
                   </td>
                 </tr>
               </table>
-              
+              ${ticketAdditional.trim() ? `
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                ${ticketAdditional.split('\n\n').map((paragraph: string) =>
+                  `<p style="margin: 0 0 12px 0;">${paragraph.replace(/\n/g, '<br/>')}</p>`
+                ).join('')}
+              </div>
+              ` : ''}
               <p style="color: #333333; font-size: 15px; margin: 0 0 5px 0;">
                 We look forward to seeing you!
               </p>
@@ -11947,13 +11937,9 @@ Thank you.`;
 </body>
 </html>`;
 
-          // Build attachments array
-          const attachments: any[] = [{
-            filename: 'Record_Day_Information.pdf',
-            content: pdfBuffer,
-            contentType: 'application/pdf'
-          }];
-          
+          // Build attachments array (PDF removed — was Record_Day_Information.pdf)
+          const attachments: any[] = [];
+
           if (ticketBannerBuffer) {
             attachments.push({
               filename: ticketBannerFilename,
@@ -13784,16 +13770,6 @@ Thank you.`;
         day: 'numeric' 
       });
 
-      // Read the static PDF file for attachment
-      const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
-      let pdfBuffer: Buffer;
-      try {
-        pdfBuffer = fs.readFileSync(pdfPath);
-      } catch (error) {
-        console.error("Error reading PDF file:", error);
-        return res.status(500).json({ error: "Contestant information PDF not found" });
-      }
-
       // Prepare banner image for CID embedding
       const ticketBannerCid = 'ticket-banner-image';
       let ticketBannerBuffer: Buffer | null = null;
@@ -13950,19 +13926,13 @@ Thank you.`;
 </body>
 </html>`;
 
-      // Prepare attachments array
+      // Prepare attachments array (PDF removed — was Record_Day_Information.pdf)
       const attachments: Array<{
         filename: string;
         content: Buffer;
         contentType?: string;
         cid?: string;
-      }> = [
-        {
-          filename: 'Record_Day_Information.pdf',
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ];
+      }> = [];
       
       // Add banner image as CID attachment if available
       if (ticketBannerBuffer) {
@@ -14081,15 +14051,6 @@ Thank you.`;
             day: 'numeric' 
           });
 
-          // Read PDF
-          const pdfPath = path.join(process.cwd(), 'server', 'assets', 'Contestant_Information.pdf');
-          let pdfBuffer: Buffer;
-          try {
-            pdfBuffer = fs.readFileSync(pdfPath);
-          } catch (error) {
-            throw new Error("Contestant information PDF not found");
-          }
-
           // Get banner
           const ticketBannerCid = 'ticket-banner-image';
           let ticketBannerBuffer: Buffer | null = null;
@@ -14199,9 +14160,8 @@ Thank you.`;
 </body>
 </html>`;
 
-          const attachments: Array<{ filename: string; content: Buffer; contentType?: string; cid?: string; }> = [
-            { filename: 'Record_Day_Information.pdf', content: pdfBuffer, contentType: 'application/pdf' },
-          ];
+          // PDF removed — was Record_Day_Information.pdf
+          const attachments: Array<{ filename: string; content: Buffer; contentType?: string; cid?: string; }> = [];
           
           if (ticketBannerBuffer) {
             attachments.push({
@@ -15868,7 +15828,6 @@ Thank you.`;
 <body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
   <div style="text-align: center; margin-bottom: 20px;">
     <span style="background: #28a745; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
-    <p style="color: #666; font-size: 12px; margin: 8px 0 0 0;">Attachment: Record_Day_Information.pdf</p>
   </div>
   <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
@@ -16452,9 +16411,6 @@ Thank you.`;
         </td>
       </tr>
     </table>
-  </div>
-  <div style="text-align: center; margin-top: 20px; padding: 15px; background: #FEF3C7; border-radius: 6px; max-width: 600px; margin: 20px auto;">
-    <p style="color: #92400E; font-size: 13px; margin: 0;"><strong>Note:</strong> In the actual email, a PDF attachment (Record_Day_Information.pdf) will be included.</p>
   </div>
 </body>
 </html>`;
