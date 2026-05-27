@@ -190,6 +190,23 @@ function getDb() {
   return db;
 }
 
+// Workspace-aware raw pg pool. Use this whenever raw SQL is executed via
+// pool.query(...) so the SQL runs against the correct schema (celeb vs public).
+// The celeb pool sets search_path = celeb, public on every new connection.
+function getPool() {
+  const workspace = workspaceStorage.getStore();
+  if (workspace === 'celeb') {
+    if (!celebPool) {
+      throw new Error("Database not configured. Please set the DATABASE_URL environment variable.");
+    }
+    return celebPool;
+  }
+  if (!pool) {
+    throw new Error("DATABASE_URL is not configured. Please set the DATABASE_URL environment variable.");
+  }
+  return pool;
+}
+
 // Warm up the database connection (call after server starts)
 export async function warmupDatabaseConnection(): Promise<boolean> {
   if (!pool) {
@@ -1168,7 +1185,7 @@ export class DbStorage implements IStorage {
 
     console.log("[RAW SQL UPDATE]", query, "params:", JSON.stringify(params));
 
-    const result = await pool!.query(query, params);
+    const result = await getPool().query(query, params);
     if (result.rows.length === 0) return undefined;
 
     const row = result.rows[0];
