@@ -52,13 +52,6 @@ type StatsByDay = {
   total: number;
 };
 
-const DEFAULT_EMAIL_SUBJECT = "Deal or No Deal - Availability Confirmation Request";
-const DEFAULT_EMAIL_HEADLINE = "Confirm Your Availability";
-const DEFAULT_EMAIL_INTRO = "Thank you for registering to be part of the Deal or No Deal audience! We're excited to potentially have you join us for an upcoming recording session.";
-const DEFAULT_EMAIL_INSTRUCTIONS = "Please click the button below to let us know which recording dates work for you. This helps us plan our audience seating and ensures we can accommodate you on your preferred day.";
-const DEFAULT_EMAIL_BUTTON_TEXT = "Select My Available Dates";
-const DEFAULT_EMAIL_FOOTER = "This is an automated message from the Deal or No Deal production team. If you have questions, please reply to this email.";
-
 export default function AvailabilityManagement() {
   const { toast } = useToast();
   const [selectedContestants, setSelectedContestants] = useState<Set<string>>(new Set());
@@ -68,13 +61,6 @@ export default function AvailabilityManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sendDialogSearch, setSendDialogSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [emailSubject, setEmailSubject] = useState(DEFAULT_EMAIL_SUBJECT);
-  const [emailHeadline, setEmailHeadline] = useState(DEFAULT_EMAIL_HEADLINE);
-  const [emailIntro, setEmailIntro] = useState(DEFAULT_EMAIL_INTRO);
-  const [emailInstructions, setEmailInstructions] = useState(DEFAULT_EMAIL_INSTRUCTIONS);
-  const [emailButtonText, setEmailButtonText] = useState(DEFAULT_EMAIL_BUTTON_TEXT);
-  const [emailFooter, setEmailFooter] = useState(DEFAULT_EMAIL_FOOTER);
-  
   // Import functionality
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importResults, setImportResults] = useState<any>(null);
@@ -103,15 +89,14 @@ export default function AvailabilityManagement() {
 
   const sendMutation = useMutation({
     mutationFn: async () => {
+      // Note: email template content (subject, headline, intro, instructions,
+      // footer, form URL) is intentionally NOT sent here. The backend reads the
+      // saved template from system config for the active workspace so that edits
+      // made on the Settings page are always reflected in the sent email — and
+      // so the actual email matches the live preview shown in the confirm step.
       return apiRequest("POST", "/api/availability/send", {
         contestantIds: Array.from(selectedContestants),
         recordDayIds: Array.from(selectedRecordDays),
-        emailSubject,
-        emailHeadline,
-        emailIntro,
-        emailInstructions,
-        emailButtonText,
-        emailFooter,
       });
     },
     onSuccess: (data: any) => {

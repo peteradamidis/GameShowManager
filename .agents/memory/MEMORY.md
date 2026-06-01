@@ -1,0 +1,1 @@
+- [Email template source-of-truth drift](email-template-source-of-truth.md) — send dialogs that pass hardcoded template defaults in the request body silently override saved Settings/system_config templates.
