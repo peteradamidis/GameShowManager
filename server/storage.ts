@@ -207,6 +207,51 @@ function getPool() {
   return pool;
 }
 
+// ── PER-WORKSPACE EMAIL CONFIG ───────────────────────────────────────────────
+// system_config rows live in the shared `public` table. Most keys (SMTP creds,
+// Adobe Sign SMTP, the auto-confirmation PDF path, Google Sheets config, the
+// forms webhook secret, the welcome popup) are INTENTIONALLY shared across both
+// workspaces. The keys below are email-template *content / branding* and are
+// scoped per workspace by prefixing the key with the workspace name (e.g.
+// `celeb:availability_email_subject`). DOND keeps the bare keys so existing data
+// is untouched; a workspace with no value yet transparently inherits the DOND
+// value as its seed until it is customised.
+const WORKSPACE_SCOPED_CONFIG_KEYS = new Set<string>([
+  // Availability email
+  'availability_email_subject', 'availability_email_headline', 'availability_email_intro',
+  'availability_email_instructions', 'availability_email_footer', 'availability_form_url',
+  // Booking email
+  'booking_email_headline', 'booking_email_intro', 'booking_email_instructions',
+  'booking_email_additional_instructions', 'booking_email_footer', 'booking_email_button_text',
+  'booking_email_banner', 'booking_email_banner_url', 'booking_mailto_body', 'booking_reply_to_email',
+  // Ticket email
+  'ticket_email_headline', 'ticket_email_intro', 'ticket_email_important', 'ticket_email_additional',
+  'ticket_email_footer', 'ticket_email_banner',
+  // Standby email
+  'standby_email_headline', 'standby_email_intro', 'standby_email_instructions', 'standby_email_footer',
+  'standby_mailto_body', 'standby_reply_to_email',
+  // Standby ticket
+  'standby_ticket_headline', 'standby_ticket_intro', 'standby_ticket_important', 'standby_ticket_footer',
+  // Reminder emails
+  'contestant_reminder_headline', 'contestant_reminder_intro', 'contestant_reminder_footer',
+  'standby_reminder_headline', 'standby_reminder_intro', 'standby_reminder_footer',
+  'email_reminder_message',
+  // Paperwork email
+  'paperwork_email_headline', 'paperwork_email_footer',
+  // Shared email branding that legitimately differs per workspace (DOND vs Celebrity)
+  'email_banner_url', 'email_sender_name',
+]);
+
+// Resolve a system_config key to its workspace-scoped form for the active
+// workspace. DOND (and the default) always use the bare key.
+function resolveConfigKey(key: string): string {
+  const workspace = workspaceStorage.getStore();
+  if (workspace && workspace !== 'dond' && WORKSPACE_SCOPED_CONFIG_KEYS.has(key)) {
+    return `${workspace}:${key}`;
+  }
+  return key;
+}
+
 // Warm up the database connection (call after server starts)
 export async function warmupDatabaseConnection(): Promise<boolean> {
   if (!pool) {
@@ -2531,25 +2576,39 @@ export class DbStorage implements IStorage {
   }
 
   // System Configuration
-  // Note: system_config is INTENTIONALLY shared across all workspaces (uses public schema,
-  // not workspace-aware getDb()). This way SMTP credentials, email templates, the
-  // auto-confirmation PDF path, Google Sheets config, etc. configured in DOND are
-  // automatically available in CELEB and vice versa. Edits in either workspace
-  // affect both.
+  // Note: system_config rows live in the shared `public` table. Infrastructure
+  // keys (SMTP credentials, Adobe Sign SMTP, the auto-confirmation PDF path,
+  // Google Sheets config, the forms webhook secret, the welcome popup) are
+  // INTENTIONALLY shared across all workspaces. Email-template content / branding
+  // keys (see WORKSPACE_SCOPED_CONFIG_KEYS) are scoped per workspace via a key
+  // prefix so DOND and CELEB can have independent templates; a workspace with no
+  // value yet inherits the bare (DOND) value as its seed.
   async getSystemConfig(key: string): Promise<string | null> {
     if (!db) throw new Error("DATABASE_URL is not configured.");
+    const effectiveKey = resolveConfigKey(key);
     const [config] = await db
       .select()
       .from(systemConfig)
-      .where(eq(systemConfig.key, key));
+      .where(eq(systemConfig.key, effectiveKey));
+    // Only inherit the shared/DOND value when NO workspace-scoped row exists yet.
+    // If a scoped row exists (even an intentionally-cleared empty value) we honor
+    // it rather than leaking the DOND value back in.
+    if (config === undefined && effectiveKey !== key) {
+      const [base] = await db
+        .select()
+        .from(systemConfig)
+        .where(eq(systemConfig.key, key));
+      return base?.value || null;
+    }
     return config?.value || null;
   }
 
   async setSystemConfig(key: string, value: string): Promise<void> {
     if (!db) throw new Error("DATABASE_URL is not configured.");
+    const effectiveKey = resolveConfigKey(key);
     await db
       .insert(systemConfig)
-      .values({ key, value })
+      .values({ key: effectiveKey, value })
       .onConflictDoUpdate({
         target: systemConfig.key,
         set: { value, updatedAt: new Date() }
