@@ -15573,7 +15573,7 @@ Thank you.`;
   app.get("/api/email-preview/booking", async (req, res) => {
     // Allow iframe embedding from same origin
     res.removeHeader('X-Frame-Options');
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.replit.dev https://*.janeway.replit.dev https://*.replit.com https://replit.com");
     // Prevent caching to ensure latest template is always shown
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -15779,7 +15779,7 @@ Thank you.`;
   app.get("/api/email-preview/ticket", async (req, res) => {
     // Allow iframe embedding from same origin
     res.removeHeader('X-Frame-Options');
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.replit.dev https://*.janeway.replit.dev https://*.replit.com https://replit.com");
     // Prevent caching to ensure latest template is always shown
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -15926,7 +15926,7 @@ Thank you.`;
   app.get("/api/email-preview/availability", async (req, res) => {
     // Allow iframe embedding from same origin
     res.removeHeader('X-Frame-Options');
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.replit.dev https://*.janeway.replit.dev https://*.replit.com https://replit.com");
     // Prevent caching to ensure latest template is always shown
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -16087,7 +16087,7 @@ Thank you.`;
   app.get("/api/email-preview/standby", async (req, res) => {
     // Allow iframe embedding from same origin
     res.removeHeader('X-Frame-Options');
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.replit.dev https://*.janeway.replit.dev https://*.replit.com https://replit.com");
     // Prevent caching to ensure latest template is always shown
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -16298,7 +16298,7 @@ Thank you.`;
   // Standby Ticket Email Preview endpoint
   app.get("/api/email-preview/standby-ticket", async (req, res) => {
     res.removeHeader('X-Frame-Options');
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://*.replit.dev https://*.janeway.replit.dev https://*.replit.com https://replit.com");
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
