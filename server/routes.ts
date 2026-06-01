@@ -15933,13 +15933,16 @@ Thank you.`;
     res.setHeader('Expires', '0');
     
     try {
-      // Get saved template values with fallback defaults
-      const subject = await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Check';
-      const headline = await storage.getSystemConfig('availability_email_headline') || 'Availability Check';
-      const intro = await storage.getSystemConfig('availability_email_intro') || "Congratulations! Following your successful audition, we'd love to invite you to be part of a Deal or No Deal recording. Please let us know your availability for our upcoming dates.";
-      const instructions = await storage.getSystemConfig('availability_email_instructions') || "Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.";
-      const footer = await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
-      const msFormUrl = await storage.getSystemConfig('availability_form_url') || 'https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u';
+      // Query overrides allow a live (unsaved) preview from the Settings form.
+      // Priority: query override -> saved system_config -> hardcoded default.
+      const q = req.query as Record<string, string | undefined>;
+      const isLiveEdit = q.subject !== undefined || q.headline !== undefined || q.intro !== undefined || q.instructions !== undefined || q.footer !== undefined;
+      const subject = q.subject || await storage.getSystemConfig('availability_email_subject') || 'Deal or No Deal - Availability Check';
+      const headline = q.headline || await storage.getSystemConfig('availability_email_headline') || 'Availability Check';
+      const intro = q.intro || await storage.getSystemConfig('availability_email_intro') || "Congratulations! Following your successful audition, we'd love to invite you to be part of a Deal or No Deal recording. Please let us know your availability for our upcoming dates.";
+      const instructions = q.instructions || await storage.getSystemConfig('availability_email_instructions') || "Please complete the form as soon as possible so we can allocate recording slots. If you have any questions, please reply to this email.";
+      const footer = q.footer || await storage.getSystemConfig('availability_email_footer') || 'This is an automated message from the Deal or No Deal production team. Please do not forward this email as it contains a unique response link.';
+      const msFormUrl = q.formUrl || await storage.getSystemConfig('availability_form_url') || 'https://forms.office.com/Pages/ResponsePage.aspx?id=ayXN-4f600uQrCY8eucYVbItEwiVLdlEnys-du5SGAxUMFhPMk9JTUFDUThQWDlLRllCOFhaUk5WVS4u';
       
       // Get record day data if provided
       const recordDayId = req.query.recordDayId as string | undefined;
@@ -15972,7 +15975,7 @@ Thank you.`;
 </head>
 <body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5;">
   <div style="text-align: center; margin-bottom: 20px;">
-    <span style="background: #28a745; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">LIVE PREVIEW - Using Your Saved Template</span>
+    <span style="background: ${isLiveEdit ? '#d97706' : '#28a745'}; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px;">${isLiveEdit ? 'LIVE PREVIEW - Showing Your Current (Unsaved) Edits' : 'LIVE PREVIEW - Using Your Saved Template'}</span>
     <p style="color: #666; font-size: 12px; margin: 8px 0 0 0;">Subject: ${subject}</p>
   </div>
   <div style="max-width: 600px; margin: 0 auto; background-color: #2a0a0a;">

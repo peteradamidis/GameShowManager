@@ -3,7 +3,9 @@ name: Email template source-of-truth drift
 description: Why edited email templates sometimes don't reach sent emails in this project, and the rule to prevent it.
 ---
 
-Email templates (availability, booking, ticket, standby) are edited on the Settings page and persisted per-workspace in `system_config`. Send endpoints resolve each field as `requestBodyValue || savedSystemConfigValue || hardcodedDefault`.
+Email templates (availability, booking, ticket, standby) are edited on the Settings page and persisted in `system_config`. Send endpoints resolve each field as `requestBodyValue || savedSystemConfigValue || hardcodedDefault`.
+
+**Storage is GLOBAL, not per-workspace (verified):** `storage.getSystemConfig`/`setSystemConfig` use the module-level non-workspace `db` (public schema), NOT `getDb()`. The `celeb.system_config` table exists but is empty/unused. So DOND and DOND CELEB SHARE one set of email templates — saving a celeb-branded template overwrites the DOND one. If true per-workspace templates are wanted, switch these two methods to `getDb()` (and migrate existing public rows into the celeb schema), updating send + all `/api/email-preview/*` paths in lockstep.
 
 **The trap:** a send dialog/page can carry its OWN copy of the template (e.g. hardcoded `DEFAULT_EMAIL_*` constants in component state) and pass them in the POST body. Because the request body has top priority, those stale dialog defaults silently override whatever the user saved on Settings — so "I edited the template but the email didn't change."
 

@@ -2468,7 +2468,17 @@ export default function Settings() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => window.open('/api/email-preview/availability', '_blank')}
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      subject: availEmailSubject,
+                      headline: availEmailHeadline,
+                      intro: availEmailIntro,
+                      instructions: availEmailInstructions,
+                      footer: availEmailFooter,
+                      formUrl: availFormUrl,
+                    });
+                    window.open(`/api/email-preview/availability?${params.toString()}`, '_blank');
+                  }}
                   data-testid="button-preview-availability-email"
                 >
                   <Eye className="w-4 h-4 mr-2" />
