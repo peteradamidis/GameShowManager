@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage, db, runWithWorkspace, pool } from "./storage";
+import { storage, db, runWithWorkspace, pool, workspaceStorage } from "./storage";
 import { 
   insertContestantSchema, 
   insertRecordDaySchema, 
@@ -490,6 +490,26 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
   }
 
   return groupMap;
+}
+
+// CELEB workspace uses weekday-specific arrival/finish times in contestant-facing
+// emails: Tuesday and Thursday record days have different call times. All other
+// workspaces (and any other weekday) fall back to the standard arrival time.
+// The weekday is derived the same way as the displayed "DATE:" line (no timeZone
+// option) so the time always matches the weekday shown in the email.
+function getArrivalTimeText(
+  rawDate: string | Date | null | undefined,
+  fallback: string,
+  opts?: { ifCalled?: boolean },
+): string {
+  const workspace = workspaceStorage.getStore() || 'dond';
+  if (workspace === 'celeb' && rawDate) {
+    const weekday = new Date(rawDate).toLocaleDateString('en-AU', { weekday: 'long' });
+    const suffix = opts?.ifCalled ? ' (if called)' : '';
+    if (weekday === 'Tuesday') return `7:45AM - 5:00PM${suffix}`;
+    if (weekday === 'Thursday') return `8:30AM - 5:45PM${suffix}`;
+  }
+  return fallback;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -4671,7 +4691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM (if called)
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30 AM (if called)', { ifCalled: true })}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
@@ -4753,7 +4773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30 AM')}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
@@ -4924,7 +4944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30 AM')}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
@@ -5141,7 +5161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM (if called)
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30 AM (if called)', { ifCalled: true })}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
@@ -11357,7 +11377,7 @@ Thank you.`;
                       <strong style="color: #8B0000;">DATE:</strong> ${recordDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30AM
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30AM')}
                     </p>
                     <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
@@ -11669,7 +11689,7 @@ Thank you.`;
                       <strong style="color: #8B0000;">DATE:</strong> ${recordDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30 AM')}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
@@ -11898,7 +11918,7 @@ Thank you.`;
                       <strong style="color: #8B0000;">DATE:</strong> ${recordDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(recordDay.date, '7:30 AM')}
                     </p>
                     <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
