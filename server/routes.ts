@@ -15688,6 +15688,7 @@ Thank you.`;
       futureDate.setDate(futureDate.getDate() + 14);
       let sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       let sampleRx = 'RX EP 1';
+      let sampleArrivalTime = getArrivalTimeText(futureDate, '7:30AM');
       
       if (recordDayId) {
         try {
@@ -15697,6 +15698,7 @@ Thank you.`;
             const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
             sampleDate = date.toLocaleDateString('en-AU', options);
             sampleRx = recordDay.rxNumber || 'RX EP 1';
+            sampleArrivalTime = getArrivalTimeText(recordDay.date, '7:30AM');
           }
         } catch (e) {
           // Ignore errors, use defaults
@@ -15767,7 +15769,7 @@ Thank you.`;
                         <strong style="color: #8B0000;">DATE:</strong> ${sampleDate.toUpperCase()}
                       </p>
                       <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
-                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30AM
+                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${sampleArrivalTime}
                       </p>
                       <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
                         <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
@@ -15855,6 +15857,7 @@ Thank you.`;
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 14);
       let sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      let sampleArrivalTime = getArrivalTimeText(futureDate, '7:30 AM');
       
       if (recordDayId) {
         try {
@@ -15867,6 +15870,7 @@ Thank you.`;
               month: 'long', 
               day: 'numeric' 
             });
+            sampleArrivalTime = getArrivalTimeText(recordDay.date, '7:30 AM');
           }
         } catch (e) {
           // Ignore errors, use defaults
@@ -15936,7 +15940,7 @@ Thank you.`;
                         <strong style="color: #8B0000;">DATE:</strong> ${sampleDate.toUpperCase()}
                       </p>
                       <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0 0 5px 0;">
-                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 7:30 AM
+                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${sampleArrivalTime}
                       </p>
                       <p style="color: #333333; font-size: 15px; line-height: 1.8; margin: 0;">
                         <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC 3008
