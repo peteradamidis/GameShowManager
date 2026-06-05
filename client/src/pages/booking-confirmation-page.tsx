@@ -67,6 +67,7 @@ type GroupMember = {
 type Booking = {
   recordDate: string;
   seatLocation: string;
+  arrivalTime?: string;
 };
 
 type TokenData = {
@@ -284,7 +285,7 @@ export default function BookingConfirmationPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" style={{ color: '#D4AF37' }} />
-                        <span>7:30AM</span>
+                        <span data-testid="text-arrival-time">{tokenData.booking.arrivalTime || '7:30AM'}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <MapPin className="w-4 h-4 mt-0.5" style={{ color: '#D4AF37' }} />
@@ -403,7 +404,7 @@ export default function BookingConfirmationPage() {
                   <Clock className="w-5 h-5" style={{ color: '#D4AF37' }} />
                   <div>
                     <p className="text-xs text-gray-500">Time</p>
-                    <p className="font-semibold text-gray-800">7:30AM</p>
+                    <p className="font-semibold text-gray-800" data-testid="text-arrival-time-confirmed">{tokenData.booking.arrivalTime || '7:30AM'}</p>
                   </div>
                 </div>
                 

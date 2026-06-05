@@ -12250,6 +12250,7 @@ Thank you.`;
         booking: {
           recordDate: recordDay.date,
           seatLocation: `Block ${assignment.blockNumber}, Seat ${assignment.seatLabel}`,
+          arrivalTime: getArrivalTimeText(recordDay.date, '7:30AM'),
         },
         confirmationStatus: tokenRecord.confirmationStatus,
         currentAttendingWith: tokenRecord.attendingWith || contestant.attendingWith,
@@ -12444,7 +12445,7 @@ Thank you.`;
                       <strong>Date:</strong> ${recordDate}
                     </p>
                     <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
-                      <strong>Time:</strong> 7:30AM
+                      <strong>Time:</strong> ${getArrivalTimeText(recordDay.date, '7:30AM')}
                     </p>
                     <p style="color: #444444; font-size: 15px; line-height: 1.7; margin: 0 0 6px 0;">
                       <strong>Location:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
