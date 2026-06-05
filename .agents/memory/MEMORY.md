@@ -1,2 +1,3 @@
 - [Email template source-of-truth drift](email-template-source-of-truth.md) — send dialogs that pass hardcoded template defaults in the request body silently override saved Settings/system_config templates.
 - [iframe preview CSP in Replit editor](iframe-preview-csp-replit-editor.md) — `frame-ancestors 'self'` renders blank in the nested Replit editor (returns 200 but blocked); works in prod. Allow replit domains.
+- [Email attachment durability](email-attachment-durability.md) — reliable email attachments must store bytes in DB, not ephemeral ./storage path refs that silently drop on redeploy.

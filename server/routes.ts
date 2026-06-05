@@ -12494,15 +12494,40 @@ Thank you.`;
                 });
               }
               
-              // Get configured PDF for auto-confirmation emails
-              const configuredPdfPath = await storage.getSystemConfig('auto_confirmation_pdf_path');
-              
-              if (configuredPdfPath && configuredPdfPath !== 'none') {
+              // Get configured PDF for auto-confirmation emails.
+              // Prefer the durable copy stored directly in the database (base64) so the
+              // attachment is guaranteed to be available even if the uploaded file was
+              // lost from the (ephemeral) local object store after a redeploy/restart.
+              const [pdfDataBase64, pdfFileName, configuredPdfPath] = await Promise.all([
+                storage.getSystemConfig('auto_confirmation_pdf_data'),
+                storage.getSystemConfig('auto_confirmation_pdf_name'),
+                storage.getSystemConfig('auto_confirmation_pdf_path'),
+              ]);
+
+              let pdfAttached = false;
+              if (pdfDataBase64) {
+                try {
+                  const buffer = Buffer.from(pdfDataBase64, 'base64');
+                  if (buffer.length > 0) {
+                    const filename = pdfFileName || 'Record-Day-Information.pdf';
+                    confirmAttachments.push({ content: buffer, contentType: 'application/pdf', filename });
+                    console.log(`📎 Attached stored auto-confirmation PDF: ${filename} (${buffer.length} bytes)`);
+                    pdfAttached = true;
+                  } else {
+                    console.error(`Stored auto-confirmation PDF decoded to an empty buffer; falling back to file store.`);
+                  }
+                } catch (attachErr: any) {
+                  console.error(`Failed to decode stored auto-confirmation PDF:`, attachErr.message);
+                }
+              }
+              // Back-compat / safety net: if no durable bytes were attached, fall back to
+              // the configured path in the file store.
+              if (!pdfAttached && configuredPdfPath && configuredPdfPath !== 'none') {
                 try {
                   const objectStorageService = new ObjectStorageService();
                   const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(configuredPdfPath);
                   confirmAttachments.push({ content: buffer, contentType, filename });
-                  console.log(`📎 Loaded configured PDF attachment: ${filename}`);
+                  console.log(`📎 Loaded configured PDF attachment from storage: ${filename}`);
                 } catch (attachErr: any) {
                   console.error(`Failed to load configured PDF attachment ${configuredPdfPath}:`, attachErr.message);
                 }
@@ -15555,10 +15580,17 @@ Thank you.`;
   // System Config Endpoints
   // ==========================================
 
+  // Keys holding large/sensitive blobs that must only be accessed through their
+  // own dedicated, authenticated endpoints — never the generic config routes.
+  const PROTECTED_CONFIG_KEYS = new Set<string>(['auto_confirmation_pdf_data', 'auto_confirmation_pdf_name']);
+
   // Get a system config value
   app.get("/api/system-config/:key", async (req, res) => {
     try {
       const { key } = req.params;
+      if (PROTECTED_CONFIG_KEYS.has(key)) {
+        return res.status(403).json({ error: "This config key is not accessible here." });
+      }
       const value = await storage.getSystemConfig(key);
       res.json(value);
     } catch (error: any) {
@@ -15572,6 +15604,10 @@ Thank you.`;
     try {
       const { key } = req.params;
       const { value } = req.body;
+
+      if (PROTECTED_CONFIG_KEYS.has(key)) {
+        return res.status(403).json({ error: "This config key is not writable here." });
+      }
       
       if (value === undefined) {
         return res.status(400).json({ error: "Value is required" });
@@ -16758,6 +16794,74 @@ Thank you.`;
       if (error instanceof ObjectNotFoundError) {
         return res.status(404).json({ error: "File not found" });
       }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
+  // Auto-Confirmation PDF (durable attachment for confirmation emails)
+  // =============================================
+  // The PDF bytes are stored directly in system_config (base64) so the
+  // confirmation email reliably includes the attachment regardless of the
+  // (ephemeral) local file store. These keys are shared across DOND and CELEB.
+
+  app.get("/api/auto-confirmation-pdf", requireAuth, async (req, res) => {
+    try {
+      const [pdfPath, name, data] = await Promise.all([
+        storage.getSystemConfig('auto_confirmation_pdf_path'),
+        storage.getSystemConfig('auto_confirmation_pdf_name'),
+        storage.getSystemConfig('auto_confirmation_pdf_data'),
+      ]);
+      const hasData = !!data;
+      const sizeBytes = data ? Math.floor((data.length * 3) / 4) : 0;
+      res.json({ path: pdfPath || 'none', name: name || null, hasData, sizeBytes });
+    } catch (error: any) {
+      console.error("Error reading auto-confirmation PDF config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auto-confirmation-pdf", requireAuth, async (req, res) => {
+    try {
+      const { path: assetPath } = req.body as { path?: string };
+
+      // Clearing the attachment.
+      if (!assetPath || assetPath === 'none') {
+        await storage.setSystemConfig('auto_confirmation_pdf_path', 'none');
+        await storage.setSystemConfig('auto_confirmation_pdf_name', '');
+        await storage.setSystemConfig('auto_confirmation_pdf_data', '');
+        return res.json({ cleared: true, hasData: false });
+      }
+
+      // Read the just-selected PDF now (while it still exists in the file store)
+      // and persist its bytes durably so the confirmation email always has them.
+      const objectStorageService = new ObjectStorageService();
+      let buffer: Buffer;
+      let filename: string;
+      let contentType: string;
+      try {
+        const result = await objectStorageService.getObjectAsBuffer(assetPath);
+        buffer = result.buffer;
+        filename = result.filename;
+        contentType = result.contentType;
+      } catch (readErr: any) {
+        return res.status(400).json({
+          error: "Could not read the selected PDF. Please click 'Upload PDF', wait for it to appear in Uploaded Files, then select it and save again.",
+        });
+      }
+
+      // Only PDFs may be configured here.
+      if (contentType !== 'application/pdf' && !filename.toLowerCase().endsWith('.pdf')) {
+        return res.status(400).json({ error: "The selected file is not a PDF." });
+      }
+
+      await storage.setSystemConfig('auto_confirmation_pdf_path', assetPath);
+      await storage.setSystemConfig('auto_confirmation_pdf_name', filename);
+      await storage.setSystemConfig('auto_confirmation_pdf_data', buffer.toString('base64'));
+
+      res.json({ saved: true, hasData: true, name: filename, sizeBytes: buffer.length });
+    } catch (error: any) {
+      console.error("Error saving auto-confirmation PDF:", error);
       res.status(500).json({ error: error.message });
     }
   });

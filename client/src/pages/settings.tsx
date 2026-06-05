@@ -874,6 +874,7 @@ export default function Settings() {
   const { data: savedAdditionalInstructions } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_additional_instructions"] });
   const { data: savedFooter } = useQuery<string | null>({ queryKey: ["/api/system-config/booking_email_footer"] });
   const { data: savedAutoConfirmationPdf } = useQuery<string | null>({ queryKey: ["/api/system-config/auto_confirmation_pdf_path"] });
+  const { data: autoConfirmationPdfStatus } = useQuery<{ path: string; name: string | null; hasData: boolean; sizeBytes: number }>({ queryKey: ["/api/auto-confirmation-pdf"] });
   
   // Fetch saved availability email template values
   const { data: savedAvailSubject } = useQuery<string | null>({ queryKey: ["/api/system-config/availability_email_subject"] });
@@ -1022,12 +1023,19 @@ export default function Settings() {
   
   const saveAutoConfirmationPdfMutation = useMutation({
     mutationFn: async (pdfPath: string) => {
-      return await apiRequest("PUT", "/api/system-config/auto_confirmation_pdf_path", { value: pdfPath });
+      const res = await apiRequest("POST", "/api/auto-confirmation-pdf", { path: pdfPath });
+      return await res.json().catch(() => ({}));
     },
-    onSuccess: () => {
-      toast({ title: "Auto-confirmation PDF saved", description: "This PDF will be attached to confirmation emails sent after contestants confirm their booking." });
+    onSuccess: (data: any) => {
+      toast({
+        title: data?.cleared ? "PDF attachment removed" : "Auto-confirmation PDF saved",
+        description: data?.cleared
+          ? "Confirmation emails will no longer include a PDF attachment."
+          : "The PDF is now stored in the database and will be attached to every confirmation email sent after a contestant confirms.",
+      });
       setAutoConfirmationPdfChanged(false);
       queryClient.invalidateQueries({ queryKey: ["/api/system-config/auto_confirmation_pdf_path"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auto-confirmation-pdf"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -2614,7 +2622,8 @@ export default function Settings() {
               <h4 className="font-medium mb-2">Auto-Confirmation Email PDF</h4>
               <div className="text-sm text-muted-foreground mb-3 space-y-1">
                 <p>
-                  Select the PDF to attach when contestants confirm their booking. This works offline once configured.
+                  Select the PDF to attach when contestants confirm their booking. When you press <em>Save</em>, the PDF is copied into the
+                  database, so it is always attached to confirmation emails — even after a redeploy or restart.
                 </p>
                 <p className="text-xs">
                   <strong>To add a new PDF:</strong> click <span className="font-mono px-1 py-0.5 rounded bg-muted">Upload PDF</span> above,
@@ -2657,11 +2666,16 @@ export default function Settings() {
                   Save
                 </Button>
               </div>
-              {autoConfirmationPdf && autoConfirmationPdf !== "none" && (
-                <p className="text-xs text-green-600 mt-2">
-                  Currently using: {assets.find(a => a.path === autoConfirmationPdf)?.name || autoConfirmationPdf}
+              {autoConfirmationPdfStatus?.hasData ? (
+                <p className="text-xs text-green-600 mt-2" data-testid="text-auto-confirmation-pdf-status">
+                  Stored and ready: {autoConfirmationPdfStatus.name || 'PDF'}
+                  {autoConfirmationPdfStatus.sizeBytes ? ` (${Math.max(1, Math.round(autoConfirmationPdfStatus.sizeBytes / 1024))} KB)` : ''} — this will be attached to every confirmation email.
                 </p>
-              )}
+              ) : autoConfirmationPdf && autoConfirmationPdf !== "none" ? (
+                <p className="text-xs text-amber-600 mt-2" data-testid="text-auto-confirmation-pdf-status">
+                  Selected but not yet stored — press Save to attach this PDF to confirmation emails.
+                </p>
+              ) : null}
             </div>
           </CardContent>
         </Card>
