@@ -208,11 +208,11 @@ function getPool() {
 }
 
 // ── PER-WORKSPACE EMAIL CONFIG ───────────────────────────────────────────────
-// system_config rows live in the shared `public` table. Most keys (SMTP creds,
-// Adobe Sign SMTP, the auto-confirmation PDF path, Google Sheets config, the
-// forms webhook secret, the welcome popup) are INTENTIONALLY shared across both
-// workspaces. The keys below are email-template *content / branding* and are
-// scoped per workspace by prefixing the key with the workspace name (e.g.
+// system_config rows live in the shared `public` table. Infrastructure keys (SMTP
+// creds, Adobe Sign SMTP, Google Sheets config, the forms webhook secret, the
+// welcome popup) are INTENTIONALLY shared across both workspaces. The keys below
+// are email-template *content / branding* PLUS the auto-confirmation PDF attachment,
+// and are scoped per workspace by prefixing the key with the workspace name (e.g.
 // `celeb:availability_email_subject`). DOND keeps the bare keys so existing data
 // is untouched; a workspace with no value yet transparently inherits the DOND
 // value as its seed until it is customised.
@@ -240,6 +240,9 @@ const WORKSPACE_SCOPED_CONFIG_KEYS = new Set<string>([
   'paperwork_email_headline', 'paperwork_email_footer',
   // Shared email branding that legitimately differs per workspace (DOND vs Celebrity)
   'email_banner_url', 'email_sender_name',
+  // Auto-confirmation PDF attachment (path + filename + durable base64 bytes) —
+  // each workspace keeps its own attachment so uploading in Celeb never overwrites DOND.
+  'auto_confirmation_pdf_path', 'auto_confirmation_pdf_name', 'auto_confirmation_pdf_data',
 ]);
 
 // Resolve a system_config key to its workspace-scoped form for the active
@@ -2577,11 +2580,11 @@ export class DbStorage implements IStorage {
 
   // System Configuration
   // Note: system_config rows live in the shared `public` table. Infrastructure
-  // keys (SMTP credentials, Adobe Sign SMTP, the auto-confirmation PDF path,
-  // Google Sheets config, the forms webhook secret, the welcome popup) are
-  // INTENTIONALLY shared across all workspaces. Email-template content / branding
-  // keys (see WORKSPACE_SCOPED_CONFIG_KEYS) are scoped per workspace via a key
-  // prefix so DOND and CELEB can have independent templates; a workspace with no
+  // keys (SMTP credentials, Adobe Sign SMTP, Google Sheets config, the forms
+  // webhook secret, the welcome popup) are INTENTIONALLY shared across all
+  // workspaces. Email-template content / branding keys AND the auto-confirmation
+  // PDF attachment (see WORKSPACE_SCOPED_CONFIG_KEYS) are scoped per workspace via
+  // a key prefix so DOND and CELEB can have independent values; a workspace with no
   // value yet inherits the bare (DOND) value as its seed.
   async getSystemConfig(key: string): Promise<string | null> {
     if (!db) throw new Error("DATABASE_URL is not configured.");
