@@ -1,4 +1,5 @@
 - [Email template source-of-truth drift](email-template-source-of-truth.md) — send dialogs that pass hardcoded template defaults in the request body silently override saved Settings/system_config templates.
+- [Post-merge + drizzle-kit dual-schema](post-merge-drizzle-dual-schema.md) — automated `drizzle-kit push` is a safe no-op here (phantom unique-constraint prompt); celeb schema is reconciled by db-init.ts at startup; declare runtime tables (session) in schema so push won't drop them.
 - [iframe preview CSP in Replit editor](iframe-preview-csp-replit-editor.md) — `frame-ancestors 'self'` renders blank in the nested Replit editor (returns 200 but blocked); works in prod. Allow replit domains.
 - [Email attachment durability](email-attachment-durability.md) — reliable email attachments must store bytes in DB, not ephemeral ./storage path refs that silently drop on redeploy.
 - [CELEB weekday arrival times](celeb-arrival-times.md) — celeb record-day call times vary by weekday (Tue 7:45–5:00, Thu 8:30–5:45) via getArrivalTimeText; never hardcode contestant-facing times.
