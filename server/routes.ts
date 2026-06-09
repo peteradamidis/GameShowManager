@@ -24,7 +24,7 @@ import {
   noticeboardComments as noticeboardCommentsTable,
   systemSettings as systemSettingsTable,
 } from "@shared/schema";
-import { getSeatingLayout } from "@shared/seating-layout";
+import { getSeatingLayout, isReversedBlock } from "@shared/seating-layout";
 import { 
   parseAttendingWith, 
   normalizeName as sharedNormalizeName,
@@ -9386,29 +9386,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if same seat is available
       if (occupiedSeats.has(`${newBlock}-${newSeatLabel}`)) {
-        // Get actual seat layout for the seating chart (A1-V1 per block typically)
-        // Use a simpler approach: try seats in same block first, then other blocks
-        const seatLabels = [];
-        for (const letter of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V']) {
-          seatLabels.push(letter);
-        }
-        
+        // Use the workspace-aware layout so seat labels (A1-E5) and block count
+        // match reality (CELEB has 6 blocks, DOND has 7).
+        const layout = getSeatingLayout((req as any).session?.activeWorkspace || 'dond');
+
+        // Generate the real seat labels for a given block, honoring the
+        // right-to-left numbering used by blocks 4-6.
+        const getBlockSeatLabels = (blockNumber: number): string[] => {
+          const labels: string[] = [];
+          for (const row of layout.rows) {
+            for (let visualPosition = 1; visualPosition <= row.count; visualPosition++) {
+              const seatNumber = isReversedBlock(blockNumber)
+                ? row.count - visualPosition + 1
+                : visualPosition;
+              labels.push(`${row.label}${seatNumber}`);
+            }
+          }
+          return labels;
+        };
+
         let foundSeat = false;
-        
+
         // First try same block
-        for (const label of seatLabels) {
+        for (const label of getBlockSeatLabels(newBlock)) {
           if (!occupiedSeats.has(`${newBlock}-${label}`)) {
             newSeatLabel = label;
             foundSeat = true;
             break;
           }
         }
-        
-        // If not found, try other blocks
+
+        // If not found, try other blocks in the layout
         if (!foundSeat) {
-          for (let block = 1; block <= 7 && !foundSeat; block++) {
+          for (const block of layout.blockNumbers) {
             if (block === newBlock) continue;
-            for (const label of seatLabels) {
+            for (const label of getBlockSeatLabels(block)) {
               if (!occupiedSeats.has(`${block}-${label}`)) {
                 newBlock = block;
                 newSeatLabel = label;
@@ -9416,9 +9428,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 break;
               }
             }
+            if (foundSeat) break;
           }
         }
-        
+
         if (!foundSeat) {
           return res.status(400).json({ error: "No available seats in the new record day" });
         }
