@@ -53,3 +53,7 @@ defaultBucketID = "replit-objstore-e6e71261-b50b-4b7a-8f8b-86447062a21d"
 
 [userenv.shared]
 PRIVATE_OBJECT_DIR = "/EmailAssets"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000

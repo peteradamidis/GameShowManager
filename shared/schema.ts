@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean, jsonb, real } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, pgEnum, date, unique, boolean, jsonb, json, real, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -975,3 +975,15 @@ export const insertPodiumPositionSchema = createInsertSchema(podiumPositions).om
 });
 export type InsertPodiumPosition = z.infer<typeof insertPodiumPositionSchema>;
 export type PodiumPosition = typeof podiumPositions.$inferSelect;
+
+// Express session store, created and managed at runtime by connect-pg-simple.
+// Declared here ONLY so `drizzle-kit push` recognizes the existing public.session
+// table and never tries to drop or rename it during automated post-merge sync.
+// It is not queried through Drizzle anywhere in the application.
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire").notNull(),
+}, (table) => ({
+  expireIdx: index("IDX_session_expire").on(table.expire),
+}));
