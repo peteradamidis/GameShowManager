@@ -47,6 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { BlockType } from "@shared/schema";
+import { getSeatingLayout, getDisplaySeatRows, isReversedBlock } from "@shared/seating-layout";
 import { Link2, AlertTriangle, ChevronUp, ChevronDown, User, Check, Gift, X, Users, Phone, Mail, GripVertical, Briefcase, MapPin, ShieldAlert, Heart, StickyNote, MousePointerClick, Plus, ArrowDown } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -1086,7 +1087,7 @@ function SeatingBlock({
       <CardContent className={isPodiumVisualizerMode ? "space-y-1 pt-0" : "space-y-2"}>
         {displayRows.map((row, displayIdx) => {
           // Find the original row index in SEAT_ROWS
-          const originalRowIdx = SEAT_ROWS.findIndex(r => r.label === row.label);
+          const originalRowIdx = activeSeatRows.findIndex(r => r.label === row.label);
           // Get the next row in display order (for vertical linking)
           const nextDisplayRow = displayIdx < displayRows.length - 1 ? displayRows[displayIdx + 1] : null;
           
@@ -1100,7 +1101,7 @@ function SeatingBlock({
               <div className="relative">
                 <div className="grid gap-1 relative" style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}>
                   {row.seats.map((seat, seatIdxInRow) => {
-                    const absoluteSeatIdx = SEAT_ROWS.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
+                    const absoluteSeatIdx = activeSeatRows.slice(0, originalRowIdx).reduce((sum, r) => sum + r.count, 0) + seatIdxInRow;
                     const nextSeat = seatIdxInRow < row.seats.length - 1 ? row.seats[seatIdxInRow + 1] : null;
                     const hasLinkToNext = nextSeat && shouldShowLink(seat, nextSeat);
                     
@@ -1233,11 +1234,11 @@ function calculateBlockStats(block: SeatData[]) {
 
 // Generate seat IDs based on the row structure
 // For blocks 4, 5, 6 (indices 3, 4, 5), seat numbering is reversed (1-5 from right to left)
-function generateBlockSeats(recordDayId: string, blockIdx: number): SeatData[] {
+function generateBlockSeats(recordDayId: string, blockIdx: number, seatRows: typeof SEAT_ROWS): SeatData[] {
   const seats: SeatData[] = [];
-  const reverseNumbering = blockIdx >= 3 && blockIdx <= 5; // Blocks 4, 5, 6
+  const reverseNumbering = isReversedBlock(blockIdx + 1); // Blocks 4, 5, 6
   
-  SEAT_ROWS.forEach(row => {
+  seatRows.forEach(row => {
     for (let i = 1; i <= row.count; i++) {
       // For reversed blocks, seat 1 is on the right (visually last), seat 5 is on the left (visually first)
       // So visual position i gets label (count - i + 1)
@@ -1294,11 +1295,23 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     staleTime: 30 * 1000,
   });
 
+  // Workspace detection (staleTime=Infinity so it never refetches unnecessarily)
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+  });
+  const isCeleb = workspaceData?.workspace === 'celeb';
+
+  // Workspace-aware seating layout (DOND: 7x22, CELEB: 6x25)
+  const layout = useMemo(() => getSeatingLayout(workspaceData?.workspace), [workspaceData?.workspace]);
+  // Rows in display order (E -> A, row A rendered at the bottom)
+  const activeSeatRows = useMemo(() => getDisplaySeatRows(workspaceData?.workspace), [workspaceData?.workspace]);
+
   // Use initialSeats as source of truth - derive blocks from props, not state
   // Only use local state for temporary overrides during active drag operations
   const defaultBlocks = useMemo(() => 
-    Array(7).fill(null).map((_, blockIdx) => generateBlockSeats(recordDayId, blockIdx)),
-    [recordDayId]
+    Array(layout.blockCount).fill(null).map((_, blockIdx) => generateBlockSeats(recordDayId, blockIdx, activeSeatRows)),
+    [recordDayId, layout.blockCount, activeSeatRows]
   );
   
   // Track a version number to know when to accept prop updates
@@ -1415,13 +1428,6 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     },
   });
 
-  // Workspace detection (staleTime=Infinity so it never refetches unnecessarily)
-  const { data: workspaceData } = useQuery<{ workspace: string }>({
-    queryKey: ['/api/workspace'],
-    staleTime: Infinity,
-  });
-  const isCeleb = workspaceData?.workspace === 'celeb';
-
   // Create a map of block number to block type
   const blockTypeMap: Record<number, 'PB' | 'NPB' | 'AUDIENCE'> = {};
   if (blockTypesData) {
@@ -1430,8 +1436,8 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     });
   }
 
-  // All blocks always use the standard 22-seat rows
-  const getSeatRowsForBlock = (_blockNum: number): typeof SEAT_ROWS => SEAT_ROWS;
+  // All blocks use the workspace-aware row structure (DOND: 22-seat, CELEB: 25-seat)
+  const getSeatRowsForBlock = (_blockNum: number): typeof SEAT_ROWS => activeSeatRows;
 
   // In CELEB all blocks are locked as AUDIENCE — config gate is always satisfied
   // In DOND the config gate applies (5 PB + 2 NPB required)
@@ -1442,7 +1448,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     if (!isBlockConfigComplete) {
       toast({
         title: "Block configuration required",
-        description: "You must configure all 7 blocks (5 Playing Blocks and 2 Non-Playing Blocks) before booking seats.",
+        description: "You must configure all blocks (5 Playing Blocks and 2 Non-Playing Blocks) before booking seats.",
         variant: "destructive",
       });
       return;
@@ -2165,10 +2171,10 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
     setPendingSwap(null);
   };
 
-  // Split blocks: 0-2 (top row), 3-5 (bottom row), 6 (standing)
+  // Split blocks: 0-2 (top row), 3-5 (bottom row), 6 (standing, DOND only)
   const topBlocks = blocks.slice(0, 3);
   const bottomBlocks = blocks.slice(3, 6);
-  const standingBlock = blocks[6];
+  const standingBlock = isCeleb ? undefined : blocks[6];
 
   // Bottom blocks need to be reordered: 6, 5, 4 (swap 4 and 6)
   const reorderedBottomBlocks = [bottomBlocks[2], bottomBlocks[1], bottomBlocks[0]]; // blocks 5, 4, 3 -> display as 6, 5, 4
@@ -2201,13 +2207,13 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   </h4>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
                     {isCeleb
-                      ? <>All <strong>7 blocks</strong> should be <strong>Audience</strong> in CELEB. Reload the page — the server will auto-repair the configuration.</>
+                      ? <>All <strong>{layout.blockCount} blocks</strong> should be <strong>Audience</strong> in CELEB. Reload the page — the server will auto-repair the configuration.</>
                       : <>You must select exactly <strong>5 Playing Blocks (PB)</strong> and <strong>2 Non-Playing Blocks (NPB)</strong> before you can book seats.</>
                     }
                   </p>
                   <p className="text-sm text-amber-600 dark:text-amber-400">
                     {isCeleb
-                      ? <>Current: {blockConfigStatus?.audienceCount ?? 0} / 7 Audience</>
+                      ? <>Current: {blockConfigStatus?.audienceCount ?? 0} / {layout.blockCount} Audience</>
                       : <>Current: {blockConfigStatus?.pbCount ?? 0} PB, {blockConfigStatus?.npbCount ?? 0} NPB</>
                     }
                     {!isCeleb && (blockConfigStatus?.pbCount ?? 0) + (blockConfigStatus?.npbCount ?? 0) < 7 && (
@@ -2386,11 +2392,14 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
 
           {/* Standing Block and Standbys - Side by Side */}
           <div className="border-t pt-6">
-            <div className="text-center mb-4">
-              <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
-            </div>
+            {!isCeleb && (
+              <div className="text-center mb-4">
+                <Badge variant="outline" className="text-sm">Standing Side of Set</Badge>
+              </div>
+            )}
             <div className="flex gap-6 justify-center items-start">
-              {/* Block 7 (Standing) */}
+              {/* Block 7 (Standing) — DOND only */}
+              {!isCeleb && standingBlock && (
               <div className="w-full max-w-sm">
                 <SeatingBlock
                   block={standingBlock}
@@ -2429,6 +2438,7 @@ export function SeatingChart({ recordDayId, initialSeats, onRefreshNeeded, onEmp
                   onRatingChange={onRatingChange}
                 />
               </div>
+              )}
               
               {/* Standbys Panel - Redesigned with static tier numbers */}
               <Card className="w-full max-w-sm" data-testid="standbys-panel">

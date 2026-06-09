@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Users, Clock, CheckCircle, Calendar, AlertTriangle, AlertCircle, CheckCircle2, Mail, Megaphone, ChevronRight, Clapperboard, Bell, Send, Loader2, Eye, Download, FileText, Trophy, Sparkles, Armchair, UserCheck, UserX, TrendingUp, Repeat2, ArrowUpRight } from "lucide-react";
 import { useLocation } from "wouter";
+import { getSeatingLayout } from "@shared/seating-layout";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -184,6 +185,11 @@ interface DeadlineInfo {
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+  });
+  const layout = useMemo(() => getSeatingLayout(workspaceData?.workspace), [workspaceData?.workspace]);
 
   // Fetch real data from API
   const { data: contestants = [] } = useQuery<Contestant[]>({
@@ -451,7 +457,7 @@ export default function Dashboard() {
       
       // Count assigned seats for this record day
       const assignmentsForDay = seatAssignments.filter(sa => sa.recordDayId === rd.id);
-      const totalSeats = rd.totalSeats || 154;
+      const totalSeats = layout.totalSeats;
       const assignedSeats = assignmentsForDay.length;
       
       // Count confirmed (seat assignments with confirmedRsvp set)
@@ -531,7 +537,7 @@ export default function Dashboard() {
           year: 'numeric' 
         }),
         rxNumber: rd.rxNumber,
-        totalSeats: rd.totalSeats || 154,
+        totalSeats: layout.totalSeats,
         filledSeats,
         confirmedSeats,
         status: statusMap[rd.status] || "Draft",

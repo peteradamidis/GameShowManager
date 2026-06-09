@@ -2,6 +2,7 @@ import PDFDocument from "pdfkit";
 import type { Response } from "express";
 import path from "path";
 import fs from "fs";
+import { getSeatingLayout, isCelebWorkspace, type Workspace } from "@shared/seating-layout";
 
 const ASSETS_DIR = path.join(process.cwd(), "server", "guide-assets");
 
@@ -277,7 +278,11 @@ function addTableOfContents(doc: PDFKit.PDFDocument) {
   });
 }
 
-export function generateGuide(res: Response) {
+export function generateGuide(res: Response, workspace: Workspace = 'dond') {
+  const layout = getSeatingLayout(workspace);
+  const isCeleb = isCelebWorkspace(workspace);
+  const blockCount = layout.blockCount;
+  const totalSeats = layout.totalSeats;
   const doc = new PDFDocument({
     size: "A4",
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
@@ -525,7 +530,7 @@ export function generateGuide(res: Response) {
     "Click the 'Create Record Day' button",
     "Enter the recording date, RX number (episode reference identifier), and any notes",
     "Click 'Create' to set up the record day",
-    "The system automatically creates a fresh seating chart with 7 blocks totalling 154 seats",
+    `The system automatically creates a fresh seating chart with ${blockCount} blocks totalling ${totalSeats} seats`,
     "You can immediately begin assigning contestants to seats",
   ]);
 
@@ -537,7 +542,9 @@ export function generateGuide(res: Response) {
     "Producer - The assigned producer for this session",
     "Assistant Producer (AP) - The assigned AP for this session",
     "Locked Status - Whether the seating chart is locked (RX Day Mode)",
-    "Block Configuration - Which blocks are Case Holder (PB) vs Non-Playing Block (NPB)",
+    isCeleb
+      ? "Block Configuration - All blocks are studio audience seating"
+      : "Block Configuration - Which blocks are Case Holder (PB) vs Non-Playing Block (NPB)",
   ]);
 
   addHeader(doc, "RX Day Mode (Locking)", 2);
@@ -553,13 +560,22 @@ export function generateGuide(res: Response) {
   addNote(doc, "Quick Move Mode works differently depending on lock status: When RX Lock is OFF, moves happen instantly without prompts. When RX Lock is ON, every move shows a confirmation dialog. This lets you use Quick Move for fast edits during preparation, while adding safety during live recording.");
 
   addHeader(doc, "Block Configuration", 2);
-  addParagraph(doc, "The studio has 7 seating blocks. Each block can be configured as:");
-  addBulletList(doc, [
-    "PB (Playing Block / Case Holder) - Contestants in these blocks hold cases and may play the game",
-    "NPB (Non-Playing Block) - Audience-facing blocks where contestants sit but don't hold cases",
-    "Block types can be changed per record day to match the production's requirements",
-    "The auto-assignment algorithm uses block configuration to place contestants appropriately",
-  ]);
+  if (isCeleb) {
+    addParagraph(doc, `The studio has ${blockCount} seating blocks, all configured as studio audience seating. Who actually plays is managed separately on the Podium tab, so the seating chart represents the studio audience.`);
+    addBulletList(doc, [
+      "All blocks are audience seating - contestants are placed across the studio blocks",
+      "The Podium tab handles the contestants who are playing",
+      "The auto-assignment algorithm fills the audience blocks while balancing demographics",
+    ]);
+  } else {
+    addParagraph(doc, `The studio has ${blockCount} seating blocks. Each block can be configured as:`);
+    addBulletList(doc, [
+      "PB (Playing Block / Case Holder) - Contestants in these blocks hold cases and may play the game",
+      "NPB (Non-Playing Block) - Audience-facing blocks where contestants sit but don't hold cases",
+      "Block types can be changed per record day to match the production's requirements",
+      "The auto-assignment algorithm uses block configuration to place contestants appropriately",
+    ]);
+  }
 
   addHeader(doc, "Producer & AP Assignment", 2);
   addParagraph(doc, "Each record day can have a Producer and Assistant Producer assigned. These assignments are displayed on the record day details and help track who is responsible for each session. To assign, simply select from the dropdown on the record day page.");
@@ -568,7 +584,7 @@ export function generateGuide(res: Response) {
   // 7. SEATING CHART
   // ===================================================================
   addHeader(doc, "7. Seating Chart");
-  addParagraph(doc, "The Seating Chart is the interactive heart of the system. It displays the studio layout with 7 blocks containing a total of 154 seats, and provides drag-and-drop, click-to-assign, and auto-assignment capabilities for managing where contestants sit during recording.");
+  addParagraph(doc, `The Seating Chart is the interactive heart of the system. It displays the studio layout with ${blockCount} blocks containing a total of ${totalSeats} seats, and provides drag-and-drop, click-to-assign, and auto-assignment capabilities for managing where contestants sit during recording.`);
   addScreenshot(doc, "seating-chart.png", "Figure 7.1 - The interactive Seating Chart showing the studio block layout with assigned contestants.");
 
   addHeader(doc, "Studio Layout", 2);
@@ -576,8 +592,8 @@ export function generateGuide(res: Response) {
   addBulletList(doc, [
     "Top Row: Blocks 1, 2, and 3 (displayed left to right)",
     "Bottom Row: Blocks 4, 5, and 6 (displayed left to right, mirrored for camera perspective)",
-    "Standing Block: Block 7 (the standing/overflow area)",
-    "Each block contains multiple numbered seats",
+    ...(isCeleb ? [] : ["Standing Block: Block 7 (the standing/overflow area)"]),
+    `Each block contains ${layout.seatsPerBlock} numbered seats (rows A-E)`,
     "Seats show the contestant's name, photo (if available), and visual indicators",
   ]);
 
@@ -601,8 +617,8 @@ export function generateGuide(res: Response) {
   addBulletList(doc, [
     "Targets 60-70% female demographic balance across the audience",
     "Keeps groups together so contestants attending with friends/family sit adjacent",
-    "Uses a heuristic search for optimal placement across all 7 blocks",
-    "Considers block type (PB vs NPB) when placing contestants",
+    `Uses a heuristic search for optimal placement across all ${blockCount} blocks`,
+    ...(isCeleb ? [] : ["Considers block type (PB vs NPB) when placing contestants"]),
     "Respects existing assignments, only fills empty seats",
     "Can be run multiple times to fill remaining seats",
   ]);

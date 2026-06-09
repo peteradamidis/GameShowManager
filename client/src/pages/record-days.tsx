@@ -5,7 +5,8 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { getSeatingLayout } from "@shared/seating-layout";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +49,10 @@ type RecordDayFormData = {
 export default function RecordDays() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+  });
+  const layout = useMemo(() => getSeatingLayout(workspaceData?.workspace), [workspaceData?.workspace]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRecordDay, setEditingRecordDay] = useState<ApiRecordDay | null>(null);
   const [deleteRecordDay, setDeleteRecordDay] = useState<ApiRecordDay | null>(null);
@@ -55,7 +60,7 @@ export default function RecordDays() {
     date: "",
     rxNumber: "",
     episodeNumber: null,
-    totalSeats: 154,
+    totalSeats: layout.totalSeats,
   });
   const [viewMode, setViewMode] = useState<"grid" | "calendar">("calendar");
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -177,7 +182,7 @@ export default function RecordDays() {
         date: localDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
         rxNumber: day.rxNumber,
         episodeNumber: day.episodeNumber,
-        totalSeats: day.totalSeats || 154,
+        totalSeats: layout.totalSeats,
         filledSeats,
         confirmedSeats,
       };
@@ -189,7 +194,7 @@ export default function RecordDays() {
       date: "",
       rxNumber: "",
       episodeNumber: null,
-      totalSeats: 154,
+      totalSeats: layout.totalSeats,
     });
     setIsDialogOpen(true);
   };
@@ -200,7 +205,7 @@ export default function RecordDays() {
       date: recordDay.date.split('T')[0],
       rxNumber: recordDay.rxNumber || "",
       episodeNumber: recordDay.episodeNumber ?? null,
-      totalSeats: recordDay.totalSeats || 154,
+      totalSeats: layout.totalSeats,
     });
     setIsDialogOpen(true);
   };
@@ -212,7 +217,7 @@ export default function RecordDays() {
       date: "",
       rxNumber: "",
       episodeNumber: null,
-      totalSeats: 154,
+      totalSeats: layout.totalSeats,
     });
   };
 
@@ -285,7 +290,7 @@ export default function RecordDays() {
           rawDate: recordDay.date,
           rxNumber: recordDay.rxNumber,
           episodeNumber: recordDay.episodeNumber,
-          totalSeats: recordDay.totalSeats || 154,
+          totalSeats: layout.totalSeats,
           filledSeats: dayAssignments.length,
           confirmedSeats: dayAssignments.filter((a: any) => a.confirmedRsvp).length,
         };

@@ -90,6 +90,7 @@ import {
   podiumPositions,
   type PodiumPosition,
 } from "@shared/schema";
+import { getSeatingLayout } from "@shared/seating-layout";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 
 // Log database configuration status (don't crash - let app start for health checks)
@@ -782,23 +783,24 @@ export class DbStorage implements IStorage {
 
   // Record Days
   async createRecordDay(recordDay: InsertRecordDay): Promise<RecordDay> {
-    const [created] = await getDb().insert(recordDays).values(recordDay).returning();
-    // For CELEB the seating chart is purely the studio audience — all 7 blocks
-    // are AUDIENCE. Who actually plays is tracked separately on the Podium tab.
+    const workspace = workspaceStorage.getStore() || 'dond';
+    const layout = getSeatingLayout(workspace);
+    // The seat total is fully determined by the workspace layout
+    // (CELEB 6x25=150, DOND 7x22=154); the UI has no seat-count field, so the
+    // server is authoritative here and ignores any client-supplied value.
+    const values = { ...recordDay, totalSeats: layout.totalSeats };
+    const [created] = await getDb().insert(recordDays).values(values).returning();
+    // For CELEB the seating chart is purely the studio audience — every block
+    // is AUDIENCE. Who actually plays is tracked separately on the Podium tab.
     // Seed the defaults so the server-side block-config gate (and seat-assignment
     // endpoint) immediately treats the new day as fully configured.
-    const workspace = workspaceStorage.getStore() || 'dond';
     if (workspace === 'celeb') {
       try {
-        await this.upsertBlockTypes(created.id, [
-          { blockNumber: 1, blockType: 'AUDIENCE' },
-          { blockNumber: 2, blockType: 'AUDIENCE' },
-          { blockNumber: 3, blockType: 'AUDIENCE' },
-          { blockNumber: 4, blockType: 'AUDIENCE' },
-          { blockNumber: 5, blockType: 'AUDIENCE' },
-          { blockNumber: 6, blockType: 'AUDIENCE' },
-          { blockNumber: 7, blockType: 'AUDIENCE' },
-        ]);
+        const configs = layout.blockNumbers.map(blockNumber => ({
+          blockNumber,
+          blockType: 'AUDIENCE' as const,
+        }));
+        await this.upsertBlockTypes(created.id, configs);
       } catch (err) {
         console.error(`[createRecordDay] Failed to seed CELEB block config for ${created.id}:`, err);
       }
@@ -2325,21 +2327,34 @@ export class DbStorage implements IStorage {
     //          podium tab handles who's actually playing, and the seating
     //          chart is purely the studio audience).
     const workspace = workspaceStorage.getStore() || 'dond';
+    const celebBlockCount = getSeatingLayout('celeb').blockCount;
     // Lazy backfill / migration for CELEB: if a record day was never configured
     // OR still has legacy PB/NPB rows from the old "3 PB + 4 AUDIENCE" model,
-    // rewrite it to the new all-AUDIENCE model so the seat-assignment gate
-    // stops blocking. This is a self-healing migration — no manual SQL needed.
-    if (workspace === 'celeb' && audienceCount !== 7) {
+    // OR still carries a stale block beyond the current layout (e.g. the old
+    // Block 7), rewrite it to the new all-AUDIENCE model so the seat-assignment
+    // gate stops blocking. This is a self-healing migration — no manual SQL needed.
+    const hasStaleBlock = blockConfigs.some(b => b.blockNumber > celebBlockCount);
+    if (workspace === 'celeb' && (audienceCount !== celebBlockCount || hasStaleBlock)) {
       try {
-        await this.upsertBlockTypes(recordDayId, [
-          { blockNumber: 1, blockType: 'AUDIENCE' },
-          { blockNumber: 2, blockType: 'AUDIENCE' },
-          { blockNumber: 3, blockType: 'AUDIENCE' },
-          { blockNumber: 4, blockType: 'AUDIENCE' },
-          { blockNumber: 5, blockType: 'AUDIENCE' },
-          { blockNumber: 6, blockType: 'AUDIENCE' },
-          { blockNumber: 7, blockType: 'AUDIENCE' },
-        ]);
+        // Remove any stale block rows beyond the current layout (e.g. Block 7).
+        const staleBlocks = blockConfigs
+          .filter(b => b.blockNumber > celebBlockCount)
+          .map(b => b.blockNumber);
+        if (staleBlocks.length > 0) {
+          await getDb()
+            .delete(blockTypes)
+            .where(
+              and(
+                eq(blockTypes.recordDayId, recordDayId),
+                inArray(blockTypes.blockNumber, staleBlocks)
+              )
+            );
+        }
+        const configs = getSeatingLayout('celeb').blockNumbers.map(blockNumber => ({
+          blockNumber,
+          blockType: 'AUDIENCE' as const,
+        }));
+        await this.upsertBlockTypes(recordDayId, configs);
         blockConfigs = await this.getBlockTypesByRecordDay(recordDayId);
         pbCount = blockConfigs.filter(b => b.blockType === 'PB').length;
         npbCount = blockConfigs.filter(b => b.blockType === 'NPB').length;
@@ -2349,7 +2364,7 @@ export class DbStorage implements IStorage {
       }
     }
     const complete = workspace === 'celeb'
-      ? audienceCount === 7
+      ? audienceCount === celebBlockCount
       : pbCount === 5 && npbCount === 2;
     return { complete, pbCount, npbCount, audienceCount };
   }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
 import { getPartnerNames, attendingWithMentionsName } from "@shared/attendingWithParser";
+import { getSeatingLayout, getBlockNumbers } from "@shared/seating-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dondLogo from "@assets/dond-logo.png";
 import { Badge } from "@/components/ui/badge";
@@ -5999,6 +6000,16 @@ function getWeekNumber(date: Date): number {
 // RX Planning Tab Component
 function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; contestants: Contestant[] }) {
   const { toast } = useToast();
+  // Workspace-aware seating layout (DOND: 7x22, CELEB: 6x25)
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+  });
+  const layout = useMemo(() => getSeatingLayout(workspaceData?.workspace), [workspaceData?.workspace]);
+  const blockNumberStrings = useMemo(
+    () => getBlockNumbers(workspaceData?.workspace).map(String),
+    [workspaceData?.workspace]
+  );
   const [selectedDayId, setSelectedDayId] = useState<string>('');
   const [selectedWeekKey, setSelectedWeekKey] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -6642,11 +6653,10 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
 
   // Get available seats for a block
   const getAvailableSeats = (blockNumber: string): string[] => {
-    const SEAT_ROWS: Record<string, number> = { A: 5, B: 5, C: 4, D: 4, E: 4 };
     const allSeats: string[] = [];
-    Object.entries(SEAT_ROWS).forEach(([row, count]) => {
-      for (let i = 1; i <= count; i++) {
-        allSeats.push(`${row}${i}`);
+    layout.rows.forEach((row) => {
+      for (let i = 1; i <= row.count; i++) {
+        allSeats.push(`${row.label}${i}`);
       }
     });
     
@@ -6978,7 +6988,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
             {viewMode === 'single' ? (
               /* Single Day View - Vertical Blocks */
               <div className="space-y-3">
-                {['1', '2', '3', '4', '5', '6', '7'].map(blockNum => {
+                {blockNumberStrings.map(blockNum => {
                   const blockContestants = currentDayBlocks[blockNum] || [];
                   const blockType = getBlockType(parseInt(blockNum));
                   const isPB = blockType === 'PB';
@@ -7194,7 +7204,7 @@ function RXPlanningTab({ recordDays, contestants }: { recordDays: RecordDay[]; c
                         </CardHeader>
                       </Card>
                       <div className="space-y-2">
-                        {['1', '2', '3', '4', '5', '6', '7'].map(blockNum => {
+                        {blockNumberStrings.map(blockNum => {
                           const blockContestants = dayBlocks[blockNum] || [];
                           const dayBlockType = weekBlockTypesMap[day.id]?.[blockNum];
                           const isNPB = dayBlockType === 'NPB';

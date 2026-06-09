@@ -1,0 +1,56 @@
+can you run a debug and check the seating chart as well as all teh tabs linked with it? all the other info on all the other tabs should be representative of the same info as the seating chart is now in DOND celeb .
+
+5 minutes ago
+
+Show less
+
+Debugging seating chart data consistency (7 seconds)
+Let me confirm the restart was clean and audit the data + remaining hardcoded constants across all seating-linked tabs in parallel.
+
+
+2 actions
+The server is running. I found a user-facing inconsistency: "All 7 blocks selected" is hardcoded (should be 6 for CELEB). Let me examine that plus the other flagged spots.
+
+
+2 actions
+Both "All 7 blocks selected" strings need to be dynamic. Let me fix them and check the podium caseNumbers and players block-7 context.
+
+
+Ran cd
+Now let me check the podium caseNumbers (line 265) and the players block-7 context to confirm they're correct.
+
+
+2 actions
+The caseNumbers (22 briefcases for Deal or No Deal) is game-specific, not seating layout — correct as-is. Let me check the players.tsx block-7 context.
+
+
+2 actions
+The block-7 EP1 warning is DOND-specific business logic (DOND's standing block); it simply never triggers for CELEB, which is correct. Now let me run a real data-consistency check against both workspaces' databases and confirm there are no orphaned CELEB assignments beyond the 6-block / 5×5 layout.
+
+
+3 actions
+The data is consistent: DOND has 154-seat days with normal block distribution (including block 7 standing); CELEB has its 150-seat day with no orphaned audience assignments (the 2 CELEB assignments are in block 8 = Podium, which is expected). No stale block-7 data in CELEB. Let me verify the two tsc warnings aren't from my edits.
+
+
+2 actions
+Both tsc warnings (line 1204 string|null, line 1543 Set iteration) are pre-existing and unrelated to my edits; the build runs via esbuild (non-strict) and the server is up. Let me verify the layout helper outputs and do a comprehensive sweep across the entire codebase for any remaining hardcoded seating constants I may have missed in other tabs.
+
+
+4 actions
+The guide.ts (user help document) and a routes.ts auto-assign comment reference the old 7/154 numbers. The change-date loop (9409), pptx-parser (191), and players block-7 warning are DOND-specific/dead paths already accounted for. Let me check whether guide.ts is workspace-aware and verify the auto-assign code below the stale comment.
+
+
+2 actions
+The auto-assign code (7138) is properly workspace-aware via MAX_NPB_SEATS/isCelebAutoAssign — only the comment is stale. The real concern is guide.ts, which generates a user-facing help document with hardcoded "7 blocks / 154 seats" and isn't workspace-aware. Let me check how it's invoked.
+
+
+2 actions
+I'll make the user guide workspace-aware so its seating description matches the actual layout. Let me read the route context and the relevant guide.ts lines.
+
+
+2 actions
+Let me read the guide.ts function signature and the three seating lines so I can make it workspace-aware.
+
+
+2 actions
+The guide is a downloadable document that runs in workspace context, so it should reflect the active workspace's layout. It has several DOND-specific seating references (7 blocks/154 seats, Block 7 standing, PB/NPB) that are wrong for CELEB. Let me make generateGuide workspace-aware. First the signature and route call.

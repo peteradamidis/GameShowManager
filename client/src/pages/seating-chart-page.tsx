@@ -18,6 +18,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { format } from "date-fns";
 import { getGroupSizeFromAttendingWith, getPartnerNames, attendingWithMentionsName, isSoloContestant, normalizeName } from "@shared/attendingWithParser";
+import { getSeatingLayout, getDisplaySeatRows, getBlockNumbers, isReversedBlock } from "@shared/seating-layout";
 import {
   Dialog,
   DialogContent,
@@ -202,13 +203,15 @@ const SEAT_ROWS = [
 
 function generateEmptyBlocks(
   recordDayId: string,
+  workspace?: string | null,
 ): SeatData[][] {
-  return Array(7).fill(null).map((_, blockIdx) => {
+  const layout = getSeatingLayout(workspace);
+  // Rows in display order (E -> A) — workspace-aware (DOND 22-seat, CELEB 25-seat)
+  const seatRows = getDisplaySeatRows(workspace);
+  return Array(layout.blockCount).fill(null).map((_, blockIdx) => {
     const seats: SeatData[] = [];
-    // All blocks always use standard 22-seat rows
-    const seatRows = SEAT_ROWS;
     // For blocks 4, 5, 6 (indices 3, 4, 5), seat numbering is reversed (1-5 from right to left)
-    const reverseNumbering = blockIdx >= 3 && blockIdx <= 5;
+    const reverseNumbering = isReversedBlock(blockIdx + 1);
     
     seatRows.forEach(row => {
       for (let i = 1; i <= row.count; i++) {
@@ -612,6 +615,23 @@ export default function SeatingChartPage() {
   });
   const isCeleb = workspaceData?.workspace === 'celeb';
 
+  // Workspace-aware seating layout (DOND: 7x22=154, CELEB: 6x25=150)
+  const layout = useMemo(() => getSeatingLayout(workspaceData?.workspace), [workspaceData?.workspace]);
+  const blockNumbers = useMemo(() => getBlockNumbers(workspaceData?.workspace), [workspaceData?.workspace]);
+
+  // Drop any out-of-range blocks (e.g. Block 7 in CELEB) once the workspace is known
+  useEffect(() => {
+    const maxBlock = layout.blockCount;
+    setSelectedBlocks(prev => {
+      const filtered = prev.filter(b => b <= maxBlock);
+      return filtered.length === prev.length ? prev : filtered;
+    });
+    setSelectedResetBlocks(prev => {
+      const filtered = prev.filter(b => b <= maxBlock);
+      return filtered.length === prev.length ? prev : filtered;
+    });
+  }, [layout.blockCount]);
+
   // Block type map for this record day (shared queryKey with SeatingChart — TanStack deduplicates)
   const { data: blockTypesPageData = [] } = useQuery<{ blockNumber: number; blockType: string }[]>({
     queryKey: ['/api/record-days', recordDayId, 'block-types'],
@@ -1002,10 +1022,10 @@ export default function SeatingChartPage() {
   const blockReadiness = useMemo(() => {
     if (!assignments || !Array.isArray(assignments)) return [];
     
-    return Array(7).fill(null).map((_, blockIdx) => {
+    return Array(layout.blockCount).fill(null).map((_, blockIdx) => {
       const blockNumber = blockIdx + 1;
       const blockAssignments = assignments.filter((a: any) => a.blockNumber === blockNumber);
-      const totalSeats = 22;
+      const totalSeats = layout.seatsPerBlock;
       const filledSeats = blockAssignments.length;
       const confirmedSeats = blockAssignments.filter((a: any) => a.confirmedRsvp).length;
       const missingConfirmation = filledSeats - confirmedSeats;
@@ -1035,7 +1055,7 @@ export default function SeatingChartPage() {
         emptySeats: totalSeats - filledSeats,
       };
     });
-  }, [assignments]);
+  }, [assignments, layout.blockCount, layout.seatsPerBlock]);
 
   // Track if we've already celebrated this record day to prevent repeated confetti
   const hasCelebratedRef = useRef<string | null>(null);
@@ -1097,8 +1117,8 @@ export default function SeatingChartPage() {
     
     const totalFilled = blockReadiness.reduce((sum, b) => sum + b.filledSeats, 0);
     const totalConfirmed = blockReadiness.reduce((sum, b) => sum + b.confirmedSeats, 0);
-    // All workspaces: 7 blocks × 22 seats = 154
-    const totalPossibleSeats = 154;
+    // Workspace-aware total (DOND: 7×22=154, CELEB: 6×25=150)
+    const totalPossibleSeats = layout.totalSeats;
     const isFullyConfirmed = totalConfirmed === totalPossibleSeats;
     
     // Reset celebration state when day is no longer fully confirmed
@@ -1267,7 +1287,7 @@ export default function SeatingChartPage() {
   // Must be called before any conditional returns (React hooks rules)
   const seats: SeatData[][] = useMemo(() => {
     if (!recordDayId) return [];
-    const emptyBlocks = generateEmptyBlocks(recordDayId);
+    const emptyBlocks = generateEmptyBlocks(recordDayId, workspaceData?.workspace);
     
     // Track which seats are occupied
     const occupiedPositions = new Set<string>();
@@ -1275,7 +1295,7 @@ export default function SeatingChartPage() {
     if (assignments && Array.isArray(assignments)) {
       assignments.forEach((assignment: any) => {
         const blockIdx = assignment.blockNumber - 1;
-        if (blockIdx >= 0 && blockIdx < 7 && emptyBlocks[blockIdx]) {
+        if (blockIdx >= 0 && blockIdx < layout.blockCount && emptyBlocks[blockIdx]) {
           const expectedId = `${recordDayId}-block${blockIdx}-${assignment.seatLabel}`;
           const seatIdx = emptyBlocks[blockIdx].findIndex(seat => seat.id === expectedId);
           
@@ -1354,7 +1374,7 @@ export default function SeatingChartPage() {
     }
     
     return emptyBlocks;
-  }, [recordDayId, assignments, canceledByPosition]);
+  }, [recordDayId, assignments, canceledByPosition, workspaceData?.workspace, layout.blockCount]);
 
   // Extract overflow assignments (block 0 = "To Seat on Day" contestants without physical seats)
   const overflowAssignments = useMemo(() => {
@@ -1545,10 +1565,10 @@ export default function SeatingChartPage() {
   };
 
   const handleSelectAllBlocks = () => {
-    if (selectedBlocks.length === 7) {
+    if (selectedBlocks.length === blockNumbers.length) {
       setSelectedBlocks([]);
     } else {
-      setSelectedBlocks([1, 2, 3, 4, 5, 6, 7]);
+      setSelectedBlocks(blockNumbers);
     }
   };
 
@@ -1588,7 +1608,7 @@ export default function SeatingChartPage() {
         return;
       }
       
-      const blocksText = selectedBlocks.length === 7 
+      const blocksText = selectedBlocks.length === blockNumbers.length 
         ? "all blocks" 
         : `Block${selectedBlocks.length > 1 ? 's' : ''} ${selectedBlocks.join(', ')}`;
       
@@ -1657,7 +1677,7 @@ export default function SeatingChartPage() {
       await refetch();
       setResetDialogOpen(false);
       setResetConfirmationStep(0);
-      const blockText = selectedResetBlocks.length === 7 
+      const blockText = selectedResetBlocks.length === blockNumbers.length 
         ? "All blocks"
         : `Block${selectedResetBlocks.length > 1 ? 's' : ''} ${selectedResetBlocks.join(', ')}`;
       toast({
@@ -1679,10 +1699,10 @@ export default function SeatingChartPage() {
   };
 
   const handleSelectAllResetBlocks = () => {
-    if (selectedResetBlocks.length === 7) {
+    if (selectedResetBlocks.length === blockNumbers.length) {
       setSelectedResetBlocks([]);
     } else {
-      setSelectedResetBlocks([1, 2, 3, 4, 5, 6, 7]);
+      setSelectedResetBlocks(blockNumbers);
     }
   };
 
@@ -2570,8 +2590,8 @@ export default function SeatingChartPage() {
             </Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6, 7].map(blockNum => {
-              const blockLabel = blockNum === 7 ? 'Block 7 (Standing)' : `Block ${blockNum}`;
+            {blockNumbers.map(blockNum => {
+              const blockLabel = (!isCeleb && blockNum === 7) ? 'Block 7 (Standing)' : `Block ${blockNum}`;
               const blockAssignments = assignments?.filter((a: any) => a.blockNumber === blockNum) || [];
               const psContestants = blockAssignments
                 .filter((a: any) => a.podiumStory === true)
@@ -3787,7 +3807,7 @@ export default function SeatingChartPage() {
               const emptySeatsInBlock = block.filter(s => !s.contestantName);
               if (emptySeatsInBlock.length === 0) return null;
               const blockLabel = blockNumber <= 3 ? `Block ${blockNumber} (Top)` :
-                blockNumber <= 6 ? `Block ${blockNumber} (Bottom)` : 'Block 7 (Standing)';
+                blockNumber <= 6 ? `Block ${blockNumber} (Bottom)` : `Block ${blockNumber} (Standing)`;
               return (
                 <div key={blockIdx} data-testid={`move-overflow-block-${blockNumber}`}>
                   <div className="flex items-center gap-2 mb-2">
@@ -4496,9 +4516,9 @@ export default function SeatingChartPage() {
                     <SelectValue placeholder="Select block" />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                    {blockNumbers.map(blockNum => (
                       <SelectItem key={blockNum} value={String(blockNum)} disabled={swapTargetBlock === String(blockNum)}>
-                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/{layout.seatsPerBlock})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -4511,9 +4531,9 @@ export default function SeatingChartPage() {
                     <SelectValue placeholder="Select block" />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                    {blockNumbers.map(blockNum => (
                       <SelectItem key={blockNum} value={String(blockNum)} disabled={swapSourceBlock === String(blockNum)}>
-                        Block {blockNum} ({getBlockOccupancy(blockNum)}/22)
+                        Block {blockNum} ({getBlockOccupancy(blockNum)}/{layout.seatsPerBlock})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -4578,7 +4598,7 @@ export default function SeatingChartPage() {
               <div className="flex items-center gap-2 pb-2 border-b">
                 <Checkbox 
                   id="select-all-reset-blocks"
-                  checked={selectedResetBlocks.length === 7}
+                  checked={selectedResetBlocks.length === blockNumbers.length}
                   onCheckedChange={handleSelectAllResetBlocks}
                   data-testid="checkbox-select-all-reset-blocks"
                 />
@@ -4588,7 +4608,7 @@ export default function SeatingChartPage() {
               </div>
               
               <div className="grid grid-cols-2 gap-3">
-                {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+                {blockNumbers.map(blockNum => (
                   <div key={blockNum} className="flex items-center gap-2">
                     <Checkbox 
                       id={`reset-block-${blockNum}`}
@@ -4605,8 +4625,8 @@ export default function SeatingChartPage() {
               
               {selectedResetBlocks.length > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  {selectedResetBlocks.length === 7 
-                    ? "All 7 blocks selected" 
+                  {selectedResetBlocks.length === blockNumbers.length 
+                    ? `All ${blockNumbers.length} blocks selected` 
                     : `${selectedResetBlocks.length} block${selectedResetBlocks.length > 1 ? 's' : ''} selected: ${selectedResetBlocks.join(', ')}`}
                 </p>
               )}
@@ -4647,7 +4667,7 @@ export default function SeatingChartPage() {
             <div className="flex items-center gap-2 pb-2 border-b">
               <Checkbox 
                 id="select-all-blocks"
-                checked={selectedBlocks.length === 7}
+                checked={selectedBlocks.length === blockNumbers.length}
                 onCheckedChange={handleSelectAllBlocks}
                 data-testid="checkbox-select-all-blocks"
               />
@@ -4657,7 +4677,7 @@ export default function SeatingChartPage() {
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              {[1, 2, 3, 4, 5, 6, 7].map(blockNum => (
+              {blockNumbers.map(blockNum => (
                 <div key={blockNum} className="flex items-center gap-2">
                   <Checkbox 
                     id={`block-${blockNum}`}
@@ -4674,8 +4694,8 @@ export default function SeatingChartPage() {
             
             {selectedBlocks.length > 0 && (
               <p className="text-sm text-muted-foreground">
-                {selectedBlocks.length === 7 
-                  ? "All 7 blocks selected" 
+                {selectedBlocks.length === blockNumbers.length 
+                  ? `All ${blockNumbers.length} blocks selected` 
                   : `${selectedBlocks.length} block${selectedBlocks.length > 1 ? 's' : ''} selected: ${selectedBlocks.join(', ')}`}
               </p>
             )}
@@ -4711,7 +4731,7 @@ export default function SeatingChartPage() {
               disabled={selectedBlocks.length === 0 || isAutoAssigning}
               data-testid="button-auto-assign-confirm"
             >
-              {isAutoAssigning ? "Assigning..." : `Auto-Assign to ${selectedBlocks.length === 7 ? 'All Blocks' : `${selectedBlocks.length} Block${selectedBlocks.length > 1 ? 's' : ''}`}`}
+              {isAutoAssigning ? "Assigning..." : `Auto-Assign to ${selectedBlocks.length === blockNumbers.length ? 'All Blocks' : `${selectedBlocks.length} Block${selectedBlocks.length > 1 ? 's' : ''}`}`}
             </Button>
           </DialogFooter>
         </DialogContent>

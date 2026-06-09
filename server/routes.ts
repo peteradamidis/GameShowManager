@@ -24,6 +24,7 @@ import {
   noticeboardComments as noticeboardCommentsTable,
   systemSettings as systemSettingsTable,
 } from "@shared/schema";
+import { getSeatingLayout } from "@shared/seating-layout";
 import { 
   parseAttendingWith, 
   normalizeName as sharedNormalizeName,
@@ -4368,10 +4369,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         acc[a.recordDayId] = (acc[a.recordDayId] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
+      // Seat total is fully determined by the workspace layout (CELEB 6x25=150,
+      // DOND 7x22=154); use it authoritatively rather than the persisted
+      // total_seats column so legacy rows can't inflate the count.
+      const layoutTotalSeats = getSeatingLayout((req as any).session?.activeWorkspace || 'dond').totalSeats;
       const emptySeats = unlockedDays.reduce((sum, rd) => {
-        const totalSeats = (rd as any).totalSeats || 154;
         const filled = assignedPerDay[rd.id] || 0;
-        return sum + Math.max(0, totalSeats - filled);
+        return sum + Math.max(0, layoutTotalSeats - filled);
       }, 0);
 
       // --- Stat 2: Available + reschedule pool, not yet assigned to any unlocked day ---
@@ -5464,7 +5468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const ws = (req as any).session?.activeWorkspace || 'dond';
         return res.status(400).json({
           error: ws === 'celeb'
-            ? "Block configuration incomplete. All 7 CELEB blocks should be Audience — try reloading the page so it auto-repairs."
+            ? "Block configuration incomplete. All CELEB blocks should be Audience — try reloading the page so it auto-repairs."
             : "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
           code: "BLOCK_CONFIG_INCOMPLETE",
           current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount, audienceCount: blockConfig.audienceCount }
@@ -5914,7 +5918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const ws = (req as any).session?.activeWorkspace || 'dond';
         return res.status(400).json({
           error: ws === 'celeb'
-            ? "Block configuration incomplete. All 7 CELEB blocks should be Audience — try reloading the page so it auto-repairs."
+            ? "Block configuration incomplete. All CELEB blocks should be Audience — try reloading the page so it auto-repairs."
             : "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before booking seats.",
           code: "BLOCK_CONFIG_INCOMPLETE",
           current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount, audienceCount: blockConfig.audienceCount }
@@ -5948,8 +5952,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Define seat structure - same as frontend for consistency
-      const SEAT_ROWS: Record<string, number> = { A: 5, B: 5, C: 4, D: 4, E: 4 };
+      // Define seat structure - same as frontend for consistency (workspace-aware)
+      const manualSeatLayout = getSeatingLayout((req as any).session?.activeWorkspace || 'dond');
+      const SEAT_ROWS: Record<string, number> = Object.fromEntries(
+        manualSeatLayout.rows.map(r => [r.label, r.count])
+      );
 
       // Parse starting seat into row letter and seat number
       const rowLetter = startingSeat.charAt(0).toUpperCase();
@@ -6517,17 +6524,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const ws = (req as any).session?.activeWorkspace || 'dond';
         return res.status(400).json({
           error: ws === 'celeb'
-            ? "Block configuration incomplete. All 7 CELEB blocks should be Audience — try reloading the page so it auto-repairs."
+            ? "Block configuration incomplete. All CELEB blocks should be Audience — try reloading the page so it auto-repairs."
             : "Block configuration incomplete. You must select 5 Playing Blocks (PB) and 2 Non-Playing Blocks (NPB) before auto-assigning seats.",
           code: "BLOCK_CONFIG_INCOMPLETE",
           current: { pbCount: blockConfig.pbCount, npbCount: blockConfig.npbCount, audienceCount: blockConfig.audienceCount }
         });
       }
 
-      // Validate selected blocks if provided
+      // Validate selected blocks if provided (workspace-aware: DOND 7, CELEB 6)
+      const blockLayout = getSeatingLayout((req as any).session?.activeWorkspace || 'dond');
       const validBlocks = selectedBlocks && Array.isArray(selectedBlocks) && selectedBlocks.length > 0
-        ? selectedBlocks.filter(b => b >= 1 && b <= 7)
-        : [1, 2, 3, 4, 5, 6, 7]; // Default to all blocks
+        ? selectedBlocks.filter(b => b >= 1 && b <= blockLayout.blockCount)
+        : [...blockLayout.blockNumbers]; // Default to all blocks
       
       console.log(`[Auto-assign] validBlocks after filtering:`, validBlocks);
 
@@ -6620,22 +6628,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Configuration
-      const BLOCKS = 7;
-      const SEATS_PER_BLOCK = 22;
-      const MAX_PB_SEATS = 18; // PB blocks fill 18 seats
-      const MAX_NPB_SEATS = 22; // NPB blocks fill completely
+      // Configuration (workspace-aware: DOND 7x22=154, CELEB 6x25=150)
+      const autoAssignWorkspace = (req as any).session?.activeWorkspace || 'dond';
+      const autoAssignLayout = getSeatingLayout(autoAssignWorkspace);
+      const isCelebAutoAssign = autoAssignLayout.workspace === 'celeb';
+      const BLOCKS = autoAssignLayout.blockCount;
+      const SEATS_PER_BLOCK = autoAssignLayout.seatsPerBlock;
+      // CELEB blocks are all AUDIENCE and fill completely; DOND keeps PB(18)/NPB(22) caps.
+      const MAX_PB_SEATS = isCelebAutoAssign ? SEATS_PER_BLOCK : 18; // PB blocks fill 18 seats
+      const MAX_NPB_SEATS = isCelebAutoAssign ? SEATS_PER_BLOCK : 22; // NPB blocks fill completely
       const MAX_C_PER_NPB = 6; // Maximum 6 C-rated contestants per NPB block
       const TARGET_FEMALE_RATIO = 0.65; // Midpoint of 60-70%
       const TARGET_FEMALE_MIN = 0.60;
       const TARGET_FEMALE_MAX = 0.70;
-      const ROWS = [
-        { label: "A", count: 5 },
-        { label: "B", count: 5 },
-        { label: "C", count: 4 },
-        { label: "D", count: 4 },
-        { label: "E", count: 4 },
-      ];
+      const ROWS = autoAssignLayout.rows;
       
       // Helper to generate seat labels - blocks 4, 5, 6 have reversed numbering (1-5 from right to left)
       const getSeatLabel = (rowLabel: string, visualPosition: number, rowCount: number, blockNumber: number): string => {
@@ -7136,7 +7142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (block.seatsUsed + bundle.size > maxSeats) return false;
           
           // CONSTRAINT: NPB blocks can ONLY have B and C ratings (no A or B+)
-          if (block.blockType === 'NPB') {
+          // CELEB has no PB/NPB distinction (all AUDIENCE) so this never applies there.
+          if (!isCelebAutoAssign && block.blockType === 'NPB') {
             const hasAOrBPlus = bundle.ratingCounts['A'] > 0 || bundle.ratingCounts['B+'] > 0;
             if (hasAOrBPlus) return false;
             
@@ -7149,7 +7156,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         // CRITICAL: C-rated contestants can ONLY go to NPB blocks (max MAX_C_PER_NPB per NPB block)
-        if (bundle.hasCRating) {
+        // CELEB has no NPB blocks, so C-rated contestants are placed like any other.
+        if (!isCelebAutoAssign && bundle.hasCRating) {
           feasibleBlocks = feasibleBlocks.filter(block => {
             if (block.blockType !== 'NPB') return false;
             // Check if adding this bundle would exceed MAX_C_PER_NPB C-rated contestants
@@ -7293,7 +7301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (block.seatsUsed + 1 > maxSeats) return false;
           
           // NPB blocks can ONLY have B and C ratings (no A or B+)
-          if (block.blockType === 'NPB') {
+          // CELEB has no PB/NPB distinction (all AUDIENCE) so this never applies there.
+          if (!isCelebAutoAssign && block.blockType === 'NPB') {
             const hasAOrBPlus = solo.ratingCounts['A'] > 0 || solo.ratingCounts['B+'] > 0;
             if (hasAOrBPlus) return false;
             
@@ -7302,7 +7311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (hasOver60km) return false;
           }
           
-          if (solo.hasCRating) {
+          if (!isCelebAutoAssign && solo.hasCRating) {
             if (block.blockType !== 'NPB') return false;
             const cCount = block.ratingCounts['C'] + solo.ratingCounts['C'];
             if (cCount > MAX_C_PER_NPB) return false;
@@ -10331,6 +10340,10 @@ ${finalEmailFooter}`;
       // Get contestant's current availability responses
       const availability = await storage.getContestantAvailability(tokenRecord.contestantId);
 
+      // Seat total is fully determined by the workspace layout, not the persisted
+      // column, so legacy CELEB rows still showing 154 surface the correct 150.
+      const tokenLayoutTotalSeats = getSeatingLayout(workspaceStorage.getStore() || 'dond').totalSeats;
+
       res.json({
         contestant: {
           id: contestant.id,
@@ -10342,7 +10355,7 @@ ${finalEmailFooter}`;
         recordDays: recordDays.map(rd => ({
           id: rd.id,
           date: rd.date,
-          totalSeats: rd.totalSeats,
+          totalSeats: tokenLayoutTotalSeats,
         })),
         currentAvailability: availability,
       });
@@ -17221,7 +17234,7 @@ Thank you.`;
   app.get("/api/guide/download", async (req, res) => {
     try {
       const { generateGuide } = await import('./guide');
-      generateGuide(res);
+      generateGuide(res, workspaceStorage.getStore() || 'dond');
     } catch (error: any) {
       console.error("Error generating guide:", error);
       res.status(500).json({ error: error.message });

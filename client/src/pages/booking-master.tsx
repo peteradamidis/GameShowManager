@@ -71,6 +71,7 @@ import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import * as XLSX from "xlsx";
+import { getSeatingLayout } from "@shared/seating-layout";
 
 // Column configuration for the booking master table
 // Columns to the right of the bar (after NOTES) are always visible and cannot be hidden
@@ -272,19 +273,16 @@ interface StandbyAssignment {
   };
 }
 
-const BLOCKS = 7;
-const ROWS = [
-  { label: "A", count: 5 },
-  { label: "B", count: 5 },
-  { label: "C", count: 4 },
-  { label: "D", count: 4 },
-  { label: "E", count: 4 },
-];
-
 const RECORD_DAY_STORAGE_KEY = 'booking-master-selected-day';
 
 export default function BookingMaster() {
   const [, setLocation] = useLocation();
+  // Workspace-aware seating layout (DOND: 7x22, CELEB: 6x25)
+  const { data: workspaceData } = useQuery<{ workspace: string }>({
+    queryKey: ['/api/workspace'],
+    staleTime: Infinity,
+  });
+  const layout = useMemo(() => getSeatingLayout(workspaceData?.workspace), [workspaceData?.workspace]);
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
     // Load from localStorage on initial render
     try {
@@ -762,8 +760,8 @@ export default function BookingMaster() {
   const generateAllSeats = (): BookingRow[] => {
     const rows: BookingRow[] = [];
     
-    for (let blockNum = 1; blockNum <= BLOCKS; blockNum++) {
-      for (const row of ROWS) {
+    for (let blockNum = 1; blockNum <= layout.blockCount; blockNum++) {
+      for (const row of layout.rows) {
         for (let seatNum = 1; seatNum <= row.count; seatNum++) {
           const seatLabel = `${row.label}${seatNum}`;
           const seatId = `${String(blockNum).padStart(2, '0')}-${seatLabel}`;
