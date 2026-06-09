@@ -36,17 +36,12 @@ import { Calendar as CalendarIcon, User, Mail, Phone, MapPin, Users, Heart, Aler
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format, isSameDay, parseISO } from "date-fns";
-
-const SEAT_ROWS = [
-  { label: 'A', count: 5 },
-  { label: 'B', count: 5 },
-  { label: 'C', count: 4 },
-  { label: 'D', count: 4 },
-  { label: 'E', count: 4 },
-];
+import { getSeatingLayout } from "@shared/seating-layout";
 
 export default function ReschedulePage() {
   const { toast } = useToast();
+  const { data: workspaceData } = useQuery<{ workspace: string }>({ queryKey: ['/api/workspace'], staleTime: Infinity });
+  const layout = getSeatingLayout(workspaceData?.workspace);
   const [rebookDialogOpen, setRebookDialogOpen] = useState(false);
   const [selectedCancellation, setSelectedCancellation] = useState<any>(null);
   const [selectedRecordDayId, setSelectedRecordDayId] = useState<string>("");
@@ -276,7 +271,7 @@ export default function ReschedulePage() {
     );
     
     const allSeats: string[] = [];
-    SEAT_ROWS.forEach(row => {
+    layout.rows.forEach(row => {
       for (let i = 1; i <= row.count; i++) {
         const seatLabel = `${row.label}${i}`;
         if (!occupied.has(seatLabel)) {
@@ -345,7 +340,7 @@ export default function ReschedulePage() {
     if (count <= 1) return [startSeat];
     const row = startSeat.charAt(0);
     const startNum = parseInt(startSeat.substring(1));
-    const rowConfig = SEAT_ROWS.find(r => r.label === row);
+    const rowConfig = layout.rows.find(r => r.label === row);
     if (!rowConfig) return [startSeat];
     const maxNum = rowConfig.count;
 
@@ -1102,7 +1097,7 @@ export default function ReschedulePage() {
                       <SelectValue placeholder="Select block" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7].map((block) => {
+                      {layout.blockNumbers.map((block) => {
                         const blockType = rebookBlockTypeMap[block];
                         return (
                           <SelectItem key={block} value={String(block)}>

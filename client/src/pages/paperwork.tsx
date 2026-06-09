@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { getSeatingLayout } from "@shared/seating-layout";
 import { 
   FileText, 
   Send, 
@@ -88,6 +89,8 @@ interface PaperworkTrackerState {
 
 export default function Paperwork() {
   const { toast } = useToast();
+  const { data: workspaceData } = useQuery<{ workspace: string }>({ queryKey: ['/api/workspace'], staleTime: Infinity });
+  const layout = getSeatingLayout(workspaceData?.workspace);
   
   // Initialize state from localStorage
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
@@ -133,6 +136,14 @@ export default function Paperwork() {
     } catch {}
     return "all";
   });
+
+  // Reset a stale persisted block filter when the active workspace has fewer
+  // blocks than the saved value (e.g. a DOND block 7 filter carried into CELEB).
+  useEffect(() => {
+    if (blockFilter !== "all" && !layout.blockNumbers.includes(parseInt(blockFilter))) {
+      setBlockFilter("all");
+    }
+  }, [workspaceData?.workspace]);
   
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try {
@@ -798,13 +809,9 @@ Deal or No Deal Production Team`);
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Blocks</SelectItem>
-                    <SelectItem value="1">Block 1</SelectItem>
-                    <SelectItem value="2">Block 2</SelectItem>
-                    <SelectItem value="3">Block 3</SelectItem>
-                    <SelectItem value="4">Block 4</SelectItem>
-                    <SelectItem value="5">Block 5</SelectItem>
-                    <SelectItem value="6">Block 6</SelectItem>
-                    <SelectItem value="7">Block 7</SelectItem>
+                    {layout.blockNumbers.map((block) => (
+                      <SelectItem key={block} value={String(block)}>Block {block}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

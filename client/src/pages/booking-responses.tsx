@@ -46,6 +46,7 @@ import {
   FileSpreadsheet
 } from "lucide-react";
 import type { RecordDay, Contestant, SeatAssignment, RebookingHistory, StandbyAssignment, CanceledAssignment } from "@shared/schema";
+import { getSeatingLayout } from "@shared/seating-layout";
 
 interface BookingAssignment extends SeatAssignment {
   contestant: Contestant | null;
@@ -95,6 +96,8 @@ interface BookingTrackerState {
 
 export default function BookingResponses() {
   const { toast } = useToast();
+  const { data: workspaceData } = useQuery<{ workspace: string }>({ queryKey: ['/api/workspace'], staleTime: Infinity });
+  const layout = getSeatingLayout(workspaceData?.workspace);
   
   // Initialize state from localStorage
   const [selectedRecordDay, setSelectedRecordDay] = useState<string>(() => {
@@ -118,6 +121,14 @@ export default function BookingResponses() {
     } catch {}
     return "all";
   });
+
+  // Reset a stale persisted block filter when the active workspace has fewer
+  // blocks than the saved value (e.g. a DOND block 7 filter carried into CELEB).
+  useEffect(() => {
+    if (selectedBlock !== "all" && !layout.blockNumbers.includes(parseInt(selectedBlock))) {
+      setSelectedBlock("all");
+    }
+  }, [workspaceData?.workspace]);
   
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(() => {
     try {
@@ -1316,7 +1327,7 @@ export default function BookingResponses() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Blocks</SelectItem>
-                {[1, 2, 3, 4, 5, 6, 7].map((block) => (
+                {layout.blockNumbers.map((block) => (
                   <SelectItem key={block} value={String(block)}>
                     Block {block}
                   </SelectItem>

@@ -32,6 +32,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay, parseISO } from "date-fns";
 import type { BlockType } from "@shared/schema";
+import { getSeatingLayout } from "@shared/seating-layout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -60,7 +61,6 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const BLOCKS = [1, 2, 3, 4, 5, 6, 7];
 const SEAT_ROWS = [
   { label: 'A', count: 5 },
   { label: 'B', count: 5 },
@@ -83,11 +83,11 @@ function getAllSeatsInOrder(): string[] {
 }
 
 // Find available consecutive seat groups of a given size (within same row only)
-function findConsecutiveSeatGroups(occupiedSeats: Set<string>, groupSize: number): { startSeat: string; seats: string[] }[] {
+function findConsecutiveSeatGroups(occupiedSeats: Set<string>, groupSize: number, seatRows: { label: string; count: number }[]): { startSeat: string; seats: string[] }[] {
   const groups: { startSeat: string; seats: string[] }[] = [];
   
   // Check each row separately - groups must stay within the same row
-  SEAT_ROWS.forEach(row => {
+  seatRows.forEach(row => {
     // Generate all seats in this row
     const rowSeats: string[] = [];
     for (let i = 1; i <= row.count; i++) {
@@ -1179,6 +1179,7 @@ export default function Contestants() {
     staleTime: Infinity,
   });
   const isDond = workspaceData?.workspace === 'dond';
+  const layout = getSeatingLayout(workspaceData?.workspace);
 
   // Bulk transfer selected contestants to CELEB workspace
   const bulkTransferToCelebMutation = useMutation({
@@ -1382,7 +1383,7 @@ export default function Contestants() {
     );
     
     const allSeats: string[] = [];
-    SEAT_ROWS.forEach(row => {
+    layout.rows.forEach(row => {
       for (let i = 1; i <= row.count; i++) {
         const seatLabel = `${row.label}${i}`;
         if (!occupied.has(seatLabel)) {
@@ -1402,7 +1403,7 @@ export default function Contestants() {
         .filter((a: any) => a.blockNumber === blockNum)
         .map((a: any) => a.seatLabel as string)
     );
-    return findConsecutiveSeatGroups(occupied, selectedContestants.length);
+    return findConsecutiveSeatGroups(occupied, selectedContestants.length, layout.rows);
   })() : [];
 
   // Create a map of dates to record days for the calendar
@@ -2606,7 +2607,7 @@ export default function Contestants() {
                       <SelectValue placeholder="Select a block" />
                     </SelectTrigger>
                     <SelectContent>
-                      {BLOCKS.map(block => (
+                      {layout.blockNumbers.map(block => (
                         <SelectItem key={block} value={block.toString()}>
                           Block {block}
                           {blockTypeMap[block] && (
