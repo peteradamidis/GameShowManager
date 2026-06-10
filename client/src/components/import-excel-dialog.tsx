@@ -86,12 +86,13 @@ export function ImportExcelDialog({
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+    const name = file?.name.toLowerCase() ?? '';
+    if (file && (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv'))) {
       setSelectedFile(file);
     } else {
       toast({
         title: "Invalid file type",
-        description: "Please upload an Excel file (.xlsx or .xls)",
+        description: "Please upload an Excel or CSV file (.xlsx, .xls or .csv)",
         variant: "destructive",
       });
     }
@@ -216,11 +217,11 @@ export function ImportExcelDialog({
             ) : (
               <div className="space-y-2">
                 <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-                <p className="font-medium">Drop Excel file here</p>
+                <p className="font-medium">Drop Excel or CSV file here</p>
                 <p className="text-sm text-muted-foreground">or click to browse</p>
                 <input
                   type="file"
-                  accept=".xlsx,.xls"
+                  accept=".xlsx,.xls,.csv"
                   onChange={handleFileSelect}
                   className="hidden"
                   id={fileInputId}

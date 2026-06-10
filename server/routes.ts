@@ -1454,7 +1454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (parseError: any) {
         console.error("Excel parse error:", parseError);
         return res.status(400).json({ 
-          error: "Could not parse Excel file. Please ensure you're uploading a valid .xlsx or .xls file exported from Cast It Reach." 
+          error: "Could not parse the file. Please ensure you're uploading a valid .xlsx, .xls or .csv file exported from Cast It Reach." 
         });
       }
       
@@ -1696,7 +1696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (parseError: any) {
         console.error("Excel parse error:", parseError);
         return res.status(400).json({ 
-          error: "Could not parse Excel file. Please ensure you're uploading a valid .xlsx or .xls file exported from Cast It Reach." 
+          error: "Could not parse the file. Please ensure you're uploading a valid .xlsx, .xls or .csv file exported from Cast It Reach." 
         });
       }
       
