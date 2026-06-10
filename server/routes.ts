@@ -1406,14 +1406,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "The uploaded file is empty or has no data rows." });
         }
         
-        let headerRowIndex = 0;
+        // Find the real header row. Cast It Reach exports can include a leading
+        // metadata row (e.g. a cell containing "exportFileId=dond") ABOVE the
+        // actual column headers, so we can't just take the first non-empty row.
+        // Prefer the row that contains recognizable column headers (a "Name"
+        // cell, or several known header keywords); fall back to the first
+        // non-empty row for any non-standard files.
+        const HEADER_KEYWORDS = ["name", "age", "gender", "email", "mobile", "audition", "postcode", "availability", "group size"];
+        let headerRowIndex = -1;
         for (let i = 0; i < allRows.length; i++) {
           const row = allRows[i] as any[];
-          const hasContent = row.some(cell => cell && cell.toString().trim() !== "");
-          if (hasContent) {
+          const cells = row.map((cell: any) => (cell ? cell.toString().trim().toLowerCase() : ""));
+          const hasName = cells.some((c: string) => c === "name" || c === "full name");
+          const keywordMatches = HEADER_KEYWORDS.filter(kw => cells.some((c: string) => c === kw)).length;
+          if (hasName || keywordMatches >= 3) {
             headerRowIndex = i;
             break;
           }
+        }
+        if (headerRowIndex === -1) {
+          for (let i = 0; i < allRows.length; i++) {
+            const row = allRows[i] as any[];
+            if (row.some((cell: any) => cell && cell.toString().trim() !== "")) {
+              headerRowIndex = i;
+              break;
+            }
+          }
+          if (headerRowIndex === -1) headerRowIndex = 0;
         }
         
         const headers = (allRows[headerRowIndex] as any[])
@@ -1627,14 +1646,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Find first row with actual content (skip completely empty rows)
-        let headerRowIndex = 0;
+        // Find the real header row. Cast It Reach exports can include a leading
+        // metadata row (e.g. a cell containing "exportFileId=dond") ABOVE the
+        // actual column headers, so we can't just take the first non-empty row.
+        // Prefer the row that contains recognizable column headers (a "Name"
+        // cell, or several known header keywords); fall back to the first
+        // non-empty row for any non-standard files.
+        const HEADER_KEYWORDS = ["name", "age", "gender", "email", "mobile", "audition", "postcode", "availability", "group size"];
+        let headerRowIndex = -1;
         for (let i = 0; i < allRows.length; i++) {
           const row = allRows[i] as any[];
-          const hasContent = row.some(cell => cell && cell.toString().trim() !== "");
-          if (hasContent) {
+          const cells = row.map((cell: any) => (cell ? cell.toString().trim().toLowerCase() : ""));
+          const hasName = cells.some((c: string) => c === "name" || c === "full name");
+          const keywordMatches = HEADER_KEYWORDS.filter(kw => cells.some((c: string) => c === kw)).length;
+          if (hasName || keywordMatches >= 3) {
             headerRowIndex = i;
             break;
           }
+        }
+        if (headerRowIndex === -1) {
+          for (let i = 0; i < allRows.length; i++) {
+            const row = allRows[i] as any[];
+            if (row.some((cell: any) => cell && cell.toString().trim() !== "")) {
+              headerRowIndex = i;
+              break;
+            }
+          }
+          if (headerRowIndex === -1) headerRowIndex = 0;
         }
         
         // Extract headers and data rows
