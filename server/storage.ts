@@ -244,6 +244,9 @@ const WORKSPACE_SCOPED_CONFIG_KEYS = new Set<string>([
   // Auto-confirmation PDF attachment (path + filename + durable base64 bytes) —
   // each workspace keeps its own attachment so uploading in Celeb never overwrites DOND.
   'auto_confirmation_pdf_path', 'auto_confirmation_pdf_name', 'auto_confirmation_pdf_data',
+  // Standby ticket PDF attachment (path + filename + durable base64 bytes) —
+  // each workspace keeps its own attachment so uploading in Celeb never overwrites DOND.
+  'standby_ticket_pdf_path', 'standby_ticket_pdf_name', 'standby_ticket_pdf_data',
 ]);
 
 // Resolve a system_config key to its workspace-scoped form for the active

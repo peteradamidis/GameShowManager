@@ -519,6 +519,33 @@ function getArrivalTimeText(
   return fallback;
 }
 
+// Load the configured Standby Ticket PDF (if any) as an email attachment.
+// The bytes are stored durably in system_config (base64) so the attachment is
+// always available regardless of the ephemeral local file store. Returns null
+// when no PDF has been uploaded for the current workspace.
+async function getStandbyTicketPdfAttachment(): Promise<{ filename: string; content: Buffer; contentType: string } | null> {
+  try {
+    const dataBase64 = await storage.getSystemConfig('standby_ticket_pdf_data');
+    if (dataBase64) {
+      const buffer = Buffer.from(dataBase64, 'base64');
+      if (buffer.length > 0) {
+        const filename = (await storage.getSystemConfig('standby_ticket_pdf_name')) || 'Standby-Information.pdf';
+        return { filename, content: buffer, contentType: 'application/pdf' };
+      }
+    }
+    // Back-compat / safety net: fall back to the configured path in the file store.
+    const configuredPath = await storage.getSystemConfig('standby_ticket_pdf_path');
+    if (configuredPath && configuredPath !== 'none') {
+      const objectStorageService = new ObjectStorageService();
+      const { buffer, contentType, filename } = await objectStorageService.getObjectAsBuffer(configuredPath);
+      return { filename, content: buffer, contentType };
+    }
+  } catch (err: any) {
+    console.error('Failed to load standby ticket PDF attachment:', err.message);
+  }
+  return null;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware to handle ngrok skip browser warning via query parameter
   // This ensures that even if the header isn't sent by the browser, 
@@ -14060,6 +14087,13 @@ Thank you.`;
         });
       }
 
+      // Attach the uploaded Standby Ticket PDF, if one has been configured.
+      const standbyTicketPdf = await getStandbyTicketPdfAttachment();
+      if (standbyTicketPdf) {
+        attachments.push(standbyTicketPdf);
+        console.log(`📎 Attached standby ticket PDF: ${standbyTicketPdf.filename} (${standbyTicketPdf.content.length} bytes)`);
+      }
+
       const senderNameConfig = await storage.getSystemConfig('email_sender_name');
       const emailConfig: EmailConfig = {
         senderName: senderNameConfig || 'Deal or No Deal',
@@ -14151,6 +14185,9 @@ Thank you.`;
         const DELAY_BETWEEN_EMAILS_MS = 1500; // 1.5 second delay between emails
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
         let emailCount = 0;
+
+        // Load the uploaded Standby Ticket PDF once (if configured) and reuse for every email.
+        const standbyTicketPdf = await getStandbyTicketPdfAttachment();
 
         for (const standby of eligibleStandbys) {
           try {
@@ -14286,6 +14323,11 @@ Thank you.`;
               contentType: ticketBannerContentType,
               cid: ticketBannerCid,
             });
+          }
+
+          // Attach the uploaded Standby Ticket PDF, if one has been configured.
+          if (standbyTicketPdf) {
+            attachments.push(standbyTicketPdf);
           }
 
           const senderNameConfig = await storage.getSystemConfig('email_sender_name');
@@ -16943,6 +16985,76 @@ Thank you.`;
       res.json({ saved: true, hasData: true, name: filename, sizeBytes: buffer.length });
     } catch (error: any) {
       console.error("Error saving auto-confirmation PDF:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // =============================================
+  // Standby Ticket PDF (durable attachment for standby ticket emails)
+  // =============================================
+  // The PDF bytes are stored directly in system_config (base64) so the standby
+  // ticket email reliably includes the attachment regardless of the (ephemeral)
+  // local file store. These keys are scoped per workspace (DOND vs CELEB).
+
+  app.get("/api/standby-ticket-pdf", requireAuth, async (req, res) => {
+    try {
+      const [pdfPath, name, data] = await Promise.all([
+        storage.getSystemConfig('standby_ticket_pdf_path'),
+        storage.getSystemConfig('standby_ticket_pdf_name'),
+        storage.getSystemConfig('standby_ticket_pdf_data'),
+      ]);
+      // Mirror getStandbyTicketPdfAttachment() fallback: bytes take priority, but a
+      // legacy path-only config still results in an attachment, so report it as present.
+      const hasData = !!data || (!!pdfPath && pdfPath !== 'none');
+      const sizeBytes = data ? Math.floor((data.length * 3) / 4) : 0;
+      res.json({ path: pdfPath || 'none', name: name || null, hasData, sizeBytes });
+    } catch (error: any) {
+      console.error("Error reading standby ticket PDF config:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/standby-ticket-pdf", requireAuth, async (req, res) => {
+    try {
+      const { path: assetPath } = req.body as { path?: string };
+
+      // Clearing the attachment.
+      if (!assetPath || assetPath === 'none') {
+        await storage.setSystemConfig('standby_ticket_pdf_path', 'none');
+        await storage.setSystemConfig('standby_ticket_pdf_name', '');
+        await storage.setSystemConfig('standby_ticket_pdf_data', '');
+        return res.json({ cleared: true, hasData: false });
+      }
+
+      // Read the just-uploaded PDF now (while it still exists in the file store)
+      // and persist its bytes durably so the standby ticket email always has them.
+      const objectStorageService = new ObjectStorageService();
+      let buffer: Buffer;
+      let filename: string;
+      let contentType: string;
+      try {
+        const result = await objectStorageService.getObjectAsBuffer(assetPath);
+        buffer = result.buffer;
+        filename = result.filename;
+        contentType = result.contentType;
+      } catch (readErr: any) {
+        return res.status(400).json({
+          error: "Could not read the uploaded PDF. Please try uploading it again.",
+        });
+      }
+
+      // Only PDFs may be configured here.
+      if (contentType !== 'application/pdf' && !filename.toLowerCase().endsWith('.pdf')) {
+        return res.status(400).json({ error: "The selected file is not a PDF." });
+      }
+
+      await storage.setSystemConfig('standby_ticket_pdf_path', assetPath);
+      await storage.setSystemConfig('standby_ticket_pdf_name', filename);
+      await storage.setSystemConfig('standby_ticket_pdf_data', buffer.toString('base64'));
+
+      res.json({ saved: true, hasData: true, name: filename, sizeBytes: buffer.length });
+    } catch (error: any) {
+      console.error("Error saving standby ticket PDF:", error);
       res.status(500).json({ error: error.message });
     }
   });

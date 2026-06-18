@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search, CalendarPlus, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Mail, Trash2, UserPlus, Clock, CheckCircle2, XCircle, Send, Calendar, ArrowRightLeft, Users, RefreshCw, CheckCircle, Loader2, Ticket, Search, CalendarPlus, PanelLeftClose, PanelLeft, Paperclip, FileText } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -144,6 +145,9 @@ export default function StandbysPage() {
   // Send ticket dialog state
   const [sendTicketDialogOpen, setSendTicketDialogOpen] = useState(false);
 
+  // Standby ticket PDF management dialog state
+  const [ticketPdfDialogOpen, setTicketPdfDialogOpen] = useState(false);
+
   // Move attended standby to reschedule dialog state
   const [moveToRescheduleDialogOpen, setMoveToRescheduleDialogOpen] = useState(false);
   const [moveToRescheduleStandby, setMoveToRescheduleStandby] = useState<StandbyAssignment | null>(null);
@@ -157,6 +161,11 @@ export default function StandbysPage() {
   // Fetch all standbys
   const { data: allStandbys = [], isLoading: standbysLoading } = useQuery<StandbyAssignment[]>({
     queryKey: ['/api/standbys'],
+  });
+
+  // Standby ticket PDF attachment status
+  const { data: ticketPdfStatus } = useQuery<{ path: string; name: string | null; hasData: boolean; sizeBytes: number }>({
+    queryKey: ['/api/standby-ticket-pdf'],
   });
 
   // Fetch block types for selected record day (PB/NPB per block)
@@ -591,6 +600,26 @@ export default function StandbysPage() {
     },
   });
 
+  // Upload + save the standby ticket PDF attachment
+  const saveTicketPdfMutation = useMutation({
+    mutationFn: async (pdfPath: string) => {
+      const res = await apiRequest("POST", "/api/standby-ticket-pdf", { path: pdfPath });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/standby-ticket-pdf"] });
+      toast({
+        title: data?.cleared ? "PDF removed" : "Standby ticket PDF saved",
+        description: data?.cleared
+          ? "Standby ticket emails will no longer include a PDF attachment."
+          : "The PDF is now stored and will be attached to every standby ticket email.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error saving PDF", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Calculate confirmed standbys eligible for ticket sending
   const selectedConfirmedWithoutTicket = useMemo(() => {
     return standbysForRecordDay.filter(s => 
@@ -921,6 +950,27 @@ export default function StandbysPage() {
                       Send Ticket ({selectedConfirmedWithoutTicket.length})
                     </Button>
                   )}
+                  {/* Manage the PDF attached to standby ticket emails */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setTicketPdfDialogOpen(true)}
+                        data-testid="button-manage-ticket-pdf"
+                      >
+                        <Paperclip className="h-4 w-4 mr-2" />
+                        Ticket PDF
+                        {ticketPdfStatus?.hasData && (
+                          <Badge variant="secondary" className="ml-2">1</Badge>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {ticketPdfStatus?.hasData
+                        ? `Attached to standby ticket emails: ${ticketPdfStatus.name || 'PDF'}`
+                        : 'No PDF attached to standby ticket emails'}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -1622,6 +1672,91 @@ export default function StandbysPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Standby Ticket PDF Management Dialog */}
+      <Dialog open={ticketPdfDialogOpen} onOpenChange={setTicketPdfDialogOpen}>
+        <DialogContent className="max-w-lg" data-testid="dialog-ticket-pdf">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Paperclip className="h-5 w-5" />
+              Standby Ticket PDF
+            </DialogTitle>
+            <DialogDescription>
+              Upload a PDF to attach to every standby ticket email. The file is stored
+              securely and will be included automatically when you send standby tickets.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {ticketPdfStatus?.hasData ? (
+              <div className="flex items-center gap-3 rounded-md border p-3" data-testid="status-ticket-pdf">
+                <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate" data-testid="text-ticket-pdf-name">
+                    {ticketPdfStatus.name || 'Standby PDF'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {ticketPdfStatus.sizeBytes
+                      ? `${Math.max(1, Math.round(ticketPdfStatus.sizeBytes / 1024))} KB`
+                      : 'Stored'}{' '}
+                    — attached to every standby ticket email
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground" data-testid="status-ticket-pdf-empty">
+                No PDF attached. Standby ticket emails are sent without a PDF.
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <ObjectUploader
+                accept="application/pdf"
+                buttonVariant="default"
+                onComplete={(result) => saveTicketPdfMutation.mutate(result.objectPath)}
+                onError={(error) =>
+                  toast({ title: "Upload failed", description: error, variant: "destructive" })
+                }
+              >
+                <Paperclip className="h-4 w-4 mr-2" />
+                {ticketPdfStatus?.hasData ? 'Replace PDF' : 'Upload PDF'}
+              </ObjectUploader>
+
+              {ticketPdfStatus?.hasData && (
+                <Button
+                  variant="outline"
+                  onClick={() => saveTicketPdfMutation.mutate('none')}
+                  disabled={saveTicketPdfMutation.isPending}
+                  data-testid="button-remove-ticket-pdf"
+                >
+                  {saveTicketPdfMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Remove PDF
+                </Button>
+              )}
+              {saveTicketPdfMutation.isPending && !ticketPdfStatus?.hasData && (
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </span>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setTicketPdfDialogOpen(false)}
+              data-testid="button-close-ticket-pdf"
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Send Ticket Email Dialog */}
       <Dialog open={sendTicketDialogOpen} onOpenChange={setSendTicketDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1631,7 +1766,10 @@ export default function StandbysPage() {
               Send Standby Ticket Emails
             </DialogTitle>
             <DialogDescription>
-              Send ticket emails with PDF attachment to {selectedConfirmedWithoutTicket.length} confirmed standby(s)
+              Send ticket emails to {selectedConfirmedWithoutTicket.length} confirmed standby(s)
+              {ticketPdfStatus?.hasData
+                ? ` with the configured PDF attachment (${ticketPdfStatus.name || 'PDF'})`
+                : ' (no PDF attached — upload one via the Ticket PDF button if needed)'}
             </DialogDescription>
           </DialogHeader>
           
