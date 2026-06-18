@@ -501,14 +501,20 @@ function identifyGroups(contestants: any[]): Map<string, string[]> {
 function getArrivalTimeText(
   rawDate: string | Date | null | undefined,
   fallback: string,
-  opts?: { ifCalled?: boolean },
+  opts?: { ifCalled?: boolean; callTimeOnly?: boolean },
 ): string {
   const workspace = workspaceStorage.getStore() || 'dond';
   if (workspace === 'celeb' && rawDate) {
     const weekday = new Date(rawDate).toLocaleDateString('en-AU', { weekday: 'long' });
     const suffix = opts?.ifCalled ? ' (if called)' : '';
-    if (weekday === 'Tuesday') return `7:45AM - 5:00PM${suffix}`;
-    if (weekday === 'Thursday') return `8:30AM - 5:45PM${suffix}`;
+    if (opts?.callTimeOnly) {
+      // Standby emails show only the call time (no finish time)
+      if (weekday === 'Tuesday') return `7:45AM${suffix}`;
+      if (weekday === 'Thursday') return `8:30AM${suffix}`;
+    } else {
+      if (weekday === 'Tuesday') return `7:45AM - 5:00PM${suffix}`;
+      if (weekday === 'Thursday') return `8:30AM - 5:45PM${suffix}`;
+    }
   }
   return fallback;
 }
@@ -13448,7 +13454,7 @@ Thank you.`;
                       <strong style="color: #8B0000;">DATE:</strong> ${formattedDate.toUpperCase()}
                     </p>
                     <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
-                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 8:00AM
+                      <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(standby.recordDay.date, '8:00AM', { callTimeOnly: true })}
                     </p>
                     <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
                       <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
@@ -13994,7 +14000,7 @@ Thank you.`;
                       <tr>
                         <td style="padding: 8px 0;">
                           <div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div>
-                          <div style="color: #333; font-size: 15px; font-weight: bold;">8:00 AM</div>
+                          <div style="color: #333; font-size: 15px; font-weight: bold;">${getArrivalTimeText(recordDay.date, '8:00 AM', { callTimeOnly: true })}</div>
                         </td>
                       </tr>
                       <tr>
@@ -14248,7 +14254,7 @@ Thank you.`;
                     </h2>
                     <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                       <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">DATE</div><div style="color: #333; font-size: 15px; font-weight: bold;">${recordDate.toUpperCase()}</div></td></tr>
-                      <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div><div style="color: #333; font-size: 15px; font-weight: bold;">8:00 AM</div></td></tr>
+                      <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div><div style="color: #333; font-size: 15px; font-weight: bold;">${getArrivalTimeText(recordDay.date, '8:00 AM', { callTimeOnly: true })}</div></td></tr>
                       <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">LOCATION</div><div style="color: #333; font-size: 15px; font-weight: bold;">Docklands Studios Melbourne</div><div style="color: #666; font-size: 13px; margin-top: 2px;">476 Docklands Drive, Docklands, VIC 3008</div></td></tr>
                     </table>
                   </td>
@@ -16276,6 +16282,7 @@ Thank you.`;
       futureDate.setDate(futureDate.getDate() + 14);
       const sampleDateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
       let sampleDate = futureDate.toLocaleDateString('en-AU', sampleDateOptions).toUpperCase();
+      let sampleRawDate: string | Date = futureDate;
       let sampleRx = 'RX01';
       
       if (recordDayId) {
@@ -16285,6 +16292,7 @@ Thank you.`;
             const date = new Date(recordDay.date);
             const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
             sampleDate = date.toLocaleDateString('en-AU', options);
+            sampleRawDate = recordDay.date;
             sampleRx = recordDay.rxNumber || 'RX01';
           }
         } catch (e) {
@@ -16358,7 +16366,7 @@ Thank you.`;
                         <strong style="color: #8B0000;">DATE:</strong> ${sampleDate.toUpperCase()}
                       </p>
                       <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0 0 8px 0;">
-                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> 8:00AM
+                        <strong style="color: #8B0000;">ARRIVAL TIME:</strong> ${getArrivalTimeText(sampleRawDate, '8:00AM', { callTimeOnly: true })}
                       </p>
                       <p style="color: #333333; font-size: 16px; line-height: 1.8; margin: 0;">
                         <strong style="color: #8B0000;">LOCATION:</strong> Docklands Studios Melbourne, 476 Docklands Drive, Docklands, VIC, 3008
@@ -16440,6 +16448,7 @@ Thank you.`;
       
       // Use actual record day date if provided, otherwise fallback to sample date
       let sampleDate: string;
+      let sampleRawDate: string | Date;
       let rxNumber = 'RX01';
       const recordDayId = req.query.recordDayId as string | undefined;
       
@@ -16447,16 +16456,19 @@ Thank you.`;
         const recordDay = await storage.getRecordDayById(recordDayId);
         if (recordDay) {
           sampleDate = new Date(recordDay.date).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+          sampleRawDate = recordDay.date;
           rxNumber = recordDay.name || 'RX01';
         } else {
           const futureDate = new Date();
           futureDate.setDate(futureDate.getDate() + 14);
           sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+          sampleRawDate = futureDate;
         }
       } else {
         const futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 14);
         sampleDate = futureDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+        sampleRawDate = futureDate;
       }
       
       const html = `<!DOCTYPE html>
@@ -16520,7 +16532,7 @@ Thank you.`;
                       </h2>
                       <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                         <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">DATE</div><div style="color: #333; font-size: 15px; font-weight: bold;">${sampleDate}</div></td></tr>
-                        <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div><div style="color: #333; font-size: 15px; font-weight: bold;">8:00 AM</div></td></tr>
+                        <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">TIME</div><div style="color: #333; font-size: 15px; font-weight: bold;">${getArrivalTimeText(sampleRawDate, '8:00 AM', { callTimeOnly: true })}</div></td></tr>
                         <tr><td style="padding: 8px 0;"><div style="color: #666; font-size: 12px; margin-bottom: 2px;">LOCATION</div><div style="color: #333; font-size: 15px; font-weight: bold;">Docklands Studios Melbourne</div><div style="color: #666; font-size: 13px; margin-top: 2px;">476 Docklands Drive, Docklands, VIC 3008</div></td></tr>
                       </table>
                     </td>
